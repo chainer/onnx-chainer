@@ -23,10 +23,10 @@ import numpy as np
 import chainer.links as L
 import onnx_chainer
 
-model = L.VGG16()
+model = L.VGG16Layers()
 
 # Pseudo input
-x = np.zeros((1, 3, 224, 224), stype=np.float32)
+x = np.zeros((1, 3, 224, 224), dtype=np.float32)
 
 onnx_chainer.export(model, x, filename='MLP.onnx')
 ```
