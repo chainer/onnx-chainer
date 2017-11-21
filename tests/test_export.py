@@ -1,6 +1,10 @@
 import unittest
-import chainer.links as L
+
+import chainer
 import chainer.functions as F
+import chainer.links as L
+import numpy as np
+import onnx_chainer
 
 
 class MLP(chainer.Chain):
@@ -21,3 +25,8 @@ class TestExport(unittest.TestCase):
 
     def setUp(self):
         self.model = MLP(3, 5)
+        self.x = np.zeros((1, 3, 5, 5), dtype=np.float32)
+
+    def test_export(self):
+        model = onnx_chainer.export(self.model, self.x)
+        print(model)

@@ -1,0 +1,16 @@
+sudo: false
+dist: trusty
+language: python
+python:
+  - "2.7"
+  - "3.6"
+env:
+  - CHAINER_VERSION="==2.0.2" ONNX_VERSION="==0.2.1"
+  - CHAINER_VERSION="==3.1.0" ONNX_VERSION="==0.2.1"
+  - CHAINER_VERSION="==4.0.0b1" ONNX_VERSION="==0.2.1"
+notifications:
+  email: false
+
+install:
+  - pip install "onnx$ONNX_VERSION"
+  - pip install "chainer$CHAINER_VERSION"

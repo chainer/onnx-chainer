@@ -1,11 +1,10 @@
 import heapq
 import os
 
-import numpy
-
 import chainer
 from chainer import function_node
 from chainer import variable
+import numpy
 
 try:
     from onnx.onnx_pb2 import TensorProto  # NOQA
@@ -51,11 +50,6 @@ def convert_parameter(parameter, param_names):
     elif isinstance(parameter, numpy.ndarray):
         array = parameter
     return numpy_helper.from_array(array, param_names[id(parameter)])
-
-
-def create_tensor_value_info(tensor):
-    return helper.make_tensor_value_info(
-        tensor.name, tensor.data_type, tensor.dims)
 
 
 def convert_convolution_2d_function(link, input_names, param_names):
@@ -175,13 +169,13 @@ def convert_batch_normalization(link, input_names, param_names):
     layer_name = _layers[link.__class__.__name__]
     unique_layer_name = os.path.dirname(input_names[1])
     out_names = [str(id(out())) for out in link.outputs]
-    # if chainer.config.train:
-    #     out_names += [
-    #         os.path.join(unique_layer_name, 'mean'),
-    #         os.path.join(unique_layer_name, 'var'),
-    #         os.path.join(unique_layer_name, 'saved_mean'),
-    #         os.path.join(unique_layer_name, 'saved_var')
-    #     ]
+    if chainer.config.train:
+        out_names += [
+            os.path.join(unique_layer_name, 'mean'),
+            os.path.join(unique_layer_name, 'var'),
+            os.path.join(unique_layer_name, 'saved_mean'),
+            os.path.join(unique_layer_name, 'saved_var')
+        ]
 
     return helper.make_node(
         layer_name, input_names, out_names,
@@ -246,15 +240,29 @@ def create_node(func_name, cand, input_names, param_names, parameters,
         # Add running_mean and running_var to graph
         param_names[id(cand.running_mean)] = os.path.join(
             layer_name, 'running_mean')
-        running_mean = convert_parameter(cand.running_mean, param_names)
-        parameters.append(running_mean)
-        input_tensors.append(create_tensor_value_info(running_mean))
+        parameters.append(
+            numpy_helper.from_array(
+                cand.running_mean,
+                param_names[id(cand.running_mean)]))
+        input_tensors.append(
+            helper.make_tensor_value_info(
+                param_names[id(cand.running_mean)],
+                _dtype[cand.running_mean.dtype],
+                cand.running_mean.shape)
+        )
 
         param_names[id(cand.running_var)] = os.path.join(
             layer_name, 'running_var')
-        running_var = convert_parameter(cand.running_var, param_names)
-        parameters.append(running_var)
-        input_tensors.append(create_tensor_value_info(running_var))
+        parameters.append(
+            numpy_helper.from_array(
+                cand.running_var,
+                param_names[id(cand.running_var)]))
+        input_tensors.append(
+            helper.make_tensor_value_info(
+                param_names[id(cand.running_var)],
+                _dtype[cand.running_var.dtype],
+                cand.running_var.shape)
+        )
 
         nodes = convert_batch_normalization(cand, input_names, param_names)
     elif func_name == 'ReLU':
@@ -275,12 +283,20 @@ def export(model, args, filename=None, export_params=True,
            graph_name='Graph', save_text=False):
     """Export function for chainer.Chain in ONNX format.
 
+    This function performs a forward computation of the given
+    :class:`~chainer.Chain`, ``model``, by passing the given argments ``args``
+    directly. It means, the output :class:`~chainer.Variable` object ``y`` to
+    make the computational graph will be created by:
+
+    y = model(*args)
+
     Args:
         model (~chainer.Chain): The model object you want to export in ONNX
             format. It should have :meth:`__call__` method because the second
             argment ``args`` is directly given to the model by the ``[]``
             accessor.
-        args: The argments which are given to the model directly.
+        args (list or dict): The argments which are given to the model
+            directly.
         filename (str): The filename used for saving the resulting ONNX model.
             If None, nothing is saved to the disk.
         export_params (bool): If True, this function exports all the parameters
@@ -303,7 +319,15 @@ def export(model, args, filename=None, export_params=True,
     for i, arg in enumerate(args):
         if not isinstance(arg, chainer.Variable):
             args[i] = chainer.Variable(arg)
-    outputs = model(*args)
+
+    if isinstance(args, list):
+        outputs = model(*args)
+    elif isinstance(args, dict):
+        outputs = model(**args)
+    else:
+        raise ValueError(
+            'The \'args\' argument should be a list or dict. But a {} object '
+            'was given.'.format(type(args)))
 
     input_tensor_ids = [id(arg) for arg in args]
 
@@ -420,4 +444,3 @@ def export(model, args, filename=None, export_params=True,
                 print(model, file=fp)
 
     return model
-
