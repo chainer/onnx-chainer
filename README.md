@@ -1,4 +1,4 @@
-# ONNX-Chainer
+# ONNX-Chainer [![Build Status](https://travis-ci.org/mitmul/onnx-chainer.svg?branch=master)](https://travis-ci.org/mitmul/onnx-chainer
 
 This is an add-on package for ONNX support by Chainer.
 
