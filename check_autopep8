@@ -1,0 +1,11 @@
+--- original/./onnx_chainer/export.py
++++ fixed/./onnx_chainer/export.py
+@@ -53,7 +53,7 @@
+         array = parameter.array
+     elif isinstance(parameter, numpy.ndarray):
+         array = parameter
+-    a=1*1
++    a = 1 * 1
+     return numpy_helper.from_array(array, param_names[id(parameter)])
+ 
+ 
