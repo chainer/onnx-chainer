@@ -27,6 +27,11 @@ try:
         'ReLU': 'Relu',
         'Softmax': 'Softmax',
         'Add': 'Add',
+        'Sub': 'Sub',
+        'Mul': 'Mul',
+        'Neg': 'Neg',
+        'Absolute': 'Abs',
+        'Div': 'Div',
     }
 
 except (ImportError, TypeError) as e:
@@ -53,8 +58,6 @@ def convert_parameter(parameter, param_names):
 
 
 def convert_convolution_2d_function(link, input_names, param_names):
-    nodes = []
-
     input_names[input_names.index(id(link.W))] = param_names[id(link.W)]
     if hasattr(link, 'b'):
         input_names[input_names.index(id(link.b))] = param_names[id(link.b)]
@@ -65,15 +68,12 @@ def convert_convolution_2d_function(link, input_names, param_names):
     layer_name = _layers[link.__class__.__name__]
     out_names = [str(id(out())) for out in link.outputs]
 
-    conv = helper.make_node(
+    return helper.make_node(
         layer_name, input_names, out_names,
         kernel_shape=link.W.shape[2:],
         strides=(link.sy, link.sx),
         pads=(link.ph, link.pw)
-    )
-    nodes.append(conv)
-
-    return nodes
+    ),
 
 
 def convert_linear_function(link, input_names, param_names):
@@ -211,7 +211,7 @@ def convert_softmax(func, input_names, param_names):
     ),
 
 
-def convert_add(func, input_names, param_names):
+def convert_nonparametric_function(func, input_names, param_names):
     for i, input_name in enumerate(input_names):
         if type(input_name) is not str:
             input_names[i] = str(input_name)
@@ -270,7 +270,19 @@ def create_node(func_name, cand, input_names, param_names, parameters,
     elif func_name == 'Softmax':
         nodes = convert_softmax(cand, input_names, param_names)
     elif func_name == 'Add':
-        nodes = convert_add(cand, input_names, param_names)
+        nodes = convert_nonparametric_function(cand, input_names, param_names)
+    elif func_name == 'Sub':
+        nodes = convert_nonparametric_function(cand, input_names, param_names)
+    elif func_name == 'Mul':
+        nodes = convert_nonparametric_function(cand, input_names, param_names)
+    elif func_name == 'Neg':
+        nodes = convert_nonparametric_function(cand, input_names, param_names)
+    elif func_name == 'Div':
+        nodes = convert_nonparametric_function(cand, input_names, param_names)
+    elif func_name == 'Absolute':
+        nodes = convert_nonparametric_function(cand, input_names, param_names)
+    else:
+        raise ValueError('{} is not supported.'.format(func_name))
 
     # A single Chainer layer could be multiple onnx layers
     # e.g., Convolution2D -> Conv + Add (for bias)
