@@ -9,7 +9,10 @@ setup(
     author_email='shunta@preferred.jp',
     url='https://github.com/mitmul/onnx-chainer',
     keywords='ONNX Chainer model converter deep learning',
-    install_requires=['chainer>=2.0.0', 'onnx>=0.2.1'],
+    install_requires=[
+        'chainer>=3.1.0',
+        'onnx==0.2.1'
+    ],
     tests_require=['chainer>=2.0.0', 'onnx>=0.2.1', 'numpy'],
     license='MIT',
 )
