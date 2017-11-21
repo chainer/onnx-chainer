@@ -28,5 +28,5 @@ model = L.VGG16Layers()
 # Pseudo input
 x = np.zeros((1, 3, 224, 224), dtype=np.float32)
 
-onnx_chainer.export(model, x, filename='MLP.onnx')
+onnx_chainer.export(model, x, filename='VGG16.onnx')
 ```
