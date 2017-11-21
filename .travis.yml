@@ -26,6 +26,7 @@ install:
   - hash -r
   - CFLAGS="-I$HOME/miniconda/include" pip install "onnx$ONNX_VERSION"
   - pip install "chainer$CHAINER_VERSION"
+  - pip install -e .
 
 script:
   - pwd

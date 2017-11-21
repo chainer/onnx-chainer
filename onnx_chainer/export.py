@@ -7,11 +7,10 @@ from chainer import variable
 import numpy
 
 try:
-    from onnx.onnx_pb2 import TensorProto  # NOQA
     from onnx import checker
     from onnx import helper
-    from onnx import numpy_helper
     from onnx.mapping import TENSOR_TYPE_TO_NP_TYPE
+    from onnx import numpy_helper
 
     _available = True
 
