@@ -1,6 +1,6 @@
 import numpy as np
-from onnx import helper
 
+from onnx import helper
 from onnx_chainer import mapping
 
 
@@ -13,7 +13,7 @@ def convert_Cast(func, input_names, param_names, parameters, input_tensors):
     out_names = [str(id(out())) for out in func.outputs]
 
     typ = func.type if isinstance(func.type, np.dtype) else np.dtype(func.type)
-    
+
     return helper.make_node(
         layer_name, input_names, out_names,
         to=mapping.dtypes[typ]

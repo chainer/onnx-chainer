@@ -7,6 +7,7 @@ import numpy as np
 import onnx_chainer
 from chainer import testing
 
+
 class Model(chainer.Chain):
 
     def __init__(self, mode):
