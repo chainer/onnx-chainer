@@ -12,7 +12,12 @@ def convert_Transpose(
     layer_name = mapping.operators[func.__class__.__name__]
     out_names = [str(id(out())) for out in func.outputs]
 
-    return helper.make_node(
-        layer_name, input_names, out_names,
-        perm=func.axes
-    ),
+    if func.axes is None:
+        node = helper.make_node(layer_name, input_names, out_names)
+    else:
+        node = helper.make_node(
+            layer_name, input_names, out_names,
+            perm=func.axes
+        )
+
+    return node,

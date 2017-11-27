@@ -16,8 +16,8 @@ def convert_Pad(func, input_names, param_names, parameters, input_tensors):
             '{} mode is not supported in ONNX\'s Pad operation'.format(
                 func.mode))
 
-    if 'constant_values' in func.keywards:
-        values = func.keywards['constant_values']
+    if 'constant_values' in func.keywords:
+        values = func.keywords['constant_values']
         if not isinstance(values, int) and len(values) > 1:
             raise ValueError(
                 'ONNX doesn\'t support multiple constant values for Pad '

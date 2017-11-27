@@ -38,6 +38,8 @@ def convert_parameter(parameter, param_names):
         array = parameter.array
     elif isinstance(parameter, numpy.ndarray):
         array = parameter
+    if array.shape == ():
+        array = array[None]
     return numpy_helper.from_array(array, param_names[id(parameter)])
 
 
@@ -115,8 +117,9 @@ def export(model, args, filename=None, export_params=True,
         param_names[id(param)] = name
         parameters.append(
             convert_parameter(param, param_names))
+        param_shape = (1,) if param.shape == () else param.shape
         input_tensors.append(helper.make_tensor_value_info(
-            name, mapping.dtypes[param.array.dtype], param.shape))
+            name, mapping.dtypes[param.array.dtype], param_shape))
 
     if isinstance(outputs, dict):
         outputs = list(outputs.values())

@@ -8,7 +8,7 @@ operators = {
     'HardSigmoid': 'HardSigmoid',
     'LeakyReLU': 'LeakyRelu',
     'LogSoftmax': 'LogSoftmax',
-    'PReLUFunction': 'PReLU',
+    'PReLUFunction': 'PRelu',
     'ReLU': 'Relu',
     'Sigmoid': 'Sigmoid',
     'Softmax': 'Softmax',
@@ -19,17 +19,17 @@ operators = {
     'Cast': 'Cast',
     'Concat': 'Concat',
     'Depth2Space': 'DepthToSpace',
-    'Pad': 'Pad'
+    'Pad': 'Pad',
     'Reshape': 'Reshape',
     'Space2Depth': 'SpaceToDepth',
     'SplitAxis': 'Split',
     'Squeeze': 'Squeeze',
     'Tile': 'Tile',
-    'Transpose': 'Transpose'
+    'Transpose': 'Transpose',
 
     # Connection
     'Convolution2DFunction': 'Conv',
-    'LinearFunction': 'Gemm',
+    'LinearFunction': 'FC',
 
     # Pooling
     'AveragePooling2D': 'AveragePool',

@@ -12,9 +12,7 @@ This is an add-on package for ONNX support by Chainer.
 
 ## Installation
 
-```bash
-pip install onnx-chainer
-```
+See [INSTALL.md](INSTALL.md)
 
 ## Quick Start
 

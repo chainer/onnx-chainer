@@ -19,7 +19,8 @@ def convert_SplitAxis(
             split.append(i - prev_i)
             prev_i = i
     else:
-        split = func.indices_or_sections
+        length = func.inputs[0].shape[func.axis] // func.indices_or_sections
+        split = [length for _ in range(func.indices_or_sections)]
 
     return helper.make_node(
         layer_name, input_names, out_names,

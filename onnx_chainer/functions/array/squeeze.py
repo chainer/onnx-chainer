@@ -13,9 +13,8 @@ def convert_Squeeze(
     out_names = [str(id(out())) for out in func.outputs]
 
     if func.axis is None:
-        shape = input_tensors[input_names[0]].get_variable().shape
         axis = []
-        for s in shape:
+        for s in func.inputs[0].shape:
             if s == 1:
                 axis.append(s)
     else:
