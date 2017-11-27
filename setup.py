@@ -13,6 +13,6 @@ setup(
         'chainer>=3.1.0',
         'onnx==0.2.1'
     ],
-    tests_require=['chainer>=2.0.0', 'onnx>=0.2.1', 'numpy'],
+    tests_require=['chainer>=3.1.0', 'onnx==0.2.1', 'numpy'],
     license='MIT',
 )
