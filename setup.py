@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name='onnx-chainer',
     packages=['onnx_chainer'],
-    version='0.2.1a2',
+    version='0.2.1b1',
     description='ONNX support for Chainer',
     author='Shunta Saito',
     author_email='shunta@preferred.jp',
@@ -13,6 +13,6 @@ setup(
         'chainer>=3.1.0',
         'onnx==0.2.1'
     ],
-    tests_require=['chainer>=2.0.0', 'onnx>=0.2.1', 'numpy'],
+    tests_require=['chainer>=3.1.0', 'onnx==0.2.1', 'numpy'],
     license='MIT',
 )

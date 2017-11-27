@@ -5,8 +5,8 @@ python:
   - "2.7"
   - "3.6"
 env:
-  - CHAINER_VERSION="==3.1.0" ONNX_VERSION="==0.2.1"
-  - CHAINER_VERSION="==4.0.0b1" ONNX_VERSION="==0.2.1"
+  - CHAINER_VERSION="==3.1.0" ONNX_VERSION="git+git://github.com/onnx/onnx.git@a8bd1facd321ea52f0a6f88600138606711b7a96"
+  - CHAINER_VERSION="==4.0.0b1" ONNX_VERSION="git+git://github.com/onnx/onnx.git@a8bd1facd321ea52f0a6f88600138606711b7a96"
 notifications:
   email: false
 
@@ -23,7 +23,7 @@ install:
   - conda info -a
   - conda install protobuf
   - hash -r
-  - CFLAGS="-I$HOME/miniconda/include" pip install "onnx$ONNX_VERSION"
+  - CFLAGS="-I$HOME/miniconda/include" pip install $ONNX_VERSION
   - pip install "chainer$CHAINER_VERSION"
   - pip install -e .
 
