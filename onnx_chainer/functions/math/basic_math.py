@@ -52,6 +52,7 @@ def convert_Div(func, input_names, param_names, parameters, input_tensors):
         func, input_names, param_names, parameters, input_tensors)
 
 
-def convert_Absolute(func, input_names, param_names, parameters, input_tensors):
+def convert_Absolute(
+        func, input_names, param_names, parameters, input_tensors):
     return convert_unary_operator(
         func, input_names, param_names, parameters, input_tensors)

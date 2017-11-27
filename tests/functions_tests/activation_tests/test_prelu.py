@@ -1,7 +1,6 @@
 import unittest
 
 import chainer
-import chainer.functions as F
 import chainer.links as L
 import numpy as np
 import onnx_chainer
@@ -27,8 +26,8 @@ class TestExport(unittest.TestCase):
 
     def test_export_test(self):
         chainer.config.train = False
-        model = onnx_chainer.export(self.model, self.x)
+        onnx_chainer.export(self.model, self.x)
 
     def test_export_train(self):
         chainer.config.train = True
-        model = onnx_chainer.export(self.model, self.x)
+        onnx_chainer.export(self.model, self.x)

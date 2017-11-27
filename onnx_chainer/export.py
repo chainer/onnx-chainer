@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 import heapq
-import os
 
 import chainer
 from chainer import function_node

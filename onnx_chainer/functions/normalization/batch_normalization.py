@@ -125,7 +125,6 @@ def convert_FixedBatchNormalization(
             input_names[i] = str(input_name)
 
     layer_name = mapping.operators[func.__class__.__name__]
-    unique_layer_name = os.path.dirname(input_names[1])
     out_names = [str(id(out())) for out in func.outputs]
 
     return helper.make_node(

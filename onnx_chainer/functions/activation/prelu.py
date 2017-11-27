@@ -1,8 +1,4 @@
-import os
-
-from onnx import checker
 from onnx import helper
-from onnx import numpy_helper
 from onnx_chainer import mapping
 
 
