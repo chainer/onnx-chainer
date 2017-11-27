@@ -27,6 +27,10 @@ class TestExport(unittest.TestCase):
         self.model = MLP(3, 5)
         self.x = np.zeros((1, 3, 5, 5), dtype=np.float32)
 
-    def test_export(self):
+    def test_export_test(self):
+        chainer.config.train = False
         model = onnx_chainer.export(self.model, self.x)
-        print(model)
+
+    def test_export_traion(self):
+        chainer.config.train = True
+        model = onnx_chainer.export(self.model, self.x)

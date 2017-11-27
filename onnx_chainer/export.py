@@ -8,35 +8,18 @@ from chainer import function_node
 from chainer import variable
 import numpy
 
+from onnx_chainer import functions
+from onnx_chainer import mapping
+
 try:
     from onnx import checker
     from onnx import helper
-    from onnx.mapping import TENSOR_TYPE_TO_NP_TYPE
     from onnx import numpy_helper
 
     _available = True
 
-    _dtype = {v: k for k, v in TENSOR_TYPE_TO_NP_TYPE.items()}
 
-    _layers = {
-        'LinearFunction': 'Gemm',
-        'Reshape': 'Reshape',
-        'Convolution2DFunction': 'Conv',
-        'AveragePooling2D': 'AveragePool',
-        'MaxPooling2D': 'MaxPool',
-        'BatchNormalization': 'BatchNormalization',
-        'ReLU': 'Relu',
-        'Softmax': 'Softmax',
-        'Add': 'Add',
-        'Sub': 'Sub',
-        'Mul': 'Mul',
-        'Neg': 'Neg',
-        'Absolute': 'Abs',
-        'Div': 'Div',
-    }
-
-except (ImportError, TypeError) as e:
-    print(e)
+except (ImportError, TypeError):
     _available = False
 
 
@@ -58,235 +41,15 @@ def convert_parameter(parameter, param_names):
     return numpy_helper.from_array(array, param_names[id(parameter)])
 
 
-def convert_convolution_2d_function(link, input_names, param_names):
-    input_names[input_names.index(id(link.W))] = param_names[id(link.W)]
-    if hasattr(link, 'b'):
-        input_names[input_names.index(id(link.b))] = param_names[id(link.b)]
-    for i, input_name in enumerate(input_names):
-        if type(input_name) is not str:
-            input_names[i] = str(input_name)
-
-    layer_name = _layers[link.__class__.__name__]
-    out_names = [str(id(out())) for out in link.outputs]
-
-    return helper.make_node(
-        layer_name, input_names, out_names,
-        kernel_shape=link.W.shape[2:],
-        strides=(link.sy, link.sx),
-        pads=(link.ph, link.pw)
-    ),
-
-
-def convert_linear_function(link, input_names, param_names):
-    W = convert_parameter(link.W, param_names)
-    input_names[input_names.index(id(link.W))] = W.name
-    if hasattr(link, 'b'):
-        b = convert_parameter(link.b, param_names)
-        input_names[input_names.index(id(link.b))] = b.name
-    for i, input_name in enumerate(input_names):
-        if type(input_name) is not str:
-            input_names[i] = str(input_name)
-
-    layer_name = _layers[link.__class__.__name__]
-    out_names = [str(id(out())) for out in link.outputs]
-
-    return helper.make_node(
-        layer_name, input_names, out_names,
-        alpha=1.,
-        beta=1.,
-        broadcast=True,
-        transA=False,
-        transB=False,
-    ),
-
-
-def convert_reshape(func, input_names, param_names):
-    for i, input_name in enumerate(input_names):
-        if type(input_name) is not str:
-            input_names[i] = str(input_name)
-
-    layer_name = _layers[func.__class__.__name__]
-    out_names = [str(id(out())) for out in func.outputs]
-
-    return helper.make_node(
-        layer_name, input_names, out_names,
-        shape=func.shape
-    ),
-
-
-def convert_average_pooling_2d(func, input_names, param_names):
-    for i, input_name in enumerate(input_names):
-        if type(input_name) is not str:
-            input_names[i] = str(input_name)
-
-    layer_name = _layers[func.__class__.__name__]
-    gpool = func.inputs[0].shape[2:] == (func.kh, func.kw)
-    out_names = [str(id(out())) for out in func.outputs]
-
-    if not gpool:
-        return helper.make_node(
-            layer_name, input_names, out_names,
-            kernel_shape=(func.kh, func.kw),
-            pads=(func.ph, func.pw),
-            strides=(func.sy, func.sx)
-        ),
-    else:
-        return helper.make_node(
-            'Global' + layer_name, input_names, out_names),
-
-
-def convert_max_pooling_2d(func, input_names, param_names):
-    for i, input_name in enumerate(input_names):
-        if type(input_name) is not str:
-            input_names[i] = str(input_name)
-
-    layer_name = _layers[func.__class__.__name__]
-    gpool = func.inputs[0].shape[2:] == (func.kh, func.kw)
-    out_names = [str(id(out())) for out in func.outputs]
-
-    if not gpool:
-        return helper.make_node(
-            layer_name, input_names, out_names,
-            kernel_shape=(func.kh, func.kw),
-            pads=(func.ph, func.pw),
-            strides=(func.sy, func.sx)
-        ),
-    else:
-        return helper.make_node(
-            'Global' + layer_name, input_names, out_names),
-
-
-def convert_batch_normalization(link, input_names, param_names):
-    gamma_idx = input_names.index(id(link.gamma))
-    input_names[gamma_idx] = param_names[id(link.gamma)]
-    beta_idx = input_names.index(id(link.beta))
-    input_names[beta_idx] = param_names[id(link.beta)]
-    for i, input_name in enumerate(input_names):
-        if type(input_name) is not str:
-            input_names[i] = str(input_name)
-    input_names.append(param_names[id(link.running_mean)])
-    input_names.append(param_names[id(link.running_var)])
-
-    layer_name = _layers[link.__class__.__name__]
-    unique_layer_name = os.path.dirname(input_names[1])
-    out_names = [str(id(out())) for out in link.outputs]
-    if chainer.config.train:
-        out_names += [
-            os.path.join(unique_layer_name, 'mean'),
-            os.path.join(unique_layer_name, 'var'),
-            os.path.join(unique_layer_name, 'saved_mean'),
-            os.path.join(unique_layer_name, 'saved_var')
-        ]
-
-    return helper.make_node(
-        layer_name, input_names, out_names,
-        epsilon=link.eps,
-        is_test=not chainer.config.train,
-        momentum=link.decay,
-        spatial=True,
-        consumed_inputs=[False, False, False, True, True],
-    ),
-
-
-def convert_relu(func, input_names, param_names):
-    for i, input_name in enumerate(input_names):
-        if type(input_name) is not str:
-            input_names[i] = str(input_name)
-
-    layer_name = _layers[func.__class__.__name__]
-    out_names = [str(id(out())) for out in func.outputs]
-    return helper.make_node(layer_name, input_names, out_names),
-
-
-def convert_softmax(func, input_names, param_names):
-    for i, input_name in enumerate(input_names):
-        if type(input_name) is not str:
-            input_names[i] = str(input_name)
-
-    layer_name = _layers[func.__class__.__name__]
-    out_names = [str(id(out())) for out in func.outputs]
-
-    return helper.make_node(
-        layer_name, input_names, out_names,
-        axis=func.axis
-    ),
-
-
-def convert_nonparametric_function(func, input_names, param_names):
-    for i, input_name in enumerate(input_names):
-        if type(input_name) is not str:
-            input_names[i] = str(input_name)
-
-    layer_name = _layers[func.__class__.__name__]
-    out_names = [str(id(out())) for out in func.outputs]
-
-    return helper.make_node(layer_name, input_names, out_names),
-
-
 def create_node(func_name, cand, input_names, param_names, parameters,
                 input_tensors):
-    if func_name == 'Convolution2DFunction':
-        nodes = convert_convolution_2d_function(cand, input_names, param_names)
-    elif func_name == 'LinearFunction':
-        nodes = convert_linear_function(cand, input_names, param_names)
-    elif func_name == 'Reshape':
-        nodes = convert_reshape(cand, input_names, param_names)
-    elif func_name == 'AveragePooling2D':
-        nodes = convert_average_pooling_2d(cand, input_names, param_names)
-    elif func_name == 'MaxPooling2D':
-        nodes = convert_max_pooling_2d(cand, input_names, param_names)
-    elif func_name == 'BatchNormalization':
-        layer_name = os.path.dirname(param_names[id(cand.gamma)])
-
-        # Add running_mean and running_var to graph
-        param_names[id(cand.running_mean)] = os.path.join(
-            layer_name, 'running_mean')
-        parameters.append(
-            numpy_helper.from_array(
-                cand.running_mean,
-                param_names[id(cand.running_mean)]))
-        input_tensors.append(
-            helper.make_tensor_value_info(
-                param_names[id(cand.running_mean)],
-                _dtype[cand.running_mean.dtype],
-                cand.running_mean.shape)
-        )
-
-        param_names[id(cand.running_var)] = os.path.join(
-            layer_name, 'running_var')
-        parameters.append(
-            numpy_helper.from_array(
-                cand.running_var,
-                param_names[id(cand.running_var)]))
-        input_tensors.append(
-            helper.make_tensor_value_info(
-                param_names[id(cand.running_var)],
-                _dtype[cand.running_var.dtype],
-                cand.running_var.shape)
-        )
-
-        nodes = convert_batch_normalization(cand, input_names, param_names)
-    elif func_name == 'ReLU':
-        nodes = convert_relu(cand, input_names, param_names)
-    elif func_name == 'Softmax':
-        nodes = convert_softmax(cand, input_names, param_names)
-    elif func_name == 'Add':
-        nodes = convert_nonparametric_function(cand, input_names, param_names)
-    elif func_name == 'Sub':
-        nodes = convert_nonparametric_function(cand, input_names, param_names)
-    elif func_name == 'Mul':
-        nodes = convert_nonparametric_function(cand, input_names, param_names)
-    elif func_name == 'Neg':
-        nodes = convert_nonparametric_function(cand, input_names, param_names)
-    elif func_name == 'Div':
-        nodes = convert_nonparametric_function(cand, input_names, param_names)
-    elif func_name == 'Absolute':
-        nodes = convert_nonparametric_function(cand, input_names, param_names)
+    converter_name = 'convert_{}'.format(func_name)
+    if hasattr(functions, converter_name):
+        converter = getattr(functions, converter_name)
+        nodes = converter(
+            cand, input_names, param_names, parameters, input_tensors)
     else:
         raise ValueError('{} is not supported.'.format(func_name))
-
-    # A single Chainer layer could be multiple onnx layers
-    # e.g., Convolution2D -> Conv + Add (for bias)
     for node in nodes:
         checker.check_node(node)
     return nodes
@@ -353,7 +116,7 @@ def export(model, args, filename=None, export_params=True,
         parameters.append(
             convert_parameter(param, param_names))
         input_tensors.append(helper.make_tensor_value_info(
-            name, _dtype[param.array.dtype], param.shape))
+            name, mapping.dtypes[param.array.dtype], param.shape))
 
     if isinstance(outputs, dict):
         outputs = list(outputs.values())
@@ -385,9 +148,9 @@ def export(model, args, filename=None, export_params=True,
                 seen_edges.add((creator, cand))
                 nodes.add(creator)
                 nodes.add(cand)
+
         elif isinstance(cand, function_node.FunctionNode):
             func_name = cand.__class__.__name__
-
             input_names = []
             for input_ in cand.inputs:
                 if input_ is not cand and (input_, cand) not in seen_edges:
@@ -396,7 +159,7 @@ def export(model, args, filename=None, export_params=True,
                     nodes.add(input_)
                     nodes.add(cand)
 
-                # If it's a parameter
+                # When input_ is a parameter
                 if input_.name is not None:
                     input_names.append(id(input_.get_variable()))
                     setattr(cand, input_.name, input_.get_variable())
@@ -414,20 +177,20 @@ def export(model, args, filename=None, export_params=True,
                     if id(out_var) in output_tensor_ids:
                         idx = output_tensor_ids.index(id(out_var))
                         output_tensor_ids[idx] = (
-                            str(id(out_)), _dtype[out_var.array.dtype],
+                            str(id(out_)), mapping.dtypes[out_var.array.dtype],
                             out_var.shape)
 
-            if func_name in _layers.keys():
+            if func_name in mapping.operators.keys():
                 onnx_nodes = create_node(
                     func_name, cand, input_names, param_names, parameters,
                     input_tensors)
                 graph.extend(onnx_nodes)
 
-                # Add all the input values for the network to input_tensors
+    # Add all the input values for the network to input_tensors
     for i, arg in enumerate(args):
         name = str(id(arg))
         input_tensors.append(helper.make_tensor_value_info(
-            name, _dtype[arg.array.dtype], arg.shape))
+            name, mapping.dtypes[arg.array.dtype], arg.shape))
 
     output_tensors = []
     for out_ in output_tensor_ids:

@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name='onnx-chainer',
     packages=['onnx_chainer'],
-    version='0.2.1a2',
+    version='0.2.1b1',
     description='ONNX support for Chainer',
     author='Shunta Saito',
     author_email='shunta@preferred.jp',
