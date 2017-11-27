@@ -28,3 +28,55 @@ x = np.zeros((1, 3, 224, 224), dtype=np.float32)
 
 onnx_chainer.export(model, x, filename='VGG16.onnx')
 ```
+
+## Supported Functions
+
+### Activation
+
+- ELU
+- HardSigmoid
+- LeakyReLU
+- LogSoftmax
+- PReLUFunction
+- ReLU
+- Sigmoid
+- Softmax
+- Softplus
+- Tanh
+
+### Array
+
+- Cast
+- Concat
+- Depth2Space
+- Pad
+- Reshape
+- Space2Depth
+- SplitAxis
+- Squeeze
+- Tile
+- Transpose
+
+### Connection
+
+- Convolution2DFunction
+- LinearFunction
+
+### Pooling
+
+- AveragePooling2D
+- MaxPooling2D
+
+### Normalization
+
+- BatchNormalization
+- FixedBatchNormalization
+
+### Math
+
+- Add
+- Sub
+- Mul
+- Neg
+- Absolute
+- Div
