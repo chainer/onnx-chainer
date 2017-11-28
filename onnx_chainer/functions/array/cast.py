@@ -2,6 +2,7 @@ import numpy as np
 
 from onnx import helper
 from onnx_chainer import mapping
+from onnx_chainer.mapping import TENSOR_TYPE_TO_NAME
 
 
 def convert_Cast(func, input_names, param_names, parameters, input_tensors):
@@ -16,5 +17,5 @@ def convert_Cast(func, input_names, param_names, parameters, input_tensors):
 
     return helper.make_node(
         layer_name, input_names, out_names,
-        to=mapping.dtypes[typ]
+        to=TENSOR_TYPE_TO_NAME[mapping.dtypes[typ]]
     ),

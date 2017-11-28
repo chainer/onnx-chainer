@@ -17,7 +17,9 @@ def convert_Convolution2DFunction(
 
     return helper.make_node(
         layer_name, input_names, out_names,
+        auto_pad='VALID',
+        dilations=(func.dy, func.dx),
         kernel_shape=func.W.shape[2:],
+        pads=(func.ph, func.pw),
         strides=(func.sy, func.sx),
-        pads=(func.ph, func.pw)
     ),
