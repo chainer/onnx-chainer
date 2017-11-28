@@ -51,14 +51,6 @@ operators = {
     'EmbedIDFunction': 'Embedding',
     'LinearFunction': 'FC',
 
-    # Pooling
-    'AveragePooling2D': 'AveragePool',
-    'MaxPooling2D': 'MaxPool',
-
-    # Normalization
-    'BatchNormalization': 'BatchNormalization',
-    'FixedBatchNormalization': 'BatchNormalization',
-
     # Math
     'Add': 'Add',
     'Absolute': 'Abs',
@@ -69,9 +61,26 @@ operators = {
     'Sub': 'Sub',
     'Clip': 'Clip',
     'Exp': 'Exp',
+    'Identity': 'Identity',
     'MatMul': 'Matmul',
     'Maximum': 'Max',
     'Minimum': 'Min',
     'Sqrt': 'Sqrt',
     'SquaredDifference': ['Sub', 'Pow'],
+    'Sum': 'ReduceSum',
+
+    # Noise
+    'Dropout': 'Dropout',
+
+    # Pooling
+    'AveragePooling2D': 'AveragePool',
+    'AveragePoolingND': 'AveragePool',
+    'MaxPooling2D': 'MaxPool',
+    'MaxPoolingND': 'MaxPool',
+
+    # Normalization
+    'BatchNormalization': 'BatchNormalization',
+    'FixedBatchNormalization': 'BatchNormalization',
+    'LocalResponseNormalization': 'LRN',
+
 }

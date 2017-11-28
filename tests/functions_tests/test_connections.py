@@ -32,7 +32,7 @@ import onnx_chainer
     {'link': L.Linear, 'in_shape': (1, 10), 'in_type': np.float32,
      'args': [None, 8, True]},
 )
-class TestActivations(unittest.TestCase):
+class TestConnections(unittest.TestCase):
 
     def setUp(self):
 

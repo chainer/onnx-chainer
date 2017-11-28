@@ -22,8 +22,14 @@ from chainer import testing
     {'info': 'Sqrt', 'ops': 'chainer.functions.sqrt(a)'},
     {'info': 'SquaredDifference',
      'ops': 'chainer.functions.squared_difference(a, b)'},
+    {'info': 'PowVarConst',
+     'ops': 'chainer.functions.math.basic_math.pow(a, 2)'},
+    {'info': 'Sum',
+     'ops': 'chainer.functions.sum(a, axis=1)'},
+    {'info': 'Sum',
+     'ops': 'chainer.functions.sum(a, axis=0, keepdims=True)'},
 )
-class TestExport(unittest.TestCase):
+class TestMathOperators(unittest.TestCase):
 
     def setUp(self):
         class Model(chainer.Chain):
