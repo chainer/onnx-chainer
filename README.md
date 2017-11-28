@@ -31,6 +31,8 @@ onnx_chainer.export(model, x, filename='VGG16.onnx')
 
 ## Supported Functions
 
+Currently 48 Chainer Functions are supported to export in ONNX format.
+
 ### Activation
 
 - ELU
@@ -60,23 +62,42 @@ onnx_chainer.export(model, x, filename='VGG16.onnx')
 ### Connection
 
 - Convolution2DFunction
+- Deconvolution2DFunction
+- EmbedIDFunction
 - LinearFunction
+
+### Math
+
+- Add
+- Absolute
+- Div
+- Mul
+- Neg
+- PowVarConst
+- Sub
+- Clip
+- Exp
+- Identity
+- MatMul
+- Maximum
+- Minimum
+- Sqrt
+- SquaredDifference
+- Sum
+
+### Noise
+
+- Dropout
 
 ### Pooling
 
 - AveragePooling2D
+- AveragePoolingND
 - MaxPooling2D
+- MaxPoolingND
 
 ### Normalization
 
 - BatchNormalization
 - FixedBatchNormalization
-
-### Math
-
-- Add
-- Sub
-- Mul
-- Neg
-- Absolute
-- Div
+- LocalResponseNormalization
