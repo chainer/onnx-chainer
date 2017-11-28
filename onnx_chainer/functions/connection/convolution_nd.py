@@ -1,11 +1,13 @@
-import numpy as np
-
 from onnx import helper
+
 from onnx_chainer import mapping
-from onnx_chainer.mapping import TENSOR_TYPE_TO_NAME
 
 
-def convert_Cast(func, input_names, param_names, parameters, input_tensors):
+def convert_ConvolutionND(
+        func, input_names, param_names, parameters, input_tensors):
+    input_names[input_names.index(id(func.W))] = param_names[id(func.W)]
+    if hasattr(func, 'b'):
+        input_names[input_names.index(id(func.b))] = param_names[id(func.b)]
     for i, input_name in enumerate(input_names):
         if type(input_name) is not str:
             input_names[i] = str(input_name)
@@ -13,9 +15,10 @@ def convert_Cast(func, input_names, param_names, parameters, input_tensors):
     layer_name = mapping.operators[func.__class__.__name__]
     out_names = [str(id(out())) for out in func.outputs]
 
-    typ = func.type if isinstance(func.type, np.dtype) else np.dtype(func.type)
-
     return helper.make_node(
         layer_name, input_names, out_names,
-        to=TENSOR_TYPE_TO_NAME[mapping.dtypes[typ]]
+        auto_pad='VALID',
+        kernel_shape=func.W.shape[2:],
+        pads=func.pad,
+        strides=func.stride,
     ),

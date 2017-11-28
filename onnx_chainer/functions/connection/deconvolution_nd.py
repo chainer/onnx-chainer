@@ -3,7 +3,7 @@ from onnx import helper
 from onnx_chainer import mapping
 
 
-def convert_Deconvolution2DFunction(
+def convert_DeconvolutionND(
         func, input_names, param_names, parameters, input_tensors):
     input_names[input_names.index(id(func.W))] = param_names[id(func.W)]
     if hasattr(func, 'b'):
@@ -19,7 +19,7 @@ def convert_Deconvolution2DFunction(
         layer_name, input_names, out_names,
         auto_pad='VALID',
         kernel_shape=func.W.shape[2:],
-        output_shape=(func.outh, func.outw),
-        pads=(func.ph, func.pw),
-        strides=(func.sy, func.sx),
+        output_shape=func.outs,
+        pads=func.pad,
+        strides=func.stride,
     ),
