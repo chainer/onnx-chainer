@@ -51,7 +51,7 @@ Currently 50 Chainer Functions are supported to export in ONNX format.
 - Cast
 - Concat
 - Depth2Space
-- Pad
+- Pad [^pad1] [^pad2]
 - Reshape
 - Space2Depth
 - SplitAxis
@@ -59,14 +59,19 @@ Currently 50 Chainer Functions are supported to export in ONNX format.
 - Tile
 - Transpose
 
+[^pad1]: mode should be either 'constant', 'reflect', or 'edge'
+[^pad2]: ONNX doesn't support multiple constant values for Pad operation
+
 ### Connection
 
 - Convolution2DFunction
 - ConvolutionND
 - Deconvolution2DFunction
 - DeconvolutionND
-- EmbedIDFunction
+- EmbedIDFunction [^embed1]
 - LinearFunction
+
+[^embed1]: Current ONNX doesn't support ignore_label for EmbedID
 
 ### Math
 
@@ -80,16 +85,20 @@ Currently 50 Chainer Functions are supported to export in ONNX format.
 - Clip
 - Exp
 - Identity
-- MatMul
+- MatMul [^matmul1]
 - Maximum
 - Minimum
 - Sqrt
 - SquaredDifference
 - Sum
 
+[^matmul1]: Current ONNX doesn't support transpose options for matmul ops
+
 ### Noise
 
-- Dropout (NOTE: In test mode, it's not exported)
+- Dropout [^dropout1]
+
+[^dropout1]: In test mode, all dropout layers aren't included in the exported file
 
 ### Pooling
 
