@@ -14,13 +14,14 @@ from chainer import testing
     {'info': 'Neg', 'ops': '-a'},
     {'info': 'Absolute', 'ops': 'abs(a)'},
     {'info': 'Div', 'ops': 'a / b'},
-    {'info': 'Clip', 'ops': 'F.clip(a, 0.1, 0.2)'},
-    {'info': 'Exp', 'ops': 'F.exp(a)'},
-    {'info': 'MatMul', 'ops': 'F.matmul(a, b.T)'},
-    {'info': 'Maximum', 'ops': 'F.maximum(a, b)'},
-    {'info': 'Minimum', 'ops': 'F.minimum(a, b)'},
-    {'info': 'Sqrt', 'ops': 'F.sqrt(a)'},
-    {'info': 'SquaredDifference', 'ops': 'F.squared_difference(a, b)'},
+    {'info': 'Clip', 'ops': 'chainer.functions.clip(a, 0.1, 0.2)'},
+    {'info': 'Exp', 'ops': 'chainer.functions.exp(a)'},
+    {'info': 'MatMul', 'ops': 'chainer.functions.matmul(a, b.T)'},
+    {'info': 'Maximum', 'ops': 'chainer.functions.maximum(a, b)'},
+    {'info': 'Minimum', 'ops': 'chainer.functions.minimum(a, b)'},
+    {'info': 'Sqrt', 'ops': 'chainer.functions.sqrt(a)'},
+    {'info': 'SquaredDifference',
+     'ops': 'chainer.functions.squared_difference(a, b)'},
 )
 class TestExport(unittest.TestCase):
 
@@ -41,7 +42,7 @@ class TestExport(unittest.TestCase):
 
     def test_export_test(self):
         chainer.config.train = False
-        print(onnx_chainer.export(self.model, self.x))
+        onnx_chainer.export(self.model, self.x)
 
     def test_export_train(self):
         chainer.config.train = True
