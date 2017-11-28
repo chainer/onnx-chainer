@@ -89,7 +89,7 @@ Currently 50 Chainer Functions are supported to export in ONNX format.
 
 ### Noise
 
-- Dropout
+- Dropout (NOTE: In test mode, it's not exported)
 
 ### Pooling
 

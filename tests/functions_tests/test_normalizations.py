@@ -11,6 +11,7 @@ import onnx_chainer
 
 @testing.parameterize(
     {'ops': F.local_response_normalization,
+     'input_argname': 'x',
      'args': {'n': 5, 'k': 2, 'alpha': 1e-4, 'beta': 0.75}},
 )
 class TestNormalizations(unittest.TestCase):
@@ -19,16 +20,18 @@ class TestNormalizations(unittest.TestCase):
 
         class Model(chainer.Chain):
 
-            def __init__(self, ops, args):
+            def __init__(self, ops, args, input_argname):
                 super(Model, self).__init__()
                 self.ops = ops
-                self.args = list(args.values())
+                self.args = args
+                self.input_argname = input_argname
 
             def __call__(self, x):
                 x = F.identity(x)
-                return self.ops(*([x] + self.args))
+                self.args[self.input_argname] = x
+                return self.ops(**self.args)
 
-        self.model = Model(self.ops, self.args)
+        self.model = Model(self.ops, self.args, self.input_argname)
         self.x = np.zeros((1, 5), dtype=np.float32)
 
     def test_export_test(self):

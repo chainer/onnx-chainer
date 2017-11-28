@@ -9,7 +9,7 @@ import onnx_chainer
 
 
 @testing.parameterize(
-    {'ops': F.dropout, 'args': {'ratio': 0.5}},
+    {'ops': F.dropout, 'input_argname': 'x', 'args': {'ratio': 0.5}},
 )
 class TestNoises(unittest.TestCase):
 
@@ -17,16 +17,18 @@ class TestNoises(unittest.TestCase):
 
         class Model(chainer.Chain):
 
-            def __init__(self, ops, args):
+            def __init__(self, ops, args, input_argname):
                 super(Model, self).__init__()
                 self.ops = ops
-                self.args = list(args.values())
+                self.args = args
+                self.input_argname = input_argname
 
             def __call__(self, x):
                 x = F.identity(x)
-                return self.ops(*([x] + self.args))
+                self.args[self.input_argname] = x
+                return self.ops(**self.args)
 
-        self.model = Model(self.ops, self.args)
+        self.model = Model(self.ops, self.args, self.input_argname)
         self.x = np.zeros((1, 5), dtype=np.float32)
 
     def test_export_test(self):

@@ -10,36 +10,60 @@ import onnx_chainer
 
 @testing.parameterize(
     {'ops': 'cast', 'input_shape': (1, 5),
+     'input_argname': 'x',
      'args': {'typ': np.float16}},
     {'ops': 'cast', 'input_shape': (1, 5),
+     'input_argname': 'x',
      'args': {'typ': np.float64}},
 
     {'ops': 'depth2space', 'input_shape': (1, 12, 6, 6),
+     'input_argname': 'X',
      'args': {'r': 2}},
 
     {'ops': 'pad', 'input_shape': (1, 5),
+     'input_argname': 'x',
      'args': {'pad_width': (0, 2), 'mode': 'constant'}},
     {'ops': 'pad', 'input_shape': (1, 5),
+     'input_argname': 'x',
      'args': {'pad_width': (0, 2), 'mode': 'reflect'}},
     {'ops': 'pad', 'input_shape': (1, 5),
+     'input_argname': 'x',
      'args': {'pad_width': (0, 2), 'mode': 'edge'}},
 
-    {'ops': 'reshape', 'input_shape': (1, 6), 'args': {'shape': (1, 2, 1, 3)}},
-    {'ops': 'reshape', 'input_shape': (1, 6), 'args': {'shape': (1, 2, 1, 3)}},
+    {'ops': 'reshape', 'input_shape': (1, 6),
+     'input_argname': 'x',
+     'args': {'shape': (1, 2, 1, 3)}},
+    {'ops': 'reshape', 'input_shape': (1, 6),
+     'input_argname': 'x',
+     'args': {'shape': (1, 2, 1, 3)}},
+
+    {'ops': 'space2depth', 'input_shape': (1, 12, 6, 6),
+     'input_argname': 'X',
+     'args': {'r': 2}},
 
     {'ops': 'split_axis', 'input_shape': (1, 6),
-     'args': {'indices_or_sections': 2, 'axis': 1, 'force_tuple': True}},
+     'input_argname': 'x',
+     'args': {'indices_or_sections': 2,
+              'axis': 1, 'force_tuple': True}},
     {'ops': 'split_axis', 'input_shape': (1, 6),
-     'args': {'indices_or_sections': 2, 'axis': 1, 'force_tuple': False}},
+     'input_argname': 'x',
+     'args': {'indices_or_sections': 2,
+              'axis': 1, 'force_tuple': False}},
 
     {'ops': 'squeeze', 'input_shape': (1, 3, 1, 2),
+     'input_argname': 'x',
      'args': {'axis': None}},
     {'ops': 'squeeze', 'input_shape': (1, 3, 1, 2, 1),
+     'input_argname': 'x',
      'args': {'axis': (2, 4)}},
 
-    {'ops': 'tile', 'input_shape': (1, 5), 'args': {'reps': (1, 2)}},
+    {'ops': 'tile', 'input_shape': (1, 5),
+     'input_argname': 'x',
+     'args': {'reps': (1, 2)}},
 
-    {'ops': 'transpose', 'input_shape': (1, 5), 'args': {'axes': None}},
+    {'ops': 'transpose', 'input_shape': (1, 5),
+     'input_argname': 'x',
+     'args': {'axes': None}},
 )
 class TestArrayOperators(unittest.TestCase):
 
@@ -47,15 +71,17 @@ class TestArrayOperators(unittest.TestCase):
 
         class Model(chainer.Chain):
 
-            def __init__(self, ops, args):
+            def __init__(self, ops, args, input_argname):
                 super(Model, self).__init__()
                 self.ops = getattr(F, ops)
-                self.args = list(args.values())
+                self.args = args
+                self.input_argname = input_argname
 
             def __call__(self, x):
-                return self.ops(*([x] + self.args))
+                self.args[self.input_argname] = x
+                return self.ops(**self.args)
 
-        self.model = Model(self.ops, self.args)
+        self.model = Model(self.ops, self.args, self.input_argname)
         self.x = np.zeros(self.input_shape, dtype=np.float32)
 
     def test_export_test(self):
