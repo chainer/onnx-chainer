@@ -31,7 +31,7 @@ onnx_chainer.export(model, x, filename='VGG16.onnx')
 
 ## Supported Functions
 
-Currently 48 Chainer Functions are supported to export in ONNX format.
+Currently 50 Chainer Functions are supported to export in ONNX format.
 
 ### Activation
 
@@ -62,7 +62,9 @@ Currently 48 Chainer Functions are supported to export in ONNX format.
 ### Connection
 
 - Convolution2DFunction
+- ConvolutionND
 - Deconvolution2DFunction
+- DeconvolutionND
 - EmbedIDFunction
 - LinearFunction
 
