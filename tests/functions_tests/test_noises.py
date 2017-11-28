@@ -1,8 +1,8 @@
 import unittest
 
 import chainer
-from chainer import testing
 import chainer.functions as F
+from chainer import testing
 import numpy as np
 
 import onnx_chainer

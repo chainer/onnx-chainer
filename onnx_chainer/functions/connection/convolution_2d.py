@@ -33,5 +33,4 @@ def convert_Convolution2DFunction(
             strides=(func.sy, func.sx),
         )
 
-    return node,        
-
+    return node,
