@@ -51,7 +51,7 @@ Currently 50 Chainer Functions are supported to export in ONNX format.
 - Cast
 - Concat
 - Depth2Space
-- Pad <sup>[1](#pad1)<sup><sup>[2](#pad2)</sup>
+- Pad <sup>[1](#pad1)<sup> <sup>[2](#pad2)</sup>
 - Reshape
 - Space2Depth
 - SplitAxis
