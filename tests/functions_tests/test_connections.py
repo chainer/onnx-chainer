@@ -14,6 +14,13 @@ import onnx_chainer
     {'link': L.Convolution2D, 'in_shape': (1, 3, 5, 5), 'in_type': np.float32,
      'args': [None, 3, 3, 1, 1, True]},
 
+    {'link': L.ConvolutionND, 'in_shape': (1, 3, 5), 'in_type': np.float32,
+     'args': [1, 3, 4, 3, 1, 0]},
+    {'link': L.ConvolutionND, 'in_shape': (1, 3, 5), 'in_type': np.float32,
+     'args': [1, 3, 4, 3, 1, 0, True]},
+    {'link': L.ConvolutionND, 'in_shape': (1, 3, 5, 5, 5),
+     'in_type': np.float32, 'args': [3, 3, 4, 3, 1, 0]},
+
     {'link': L.DilatedConvolution2D, 'in_shape': (1, 3, 5, 5),
      'in_type': np.float32, 'args': [None, 3, 3, 1, 1, 2]},
     {'link': L.DilatedConvolution2D, 'in_shape': (1, 3, 5, 5),

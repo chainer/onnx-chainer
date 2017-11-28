@@ -47,7 +47,9 @@ operators = {
 
     # Connection
     'Convolution2DFunction': 'Conv',
+    'ConvolutionND': 'Conv',
     'Deconvolution2DFunction': 'ConvTranspose',
+    'DeconvolutionND': 'ConvTranspose',
     'EmbedIDFunction': 'Embedding',
     'LinearFunction': 'FC',
 

@@ -21,7 +21,9 @@ from onnx_chainer.functions.array.tile import convert_Tile  # NOQA
 from onnx_chainer.functions.array.transpose import convert_Transpose  # NOQA
 
 from onnx_chainer.functions.connection.convolution_2d import convert_Convolution2DFunction  # NOQA
+from onnx_chainer.functions.connection.convolution_nd import convert_ConvolutionND  # NOQA
 from onnx_chainer.functions.connection.deconvolution_2d import convert_Deconvolution2DFunction  # NOQA
+from onnx_chainer.functions.connection.deconvolution_nd import convert_DeconvolutionND  # NOQA
 from onnx_chainer.functions.connection.embed_id import convert_EmbedIDFunction  # NOQA
 from onnx_chainer.functions.connection.linear import convert_LinearFunction  # NOQA
 
