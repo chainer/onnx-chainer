@@ -51,7 +51,7 @@ Currently 50 Chainer Functions are supported to export in ONNX format.
 - Cast
 - Concat
 - Depth2Space
-- Pad [^pad1] [^pad2]
+- Pad <sup>[1](#pad1)<sup><sup>[2](#pad2)</sup>
 - Reshape
 - Space2Depth
 - SplitAxis
@@ -59,19 +59,14 @@ Currently 50 Chainer Functions are supported to export in ONNX format.
 - Tile
 - Transpose
 
-[^pad1]: mode should be either 'constant', 'reflect', or 'edge'
-[^pad2]: ONNX doesn't support multiple constant values for Pad operation
-
 ### Connection
 
 - Convolution2DFunction
 - ConvolutionND
 - Deconvolution2DFunction
 - DeconvolutionND
-- EmbedIDFunction [^embed1]
+- EmbedIDFunction <sup>[3](#embed1)</sup>
 - LinearFunction
-
-[^embed1]: Current ONNX doesn't support ignore_label for EmbedID
 
 ### Math
 
@@ -85,20 +80,16 @@ Currently 50 Chainer Functions are supported to export in ONNX format.
 - Clip
 - Exp
 - Identity
-- MatMul [^matmul1]
+- MatMul <sup>[4](#matmul1)</sup>
 - Maximum
 - Minimum
 - Sqrt
 - SquaredDifference
 - Sum
 
-[^matmul1]: Current ONNX doesn't support transpose options for matmul ops
-
 ### Noise
 
-- Dropout [^dropout1]
-
-[^dropout1]: In test mode, all dropout layers aren't included in the exported file
+- Dropout <sup>[5](#dropout1)</sup>
 
 ### Pooling
 
@@ -112,3 +103,11 @@ Currently 50 Chainer Functions are supported to export in ONNX format.
 - BatchNormalization
 - FixedBatchNormalization
 - LocalResponseNormalization
+
+---
+
+<a name="pad1">1</a>: mode should be either 'constant', 'reflect', or 'edge'<br />
+<a name="pad2">2</a>: ONNX doesn't support multiple constant values for Pad operation<br />
+<a name="embed1">3</a>: Current ONNX doesn't support ignore_label for EmbedID<br />
+<a name="matmul1">4</a>: Current ONNX doesn't support transpose options for matmul ops<br />
+<a name="dropout1">5</a>: In test mode, all dropout layers aren't included in the exported file<br />
