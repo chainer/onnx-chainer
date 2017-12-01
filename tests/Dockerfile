@@ -10,8 +10,7 @@ RUN apt-get update && apt-get install -y \
     git \
     libgoogle-glog-dev \
     libprotobuf-dev \
-    protobuf-compiler \
-    && rm -rf /var/lib/apt/lists/*
+    protobuf-compiler
 
 RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-4.3.21-Linux-x86_64.sh -o miniconda.sh
 RUN bash miniconda.sh -b -p miniconda
@@ -46,6 +45,7 @@ RUN cd caffe2 && mkdir build && cd build \
     -DUSE_OPENCV=OFF \
     -DBUILD_TEST=OFF \
     -DBUILD_BENCHMARK=OFF \
+    -DPYTHON_EXECUTABLE=/miniconda/bin/python \
     -DPYTHON_INCLUDE_DIR=/miniconda/include \
     -DPYTHON_INCLUDE_DIR2=/miniconda/include/python3.6m \
     -DPYTHON_LIBRARY=/miniconda/lib/libpython3.6m.so \
