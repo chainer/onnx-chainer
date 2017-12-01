@@ -25,6 +25,7 @@ addons:
       - protobuf-compiler
 
 install:
+  - pwd
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
       curl -L https://repo.continuum.io/miniconda/Miniconda2-4.3.21-Linux-x86_64.sh -o $HOME/miniconda.sh;
     else
