@@ -77,7 +77,7 @@ install:
   - export PATH=$HOME/caffe2/install/bin:$PATH
   - export LD_LIBRARY_PATH=$HOME/caffe2/install/lib:$LD_LIBRARY_PATH
   - export CPATH=$HOME/caffe2/install/include:$CPATH
-  - export PYTHONPATH=/usr/local/  
+  - export PYTHONPATH=$HOME/caffe2/install
   - python -c 'from caffe2.python import core' 2>/dev/null && echo "Success" || echo "Failure"
 
 script:
