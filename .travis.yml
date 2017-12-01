@@ -1,6 +1,12 @@
 sudo: false
 dist: trusty
 language: python
+cache:
+  apt: true
+  pip: true
+  directories:
+  - $HOME/miniconda
+  - $HOME/caffe2
 
 python:
   - "2.7"
@@ -57,8 +63,6 @@ install:
   - git clone --recursive https://github.com/caffe2/caffe2.git $HOME/caffe2
   - mkdir -p $HOME/caffe2/build
   - ls $HOME/miniconda/lib
-
-script:
   - cd $HOME/caffe2/build && cmake ..
     -DUSE_CUDA=OFF
     -DUSE_NCCL=OFF
@@ -90,6 +94,8 @@ script:
   - python -c 'from caffe2.python import core' 2>/dev/null && echo "Success" || echo "Failure"
   - pip install $ONNX_CAFFE2_VERSION
   - cd $INITDIR && pip install -e .
+
+script:
   - flake8 .
   - autopep8 -r -d . | tee check_autopep8
   - test ! -s check_autopep8
