@@ -22,18 +22,20 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda info -a
   - conda install protobuf
+  - conda install glog
   - hash -r
   - CFLAGS="-I$HOME/miniconda/include" pip install $ONNX_VERSION
   - pip install "chainer$CHAINER_VERSION"
   - pip install -e .
-
-script:
-  - pwd
+  - git clone --recursive https://github.com/caffe2/caffe2.git && cd caffe2 && make && cd build && make install
+  - python -c 'from caffe2.python import core' 2>/dev/null && echo "Success" || echo "Failure"
   - pip install flake8
   - pip install hacking
   - pip install autopep8
   - pip install mock
   - pip install pytest
+
+script:
   - flake8 .
   - autopep8 -r -d . | tee check_autopep8
   - test ! -s check_autopep8
