@@ -38,12 +38,11 @@ install:
   - export LD_LIBRARY_PATH="$HOME/miniconda/lib:$LD_LIBRARY_PATH"
   - export CPATH="$HOME/miniconda/include:$CPATH"
   - export CPATH="$HOME/miniconda/include/python$PYTHON_VER:$CPATH"
+  - ls $HOME/miniconda/include/python$PYTHON_VER
   - printenv
-  - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda install -c conda-forge protobuf
   - conda install -c conda-forge numpy
-  - hash -r
   - pip install $ONNX_VERSION
   - pip install future
   - pip install hypothesis
@@ -54,6 +53,7 @@ install:
   - pip install pytest
   - pip install six
   - pip install "chainer$CHAINER_VERSION"
+  - hash -r
   - git clone --recursive https://github.com/caffe2/caffe2.git $HOME/caffe2
   - mkdir -p $HOME/caffe2/build
   - ls $HOME/miniconda/lib
