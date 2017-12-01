@@ -211,6 +211,8 @@ def export(model, args, filename=None, export_params=True,
         onnx_graph,
         producer_name='Chainer',
         producer_version=chainer.__version__)
+
+    # TODO(mitmul): Remove this
     model.ir_version = 1
 
     checker.check_model(model)
