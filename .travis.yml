@@ -79,7 +79,7 @@ install:
     -DPROTOBUF_LITE_LIBRARY_DEBUG=$HOME/miniconda/lib/libprotobuf-lite.so
     -DPROTOBUF_PROTOC_LIBRARY=$HOME/miniconda/lib/libprotoc.so
     -DPROTOBUF_PROTOC_LIBRARY_DEBUG=$HOME/miniconda/lib/libprotoc.so
-  - cd $HOME/caffe2/build && make -j"$(nproc)" install && hash -r && make clean
+  - cd $HOME/caffe2/build && CFLAGS="-I$HOME/miniconda/include/python$PYTHON_VER" make -j"$(nproc)" install && hash -r && make clean
   - export PATH=$HOME/caffe2/install/bin:$PATH
   - export LD_LIBRARY_PATH=$HOME/caffe2/install/lib:$LD_LIBRARY_PATH
   - export CPATH=$HOME/caffe2/install/include:$CPATH
