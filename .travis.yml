@@ -1,29 +1,34 @@
-sudo: required
+sudo: false
 dist: trusty
 language: python
+
 python:
   - "2.7"
   - "3.6"
+
 env:
   - CHAINER_VERSION="==3.1.0" ONNX_VERSION="git+git://github.com/onnx/onnx.git@8d0fc40162e0df1d14a0eba9e9696568153e54fd"
   - CHAINER_VERSION="==4.0.0b1" ONNX_VERSION="git+git://github.com/onnx/onnx.git@8d0fc40162e0df1d14a0eba9e9696568153e54fd"
+
 notifications:
   email: false
 
+addons:
+  apt:
+    packages:
+      - build-essential
+      - curl
+      - cmake
+      - git
+      - libgoogle-glog-dev
+      - libprotobuf-dev
+      - protobuf-compiler
+
 install:
-  - sudo apt-get update
-  - sudo apt-get install -y \
-    build-essential \
-    curl \
-    cmake \
-    git \
-    libgoogle-glog-dev \
-    libprotobuf-dev \
-    protobuf-compiler
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda2-4.3.21-Linux-x86_64.sh -O miniconda.sh;
+      curl -L https://repo.continuum.io/miniconda/Miniconda2-4.3.21-Linux-x86_64.sh -o miniconda.sh;
     else
-      wget https://repo.continuum.io/miniconda/Miniconda3-4.3.21-Linux-x86_64.sh -O miniconda.sh;
+      curl -L https://repo.continuum.io/miniconda/Miniconda3-4.3.21-Linux-x86_64.sh -o miniconda.sh;
     fi
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
