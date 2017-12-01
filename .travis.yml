@@ -28,10 +28,10 @@ install:
   - INITDIR=`pwd`
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
       curl -L https://repo.continuum.io/miniconda/Miniconda2-4.3.21-Linux-x86_64.sh -o $HOME/miniconda.sh;
-      PYTHON_VER="2.7"
+      PYTHON_VER="2.7";
     else
       curl -L https://repo.continuum.io/miniconda/Miniconda3-4.3.21-Linux-x86_64.sh -o $HOME/miniconda.sh;
-      PYTHON_VER="3.6m"
+      PYTHON_VER="3.6m";
     fi
   - cd $HOME && bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
