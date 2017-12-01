@@ -26,11 +26,11 @@ addons:
 
 install:
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      curl -L https://repo.continuum.io/miniconda/Miniconda2-4.3.21-Linux-x86_64.sh -o miniconda.sh;
+      curl -L https://repo.continuum.io/miniconda/Miniconda2-4.3.21-Linux-x86_64.sh -o $HOME/miniconda.sh;
     else
-      curl -L https://repo.continuum.io/miniconda/Miniconda3-4.3.21-Linux-x86_64.sh -o miniconda.sh;
+      curl -L https://repo.continuum.io/miniconda/Miniconda3-4.3.21-Linux-x86_64.sh -o $HOME/miniconda.sh;
     fi
-  - bash miniconda.sh -b -p $HOME/miniconda
+  - cd $HOME && bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - export LD_LIBRARY_PATH="$HOME/miniconda/lib:$LD_LIBRARY_PATH"
   - export CPATH="$HOME/miniconda/include:$CPATH"
@@ -51,6 +51,7 @@ install:
   - pip install -e .
   - git clone --recursive https://github.com/caffe2/caffe2.git $HOME/caffe2
   - mkdir -p $HOME/caffe2/build
+  - ls $HOME/miniconda/lib
   - cd $HOME/caffe2/build && cmake .. \
     -DUSE_CUDA=OFF \
     -DUSE_NCCL=OFF \
