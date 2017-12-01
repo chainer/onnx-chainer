@@ -32,7 +32,7 @@ RUN pip install autopep8
 RUN pip install mock
 RUN pip install pytest
 RUN pip install six
-RUN pip install git+git://github.com/onnx/onnx.git@a8bd1facd321ea52f0a6f88600138606711b7a96
+RUN pip install git+git://github.com/onnx/onnx.git@8d0fc40162e0df1d14a0eba9e9696568153e54fd
 
 RUN git clone --recursive https://github.com/caffe2/caffe2.git
 RUN cd caffe2 && mkdir build && cd build \

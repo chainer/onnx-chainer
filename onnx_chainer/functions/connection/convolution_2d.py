@@ -18,18 +18,18 @@ def convert_Convolution2DFunction(
     if hasattr(func, 'dy') and hasattr(func, 'dx'):
         node = helper.make_node(
             layer_name, input_names, out_names,
-            auto_pad='VALID',
             dilations=(func.dy, func.dx),
             kernel_shape=func.W.shape[2:],
-            pads=(func.ph, func.pw),
+            # pads: [x1_begin, x2_begin...x1_end, x2_end,...]
+            pads=(func.ph, func.pw, func.ph, func.pw),
             strides=(func.sy, func.sx),
         )
     else:
         node = helper.make_node(
             layer_name, input_names, out_names,
-            auto_pad='VALID',
+            dilations=(1, 1),
             kernel_shape=func.W.shape[2:],
-            pads=(func.ph, func.pw),
+            pads=(func.ph, func.ph, func.pw, func.pw),
             strides=(func.sy, func.sx),
         )
 

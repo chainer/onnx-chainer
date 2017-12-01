@@ -1,16 +1,25 @@
-sudo: false
+sudo: required
 dist: trusty
 language: python
 python:
   - "2.7"
   - "3.6"
 env:
-  - CHAINER_VERSION="==3.1.0" ONNX_VERSION="git+git://github.com/onnx/onnx.git@a8bd1facd321ea52f0a6f88600138606711b7a96"
-  - CHAINER_VERSION="==4.0.0b1" ONNX_VERSION="git+git://github.com/onnx/onnx.git@a8bd1facd321ea52f0a6f88600138606711b7a96"
+  - CHAINER_VERSION="==3.1.0" ONNX_VERSION="git+git://github.com/onnx/onnx.git@8d0fc40162e0df1d14a0eba9e9696568153e54fd"
+  - CHAINER_VERSION="==4.0.0b1" ONNX_VERSION="git+git://github.com/onnx/onnx.git@8d0fc40162e0df1d14a0eba9e9696568153e54fd"
 notifications:
   email: false
 
 install:
+  - sudo apt-get update
+  - sudo apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    cmake \
+    git \
+    libgoogle-glog-dev \
+    libprotobuf-dev \
+    protobuf-compiler
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
       wget https://repo.continuum.io/miniconda/Miniconda2-4.3.21-Linux-x86_64.sh -O miniconda.sh;
     else
@@ -18,22 +27,53 @@ install:
     fi
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
+  - export LD_LIBRARY_PATH="/miniconda/lib:$LD_LIBRARY_PATH"
+  - export CPATH="/miniconda/include:$CPATH"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
-  - conda info -a
-  - conda install protobuf
-  - conda install glog
+  - conda install -c conda-forge protobuf
   - hash -r
-  - CFLAGS="-I$HOME/miniconda/include" pip install $ONNX_VERSION
-  - pip install "chainer$CHAINER_VERSION"
-  - pip install -e .
-  - git clone --recursive https://github.com/caffe2/caffe2.git && cd caffe2 && make && cd build && make install
-  - python -c 'from caffe2.python import core' 2>/dev/null && echo "Success" || echo "Failure"
+  - pip install $ONNX_VERSION
+  - pip install future
+  - pip install hypothesis
   - pip install flake8
   - pip install hacking
   - pip install autopep8
   - pip install mock
   - pip install pytest
+  - pip install six
+  - pip install "chainer$CHAINER_VERSION"
+  - pip install -e .
+  - git clone --recursive https://github.com/caffe2/caffe2.git \
+    && cd caffe2 && mkdir build && cd build \
+    && cmake .. \
+    -DUSE_CUDA=OFF \
+    -DUSE_NCCL=OFF \
+    -DUSE_NNPACK=OFF \
+    -DUSE_ROCKSDB=OFF \
+    -DUSE_LEVELDB=OFF \
+    -DUSE_LMDB=OFF \
+    -DUSE_OPENCV=OFF \
+    -DBUILD_TEST=OFF \
+    -DBUILD_BENCHMARK=OFF \
+    -DPYTHON_INCLUDE_DIR=/miniconda/include \
+    -DPYTHON_INCLUDE_DIR2=/miniconda/include/python3.6m \
+    -DPYTHON_LIBRARY=/miniconda/lib/libpython3.6m.so \
+    -DPYTHON_LIBRARY_DEBUG=/miniconda/lib/libpython3.6m.so \
+    -DPROTOBUF_INCLUDE_DIR=/miniconda/include \
+    -DPROTOBUF_LIBRARY=/miniconda/lib/libprotobuf.so \
+    -DPROTOBUF_LIBRARY_DEBUG=/miniconda/lib/libprotobuf.so \
+    -DPROTOBUF_LITE_LIBRARY=/miniconda/lib/libprotobuf-lite.so \
+    -DPROTOBUF_LITE_LIBRARY_DEBUG=/miniconda/lib/libprotobuf-lite.so \
+    -DPROTOBUF_PROTOC_LIBRARY=/miniconda/lib/libprotoc.so \
+    -DPROTOBUF_PROTOC_LIBRARY_DEBUG=/miniconda/lib/libprotoc.so \
+    && make -j"$(nproc)" install \
+    && ldconfig \
+    && make clean \
+    && cd .. \
+    && rm -rf build
+  - export PYTHONPATH=/usr/local/  
+  - python -c 'from caffe2.python import core' 2>/dev/null && echo "Success" || echo "Failure"
 
 script:
   - flake8 .

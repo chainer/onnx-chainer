@@ -15,7 +15,7 @@ def convert_LinearFunction(
     else:
         # If nobias=True, create zero vector and add it to parameters
         layer_name = os.path.dirname(param_names[id(func.W)])
-        bias = np.zeros((func.W.shape[1]), dtype=func.W.array.dtype)
+        bias = np.zeros((func.W.shape[1],), dtype=func.W.array.dtype)
         param_names[id(bias)] = os.path.join(layer_name, 'b')
         parameters.append(
             numpy_helper.from_array(
