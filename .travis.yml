@@ -37,6 +37,8 @@ install:
   - export PATH="$HOME/miniconda/bin:$PATH"
   - export LD_LIBRARY_PATH="$HOME/miniconda/lib:$LD_LIBRARY_PATH"
   - export CPATH="$HOME/miniconda/include:$CPATH"
+  - export CPATH="$HOME/miniconda/include/python$PYTHON_VER:$CPATH"
+  - printenv
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda install -c conda-forge protobuf
