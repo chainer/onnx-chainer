@@ -111,4 +111,4 @@ script:
   - flake8 .
   - autopep8 -r -d . | tee check_autopep8
   - test ! -s check_autopep8
-  - py.test -vvvs .
+  - py.test -vvvs tests/functions_tests
