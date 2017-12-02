@@ -98,9 +98,14 @@ install:
   - export CPATH=$HOME/caffe2/install/include:$CPATH
   - export PYTHONPATH=$HOME/caffe2/install
   - ls $HOME/caffe2/install
-  - python -c 'from caffe2.python import core'
   - pip install $ONNX_CAFFE2_VERSION
   - cd $INITDIR && pip install -e .
+  - python -c 'from caffe2.python import core'
+  - python -c 'import onnx'
+  - python -c 'import onnx_chainer'
+  - python -c 'from onnx_caffe2.backend import Caffe2Backend'
+  - python -c 'from onnx_caffe2.backend import run_model'
+  - python -c 'from onnx_caffe2.helper import benchmark_caffe2_model'
 
 script:
   - flake8 .
