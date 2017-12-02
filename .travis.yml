@@ -59,7 +59,9 @@ install:
   - pip install six
   - pip install "chainer$CHAINER_VERSION"
   - hash -r
-  - git clone --recursive https://github.com/caffe2/caffe2.git $HOME/caffe2
+  - if [ ! -d $HOME/caffe2 ]; then
+      git clone --recursive https://github.com/caffe2/caffe2.git $HOME/caffe2;
+    fi
   - mkdir -p $HOME/caffe2/build
   - ls $HOME/miniconda/lib
   - cd $HOME/caffe2/build && cmake ..
