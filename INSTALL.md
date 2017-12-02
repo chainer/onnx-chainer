@@ -1,6 +1,6 @@
 ## Installation
 
-### On Ubuntu 16.04
+### On Ubuntu 14.04/16.04
 
 ```bash
 conda install -c conda-forge protobuf numpy pybind11

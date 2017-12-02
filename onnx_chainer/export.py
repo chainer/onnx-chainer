@@ -74,8 +74,8 @@ def export(model, args, filename=None, export_params=True,
             accessor.
         args (list or dict): The argments which are given to the model
             directly.
-        filename (str): The filename used for saving the resulting ONNX model.
-            If None, nothing is saved to the disk.
+        filename (str or file-like object): The filename used for saving the
+            resulting ONNX model. If None, nothing is saved to the disk.
         export_params (bool): If True, this function exports all the parameters
             included in the given model at the same time. If False, the
             exported ONNX model doesn't include any parameter values.
@@ -212,13 +212,18 @@ def export(model, args, filename=None, export_params=True,
         producer_name='Chainer',
         producer_version=chainer.__version__)
 
+    # TODO(mitmul): Remove this
+    model.ir_version = 1
+
     checker.check_model(model)
 
-    if filename is not None:
+    if filename is not None and isinstance(filename, str):
         with open(filename, 'wb') as fp:
             fp.write(model.SerializeToString())
         if save_text:
             with open(filename + '.txt', 'w') as fp:
                 print(model, file=fp)
+    elif hasattr(filename, 'write'):
+        filename.write(model.SerializeToString())
 
     return model

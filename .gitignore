@@ -1,5 +1,14 @@
 .vscode/
 check_autopep8
+.DS_Store
+.bash_history
+.conda/
+.python_history
+.viminfo
+*.dot
+*.onnx
+*.pb
+*.pbtxt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -13,7 +13,7 @@ setup(
         'onnx_chainer.functions.normalization',
         'onnx_chainer.functions.pooling',
     ],
-    version='0.2.1b3',
+    version='0.2.1b4',
     description='ONNX support for Chainer',
     author='Shunta Saito',
     author_email='shunta@preferred.jp',
@@ -23,6 +23,11 @@ setup(
         'chainer>=3.1.0',
         'onnx==0.2.1'
     ],
-    tests_require=['chainer>=3.1.0', 'onnx==0.2.1', 'numpy'],
+    tests_require=[
+        'chainer>=3.1.0',
+        'onnx==0.2.1',
+        'onnx-caffe2',
+        'numpy',
+    ],
     license='MIT',
 )

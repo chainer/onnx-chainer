@@ -1,40 +1,114 @@
 sudo: false
 dist: trusty
 language: python
+cache:
+  apt: true
+  pip: true
+  directories:
+  - $HOME/caffe2
+
 python:
   - "2.7"
   - "3.6"
+
 env:
-  - CHAINER_VERSION="==3.1.0" ONNX_VERSION="git+git://github.com/onnx/onnx.git@a8bd1facd321ea52f0a6f88600138606711b7a96"
-  - CHAINER_VERSION="==4.0.0b1" ONNX_VERSION="git+git://github.com/onnx/onnx.git@a8bd1facd321ea52f0a6f88600138606711b7a96"
+  - CHAINER_VERSION="==3.1.0" ONNX_VERSION="git+git://github.com/onnx/onnx.git@8d0fc40162e0df1d14a0eba9e9696568153e54fd" ONNX_CAFFE2_VERSION="git+git://github.com/onnx/onnx-caffe2@7aaf817ecf1c4ec34d881633bc494f7f00d2d6b5"
+  - CHAINER_VERSION="==4.0.0b1" ONNX_VERSION="git+git://github.com/onnx/onnx.git@8d0fc40162e0df1d14a0eba9e9696568153e54fd" ONNX_CAFFE2_VERSION="git+git://github.com/onnx/onnx-caffe2@7aaf817ecf1c4ec34d881633bc494f7f00d2d6b5"
+
 notifications:
   email: false
 
-install:
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda2-4.3.21-Linux-x86_64.sh -O miniconda.sh;
-    else
-      wget https://repo.continuum.io/miniconda/Miniconda3-4.3.21-Linux-x86_64.sh -O miniconda.sh;
-    fi
-  - bash miniconda.sh -b -p $HOME/miniconda
-  - export PATH="$HOME/miniconda/bin:$PATH"
-  - hash -r
-  - conda config --set always_yes yes --set changeps1 no
-  - conda info -a
-  - conda install protobuf
-  - hash -r
-  - CFLAGS="-I$HOME/miniconda/include" pip install $ONNX_VERSION
-  - pip install "chainer$CHAINER_VERSION"
-  - pip install -e .
+addons:
+  apt:
+    packages:
+      - build-essential
+      - curl
+      - cmake
+      - git
+      - libgoogle-glog-dev
+      - libprotobuf-dev
+      - protobuf-compiler
 
-script:
-  - pwd
+install:
+  - INITDIR=`pwd`
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+      curl -L https://repo.continuum.io/miniconda/Miniconda2-4.3.21-Linux-x86_64.sh -o $HOME/miniconda.sh;
+      PYTHON_VER="2.7";
+    else
+      curl -L https://repo.continuum.io/miniconda/Miniconda3-4.3.21-Linux-x86_64.sh -o $HOME/miniconda.sh;
+      PYTHON_VER="3.6m";
+    fi
+  - cd $HOME && bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - export LD_LIBRARY_PATH="$HOME/miniconda/lib:$LD_LIBRARY_PATH"
+  - export CPATH="$HOME/miniconda/include:$CPATH"
+  - export CPATH="$HOME/miniconda/include/python$PYTHON_VER:$CPATH"
+  - ls $HOME/miniconda/include/python$PYTHON_VER
+  - printenv
+  - conda config --set always_yes yes --set changeps1 no
+  - conda install -c conda-forge protobuf
+  - conda install -c conda-forge numpy
+  - pip install $ONNX_VERSION
+  - pip install future
+  - pip install hypothesis
   - pip install flake8
   - pip install hacking
   - pip install autopep8
   - pip install mock
   - pip install pytest
+  - pip install six
+  - pip install "chainer$CHAINER_VERSION"
+  - hash -r
+  - if [ ! -d $HOME/caffe2 ]; then
+      git clone --recursive https://github.com/caffe2/caffe2.git $HOME/caffe2;
+    fi
+  - if [ ! -d $HOME/caffe2/build ]; then
+      mkdir -p $HOME/caffe2/build;
+    fi
+  - ls $HOME/miniconda/lib
+  - if [ ! -d $HOME/caffe2/install ]; then
+      cd $HOME/caffe2/build && cmake ..
+      -DUSE_CUDA=OFF
+      -DUSE_NCCL=OFF
+      -DUSE_NNPACK=OFF
+      -DUSE_ROCKSDB=OFF
+      -DUSE_LEVELDB=OFF
+      -DUSE_LMDB=OFF
+      -DUSE_OPENCV=OFF
+      -DBUILD_TEST=OFF
+      -DBUILD_BENCHMARK=OFF
+      -DCMAKE_INSTALL_PREFIX=../install
+      -DPYTHON_EXECUTABLE=$HOME/miniconda/bin/python
+      -DPYTHON_INCLUDE_DIR=$HOME/miniconda/include
+      -DPYTHON_INCLUDE_DIR2=$HOME/miniconda/include/python$PYTHON_VER
+      -DPYTHON_LIBRARY=$HOME/miniconda/lib/libpython$PYTHON_VER.so
+      -DPYTHON_LIBRARY_DEBUG=$HOME/miniconda/lib/libpython$PYTHON_VER.so
+      -DPROTOBUF_INCLUDE_DIR=$HOME/miniconda/include
+      -DPROTOBUF_LIBRARY=$HOME/miniconda/lib/libprotobuf.so
+      -DPROTOBUF_LIBRARY_DEBUG=$HOME/miniconda/lib/libprotobuf.so
+      -DPROTOBUF_LITE_LIBRARY=$HOME/miniconda/lib/libprotobuf-lite.so
+      -DPROTOBUF_LITE_LIBRARY_DEBUG=$HOME/miniconda/lib/libprotobuf-lite.so
+      -DPROTOBUF_PROTOC_LIBRARY=$HOME/miniconda/lib/libprotoc.so
+      -DPROTOBUF_PROTOC_LIBRARY_DEBUG=$HOME/miniconda/lib/libprotoc.so;
+      CFLAGS="-I$HOME/miniconda/include/python$PYTHON_VER" make -j"$(nproc)" install;
+      hash -r && make clean;
+    fi
+  - export PATH=$HOME/caffe2/install/bin:$PATH
+  - export LD_LIBRARY_PATH=$HOME/caffe2/install/lib:$LD_LIBRARY_PATH
+  - export CPATH=$HOME/caffe2/install/include:$CPATH
+  - export PYTHONPATH=$HOME/caffe2/install
+  - ls $HOME/caffe2/install
+  - pip install $ONNX_CAFFE2_VERSION
+  - cd $INITDIR && pip install -e .
+  - python -c 'from caffe2.python import core'
+  - python -c 'import onnx'
+  - python -c 'import onnx_chainer'
+  - python -c 'from onnx_caffe2.backend import Caffe2Backend'
+  - python -c 'from onnx_caffe2.backend import run_model'
+  - python -c 'from onnx_caffe2.helper import benchmark_caffe2_model'
+
+script:
   - flake8 .
   - autopep8 -r -d . | tee check_autopep8
   - test ! -s check_autopep8
-  - py.test .
+  - py.test -vvvs tests/functions_tests
