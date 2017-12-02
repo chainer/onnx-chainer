@@ -90,7 +90,7 @@ install:
   - export LD_LIBRARY_PATH=$HOME/caffe2/install/lib:$LD_LIBRARY_PATH
   - export CPATH=$HOME/caffe2/install/include:$CPATH
   - export PYTHONPATH=$HOME/caffe2/install
-  - python -c 'from caffe2.python import core' 2>/dev/null && echo "Success" || echo "Failure"
+  - python -c 'from caffe2.python import core'
   - pip install $ONNX_CAFFE2_VERSION
   - cd $INITDIR && pip install -e .
 
