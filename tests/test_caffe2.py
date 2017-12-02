@@ -36,11 +36,14 @@ def check_output(model, x):
     with tempfile.NamedTemporaryFile('wb') as fp:
         onnx_chainer.export(model, x, fp)
         onnx_model = onnx.ModelProto.FromString(open(fp.name, 'rb').read())
+        print(onnx_model)
 
         init_net, predict_net = Caffe2Backend.onnx_graph_to_caffe2_net(
             onnx_model.graph, device='CPU')
+        print(type(init_net), type(predict_net))
 
-        benchmark_caffe2_model(init_net, predict_net)
+        b = benchmark_caffe2_model(init_net, predict_net)
+        print(b)
 
         y = model(x)
         if isinstance(y, dict):
