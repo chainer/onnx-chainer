@@ -1,11 +1,11 @@
 sudo: false
 dist: trusty
 language: python
-cache:
-  apt: true
-  pip: true
-  directories:
-  - $HOME/caffe2
+# cache:
+#   apt: true
+#   pip: true
+#   directories:
+#   - $HOME/caffe2
 
 python:
   - "2.7"
