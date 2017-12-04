@@ -6,7 +6,6 @@ RUN apt-get update
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
-    cmake \
     git \
     libgoogle-glog-dev \
     libprotobuf-dev \
@@ -21,6 +20,8 @@ ENV CPATH /miniconda/include:$CPATH
 RUN conda config --set always_yes yes --set changeps1 no
 RUN conda install -c conda-forge protobuf
 RUN conda install -c conda-forge numpy 
+RUN conda install -c conda-forge scipy 
+RUN conda install -c conda-forge cmake
 
 RUN pip install chainer==3.1.0
 RUN pip install future
@@ -66,5 +67,21 @@ ENV PYTHONPATH /usr/local/
 RUN python -c 'from caffe2.python import core' 2>/dev/null && echo "Success" || echo "Failure"
 RUN pip install git+git://github.com/onnx/onnx-caffe2@7aaf817ecf1c4ec34d881633bc494f7f00d2d6b5
 
+# Install MXNet
 RUN pip install mxnet
 RUN cd $HOME && git clone https://github.com/onnx/onnx-mxnet.git && cd onnx-mxnet && python setup.py install
+
+# Install NNVM
+RUN cd $HOME && git clone --recursive https://github.com/dmlc/nnvm \
+    && cd nnvm && mkdir build && cd build \
+    && cmake -DCMAKE_INSTALL_PREFIX=../install .. \
+    && make -j$(nproc) install \
+    && cd ../python && python setup.py install
+
+# Install TVM
+RUN cd $HOME && git clone --recursive https://github.com/dmlc/tvm \
+    && cd tvm && mkdir build && cd build \
+    && cmake -DCMAKE_INSTALL_PREFIX=../install .. \
+    && make -j$(nproc) install \
+    && cd ../python && python setup.py install \
+    && cd $HOME/tvm/topi && python setup.py install
