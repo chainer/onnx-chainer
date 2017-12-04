@@ -1,3 +1,4 @@
+from collections import namedtuple
 import tempfile
 import unittest
 
@@ -5,12 +6,11 @@ import chainer
 import chainer.functions as F
 import chainer.links as L
 import numpy as np
-from onnx_caffe2.backend import Caffe2Backend
-from onnx_caffe2.backend import run_model
-from onnx_caffe2.helper import benchmark_caffe2_model
 
+import mxnet as mx
 import onnx
 import onnx_chainer
+import onnx_mxnet
 
 
 class SmallCNN(chainer.Chain):
@@ -35,21 +35,29 @@ class SmallCNN(chainer.Chain):
 def check_output(model, x):
     with tempfile.NamedTemporaryFile('wb') as fp:
         onnx_chainer.export(model, x, fp)
-        onnx_model = onnx.ModelProto.FromString(open(fp.name, 'rb').read())
 
-        init_net, predict_net = Caffe2Backend.onnx_graph_to_caffe2_net(
-            onnx_model.graph, device='CPU')
+        sym, params = onnx_mxnet.import_model(fp.name)
 
-        b = benchmark_caffe2_model(init_net, predict_net)
+        mod = mx.mod.Module(
+            symbol=sym, data_names=['input_0'], context=mx.cpu(),
+            label_names=None)
+        mod.bind(
+            for_training=False, data_shapes=[('input_0', x.shape)],
+            label_shapes=None)
+        mod.set_params(arg_params=params, aux_params=None, allow_missing=True)
+
+        Batch = namedtuple('Batch', ['data'])
+        mod.forward(Batch([mx.nd.array(x)]))
+
+        mxnet_out = mod.get_outputs()[0].asnumpy()
 
         y = model(x)
         if isinstance(y, dict):
             y = y['prob']
         chainer_out = y.array
-        caffe2_out = run_model(onnx_model, [x])[0]
 
         np.testing.assert_almost_equal(
-            chainer_out, caffe2_out, decimal=5)
+            chainer_out, mxnet_out, decimal=5)
 
 
 class TestSmallCNN(unittest.TestCase):

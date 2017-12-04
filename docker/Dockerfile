@@ -64,4 +64,7 @@ RUN cd caffe2 && mkdir build && cd build \
     && rm -rf build
 ENV PYTHONPATH /usr/local/
 RUN python -c 'from caffe2.python import core' 2>/dev/null && echo "Success" || echo "Failure"
+RUN pip install git+git://github.com/onnx/onnx-caffe2@7aaf817ecf1c4ec34d881633bc494f7f00d2d6b5
 
+RUN pip install mxnet
+RUN cd $HOME && git clone https://github.com/onnx/onnx-mxnet.git && cd onnx-mxnet && python setup.py install
