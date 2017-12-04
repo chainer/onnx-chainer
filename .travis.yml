@@ -99,16 +99,12 @@ install:
   - export PYTHONPATH=$HOME/caffe2/install
   - ls $HOME/caffe2/install
   - pip install $ONNX_CAFFE2_VERSION
+  - pip install mxnet
+  - cd $HOME && git clone https://github.com/onnx/onnx-mxnet.git && cd $HOME/onnx-mxnet && python setup.py install
   - cd $INITDIR && pip install -e .
-  - python -c 'from caffe2.python import core'
-  - python -c 'import onnx'
-  - python -c 'import onnx_chainer'
-  - python -c 'from onnx_caffe2.backend import Caffe2Backend'
-  - python -c 'from onnx_caffe2.backend import run_model'
-  - python -c 'from onnx_caffe2.helper import benchmark_caffe2_model'
 
 script:
   - flake8 .
   - autopep8 -r -d . | tee check_autopep8
   - test ! -s check_autopep8
-  - py.test -vvvs tests/functions_tests
+  - py.test -vvvs -m "not slow" tests

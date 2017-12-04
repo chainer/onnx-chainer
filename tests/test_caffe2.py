@@ -12,6 +12,8 @@ from onnx_caffe2.helper import benchmark_caffe2_model
 import onnx
 import onnx_chainer
 
+import pytest
+
 
 class SmallCNN(chainer.Chain):
 
@@ -40,7 +42,7 @@ def check_output(model, x):
         init_net, predict_net = Caffe2Backend.onnx_graph_to_caffe2_net(
             onnx_model.graph, device='CPU')
 
-        b = benchmark_caffe2_model(init_net, predict_net)
+        benchmark_caffe2_model(init_net, predict_net)
 
         y = model(x)
         if isinstance(y, dict):
@@ -71,6 +73,7 @@ class TestVGG16(unittest.TestCase):
         self.model = L.VGG16Layers(None)
         self.x = np.random.randn(1, 3, 224, 224).astype(np.float32)
 
+    @pytest.mark.slow
     def test_export_test(self):
         chainer.config.train = False
         check_output(self.model, self.x)
@@ -83,6 +86,7 @@ class TestResNet50(unittest.TestCase):
         self.model = L.ResNet50Layers(None)
         self.x = np.random.randn(1, 3, 224, 224).astype(np.float32)
 
+    @pytest.mark.slow
     def test_export_test(self):
         chainer.config.train = False
         check_output(self.model, self.x)

@@ -2,19 +2,15 @@
 # -*- coding: utf-8 -*-
 
 import time
-import tempfile
 
 import chainer
 import chainer.links as L
-from caffe2.python import workspace
+import numpy as np
 from onnx_caffe2.backend import Caffe2Backend
-from onnx_caffe2.backend import prepare
 from onnx_caffe2.backend import run_model
-from onnx_caffe2.helper import benchmark_caffe2_model
 from onnx_caffe2.helper import save_caffe2_net
 
 import onnx_chainer
-import numpy as np
 
 chainer.config.train = False
 

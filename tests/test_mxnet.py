@@ -8,9 +8,10 @@ import chainer.links as L
 import numpy as np
 
 import mxnet as mx
-import onnx
 import onnx_chainer
 import onnx_mxnet
+
+import pytest
 
 
 class SmallCNN(chainer.Chain):
@@ -79,6 +80,7 @@ class TestVGG16(unittest.TestCase):
         self.model = L.VGG16Layers(None)
         self.x = np.random.randn(1, 3, 224, 224).astype(np.float32)
 
+    @pytest.mark.slow
     def test_export_test(self):
         chainer.config.train = False
         check_output(self.model, self.x)
@@ -91,6 +93,7 @@ class TestResNet50(unittest.TestCase):
         self.model = L.ResNet50Layers(None)
         self.x = np.random.randn(1, 3, 224, 224).astype(np.float32)
 
+    @pytest.mark.slow
     def test_export_test(self):
         chainer.config.train = False
         check_output(self.model, self.x)

@@ -2,13 +2,15 @@
 # -*- coding: utf-8 -*-
 
 import chainer
-import chainer.links as L
 import chainer.functions as F
-import nnvm
-import onnx_chainer
+import chainer.links as L
 import numpy as np
 
+import nnvm
+import onnx_chainer
+
 # model = L.VGG16Layers()
+
 
 class MLP(chainer.Chain):
 
@@ -16,9 +18,10 @@ class MLP(chainer.Chain):
         super().__init__()
         with self.init_scope():
             self.l1 = L.Linear(None, 10)
-    
+
     def __call__(self, x):
         return F.relu(self.l1(x))
+
 
 model = MLP()
 x = np.random.rand(1, 10).astype(np.float32)
