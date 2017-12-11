@@ -18,6 +18,7 @@ See [INSTALL.md](INSTALL.md)
 
 ```python
 import numpy as np
+import chainer
 import chainer.links as L
 import onnx_chainer
 
@@ -25,6 +26,9 @@ model = L.VGG16Layers()
 
 # Pseudo input
 x = np.zeros((1, 3, 224, 224), dtype=np.float32)
+
+# Don't forget to set train flag off!
+chainer.config.train = False
 
 onnx_chainer.export(model, x, filename='VGG16.onnx')
 ```

@@ -1,19 +1,19 @@
 sudo: false
 dist: trusty
 language: python
-cache:
-  apt: true
-  pip: true
-  directories:
-  - $HOME/caffe2
+# cache:
+#   apt: true
+#   pip: true
+#   directories:
+#   - $HOME/caffe2
 
 python:
   - "2.7"
   - "3.6"
 
 env:
-  - CHAINER_VERSION="==3.1.0" ONNX_VERSION="git+git://github.com/onnx/onnx.git@8d0fc40162e0df1d14a0eba9e9696568153e54fd" ONNX_CAFFE2_VERSION="git+git://github.com/onnx/onnx-caffe2@7aaf817ecf1c4ec34d881633bc494f7f00d2d6b5"
-  - CHAINER_VERSION="==4.0.0b1" ONNX_VERSION="git+git://github.com/onnx/onnx.git@8d0fc40162e0df1d14a0eba9e9696568153e54fd" ONNX_CAFFE2_VERSION="git+git://github.com/onnx/onnx-caffe2@7aaf817ecf1c4ec34d881633bc494f7f00d2d6b5"
+  - CHAINER_VERSION="==3.1.0" ONNX_VERSION="==1.0.0" ONNX_CAFFE2_VERSION="==1.0.0"
+  - CHAINER_VERSION="==4.0.0b1" ONNX_VERSION="==1.0.0" ONNX_CAFFE2_VERSION="==1.0.0"
 
 notifications:
   email: false
@@ -23,14 +23,9 @@ addons:
     packages:
       - build-essential
       - curl
-      - cmake
       - git
-      - libgoogle-glog-dev
-      - libprotobuf-dev
-      - protobuf-compiler
 
 install:
-  - INITDIR=`pwd`
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
       curl -L https://repo.continuum.io/miniconda/Miniconda2-4.3.21-Linux-x86_64.sh -o $HOME/miniconda.sh;
       PYTHON_VER="2.7";
@@ -41,6 +36,7 @@ install:
   - cd $HOME && bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - export LD_LIBRARY_PATH="$HOME/miniconda/lib:$LD_LIBRARY_PATH"
+  - export LIBRARY_PATH="$HOME/miniconda/lib:$LIBRARY_PATH"
   - export CPATH="$HOME/miniconda/include:$CPATH"
   - export CPATH="$HOME/miniconda/include/python$PYTHON_VER:$CPATH"
   - ls $HOME/miniconda/include/python$PYTHON_VER
@@ -48,7 +44,8 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda install -c conda-forge protobuf
   - conda install -c conda-forge numpy
-  - pip install $ONNX_VERSION
+  - conda install -c conda-forge cmake
+  - pip install "onnx$ONNX_VERSION"
   - pip install future
   - pip install hypothesis
   - pip install flake8
@@ -95,20 +92,17 @@ install:
     fi
   - export PATH=$HOME/caffe2/install/bin:$PATH
   - export LD_LIBRARY_PATH=$HOME/caffe2/install/lib:$LD_LIBRARY_PATH
+  - export LIBRARY_PATH=$HOME/caffe2/install/lib:$LIBRARY_PATH
   - export CPATH=$HOME/caffe2/install/include:$CPATH
   - export PYTHONPATH=$HOME/caffe2/install
   - ls $HOME/caffe2/install
-  - pip install $ONNX_CAFFE2_VERSION
-  - cd $INITDIR && pip install -e .
-  - python -c 'from caffe2.python import core'
-  - python -c 'import onnx'
-  - python -c 'import onnx_chainer'
-  - python -c 'from onnx_caffe2.backend import Caffe2Backend'
-  - python -c 'from onnx_caffe2.backend import run_model'
-  - python -c 'from onnx_caffe2.helper import benchmark_caffe2_model'
+  - pip install "onnx-caffe2$ONNX_CAFFE2_VERSION"
+  - pip install mxnet
+  - cd $HOME && git clone https://github.com/onnx/onnx-mxnet.git && cd $HOME/onnx-mxnet && python setup.py install
+  - cd $TRAVIS_BUILD_DIR && pip install -e .
 
 script:
   - flake8 .
   - autopep8 -r -d . | tee check_autopep8
   - test ! -s check_autopep8
-  - py.test -vvvs tests/functions_tests
+  - py.test -vvvs -m "not slow" tests
