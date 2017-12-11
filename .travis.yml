@@ -12,8 +12,8 @@ python:
   - "3.6"
 
 env:
-  - CHAINER_VERSION="==3.1.0" ONNX_VERSION="git+git://github.com/onnx/onnx.git@8d0fc40162e0df1d14a0eba9e9696568153e54fd" ONNX_CAFFE2_VERSION="git+git://github.com/onnx/onnx-caffe2@7aaf817ecf1c4ec34d881633bc494f7f00d2d6b5"
-  - CHAINER_VERSION="==4.0.0b1" ONNX_VERSION="git+git://github.com/onnx/onnx.git@8d0fc40162e0df1d14a0eba9e9696568153e54fd" ONNX_CAFFE2_VERSION="git+git://github.com/onnx/onnx-caffe2@7aaf817ecf1c4ec34d881633bc494f7f00d2d6b5"
+  - CHAINER_VERSION="==3.1.0" ONNX_VERSION="==1.0.0" ONNX_CAFFE2_VERSION="==1.0.0"
+  - CHAINER_VERSION="==4.0.0b1" ONNX_VERSION="==1.0.0" ONNX_CAFFE2_VERSION="==1.0.0"
 
 notifications:
   email: false
@@ -46,7 +46,7 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda install -c conda-forge protobuf
   - conda install -c conda-forge numpy
-  - pip install $ONNX_VERSION
+  - pip install "onnx$ONNX_VERSION"
   - pip install future
   - pip install hypothesis
   - pip install flake8
@@ -93,10 +93,11 @@ install:
     fi
   - export PATH=$HOME/caffe2/install/bin:$PATH
   - export LD_LIBRARY_PATH=$HOME/caffe2/install/lib:$LD_LIBRARY_PATH
+  - export LIBRARY_PATH=$HOME/caffe2/install/lib:$LIBRARY_PATH
   - export CPATH=$HOME/caffe2/install/include:$CPATH
   - export PYTHONPATH=$HOME/caffe2/install
   - ls $HOME/caffe2/install
-  - pip install $ONNX_CAFFE2_VERSION
+  - pip install "onnx-caffe2$ONNX_CAFFE2_VERSION"
   - pip install mxnet
   - cd $HOME && git clone https://github.com/onnx/onnx-mxnet.git && cd $HOME/onnx-mxnet && python setup.py install
   - cd $INITDIR && pip install -e .
