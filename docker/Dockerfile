@@ -12,6 +12,7 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-4.3.21-Linux-x86_64.s
 RUN bash miniconda.sh -b -p miniconda
 ENV PATH /miniconda/bin:$PATH
 ENV LD_LIBRARY_PATH /miniconda/lib:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH /usr/local/lib:$LD_LIBRARY_PATH
 ENV LIBRARY_PATH /miniconda/lib:$LIBRARY_PATH
 ENV CPATH /miniconda/include:$CPATH
 
@@ -36,9 +37,6 @@ RUN pip install six
 RUN pip install onnx==1.0.0
 
 RUN git clone --recursive https://github.com/caffe2/caffe2.git $HOME/caffe2
-RUN ls /miniconda/bin/
-RUN ls /miniconda/lib/
-RUN ls /miniconda/include/
 RUN cd $HOME/caffe2 && mkdir build && cd build \
     && cmake .. \
     -DUSE_CUDA=OFF \
@@ -69,7 +67,7 @@ RUN cd $HOME/caffe2/build && \
     make -j"$(nproc)" install
 ENV PYTHONPATH /usr/local/
 RUN python -c 'from caffe2.python import core' 2>/dev/null && echo "Success" || echo "Failure"
-RUN pip install onnx-caffe2=1.0.0
+RUN pip install onnx-caffe2==1.0.0
 
 # Install MXNet
 RUN pip install mxnet

@@ -28,4 +28,4 @@ x = np.random.rand(1, 10).astype(np.float32)
 
 chainer.config.train = False
 model_onnx = onnx_chainer.export(model, x)
-sym, params = nnvm.frontend.from_onnx(model_onnx)
+sym, params = nnvm.frontend.from_onnx(model_onnx.graph)
