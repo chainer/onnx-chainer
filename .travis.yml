@@ -23,7 +23,6 @@ addons:
     packages:
       - build-essential
       - curl
-      - cmake
       - git
 
 install:
@@ -46,6 +45,7 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda install -c conda-forge protobuf
   - conda install -c conda-forge numpy
+  - conda install -c conda-forge cmake
   - pip install "onnx$ONNX_VERSION"
   - pip install future
   - pip install hypothesis

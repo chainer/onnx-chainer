@@ -33,7 +33,7 @@ RUN pip install autopep8
 RUN pip install mock
 RUN pip install pytest
 RUN pip install six
-RUN pip install git+git://github.com/onnx/onnx.git@8d0fc40162e0df1d14a0eba9e9696568153e54fd
+RUN pip install onnx==1.0.0
 
 RUN git clone --recursive https://github.com/caffe2/caffe2.git $HOME/caffe2
 RUN ls /miniconda/bin/
@@ -69,7 +69,7 @@ RUN cd $HOME/caffe2/build && \
     make -j"$(nproc)" install
 ENV PYTHONPATH /usr/local/
 RUN python -c 'from caffe2.python import core' 2>/dev/null && echo "Success" || echo "Failure"
-RUN pip install git+git://github.com/onnx/onnx-caffe2@7aaf817ecf1c4ec34d881633bc494f7f00d2d6b5
+RUN pip install onnx-caffe2=1.0.0
 
 # Install MXNet
 RUN pip install mxnet
