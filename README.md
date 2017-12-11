@@ -1,6 +1,6 @@
 # ONNX-Chainer
 ![pypi](https://img.shields.io/pypi/v/onnx-chainer.svg)
-![Build Status](https://travis-ci.org/mitmul/onnx-chainer.svg?branch=master)
+![Build Status](https://travis-ci.org/chainer/onnx-chainer.svg?branch=master)
 ![MIT License](https://img.shields.io/github/license/mitmul/onnx-chainer.svg)
 
 This is an add-on package for ONNX support by Chainer.
