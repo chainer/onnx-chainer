@@ -8,7 +8,7 @@ This is an add-on package for ONNX support by Chainer.
 ## Requirements
 
 - onnx==0.2.1
-- chainer>=3.1.0
+- chainer>=3.2.0
 
 ## Installation
 
