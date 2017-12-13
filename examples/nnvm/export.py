@@ -21,6 +21,7 @@ class MLP(chainer.Chain):
     def __call__(self, x):
         return F.relu(self.l1(x))
 
+# Currently it doesn't work
 
 model = MLP()
 x = np.random.rand(1, 3, 28, 28).astype(np.float32)
