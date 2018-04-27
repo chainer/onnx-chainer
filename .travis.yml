@@ -18,13 +18,6 @@ notifications:
 before_install:
 - docker pull mitmul/onnx-chainer:v$CHAINER_VERSION-py$TRAVIS_PYTHON_VERSION
 
-addons:
-  apt:
-    packages:
-      - build-essential
-      - curl
-      - git
-
 script:
   - docker run -v $TRAVIS_BUILD_DIR:/root/onnx-chainer --rm -ti mitmul/onnx-chainer:v$CHAINER_VERSION-py$TRAVIS_PYTHON_VERSION \
     cd /root/onnx-chainer && flake8 . && \
