@@ -13,13 +13,20 @@ WORKDIR /root
 RUN curl -L https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -o miniconda.sh && \
     bash miniconda.sh -b -p miniconda && rm -rf miniconda.sh
 ENV PATH /root/miniconda/bin:$PATH
-ENV LD_LIBRARY_PATH /root/miniconda/lib:$LD_LIBRARY_PATH
 ENV LD_LIBRARY_PATH /usr/local/lib:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH /root/miniconda/lib:$LD_LIBRARY_PATH
 ENV LIBRARY_PATH /root/miniconda/lib:$LIBRARY_PATH
 ENV CPATH /root/miniconda/include:$CPATH
 
 RUN conda config --set always_yes yes --set changeps1 no
 RUN conda update -n base conda
+
+# Install ONNX
+RUN conda install -c conda-forge protobuf numpy
+RUN ONNX_ML=1 pip install onnx==1.1.1 && \
+    python -c 'import onnx; print(onnx.__version__)'
+
+# Install cmake
 RUN conda install cmake
 
 # Install caffe2
@@ -28,9 +35,8 @@ RUN conda install -c caffe2 caffe2-gcc4.8
 # Dependencies for test
 RUN pip install future hypothesis flake8 hacking autopep8 mock pytest six
 
-# Chainer and ONNX
+# Install Chainer
 RUN pip install chainer==4.0.0
-RUN conda install -c conda-forge onnx==1.1.1
 
 # Install MXNet
 RUN pip install mxnet==1.1.0.post0 onnx-mxnet==0.4.2

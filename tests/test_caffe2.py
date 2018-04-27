@@ -5,7 +5,7 @@ import chainer
 import chainer.functions as F
 import chainer.links as L
 import numpy as np
-from onnx_caffe2.backend import Caffe2Backend
+from caffe2.onnx.backend import Caffe2Backend
 from onnx_caffe2.backend import run_model
 from onnx_caffe2.helper import benchmark_caffe2_model
 

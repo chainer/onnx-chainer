@@ -21,7 +21,8 @@ before_install:
 
 script:
   - docker run -v $TRAVIS_BUILD_DIR:/root/onnx-chainer --rm -ti mitmul/onnx-chainer:v$CHAINER_VERSION-py$TRAVIS_PYTHON_VERSION \
-    cd /root/onnx-chainer && flake8 . && \
+    cd /root/onnx-chainer && \
+    flake8 . && \
     autopep8 -r -d . | tee check_autopep8 && \
     test ! -s check_autopep8 && \
     py.test -vvvs tests && \
