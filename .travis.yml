@@ -1,3 +1,4 @@
+dist: trusty
 sudo: required
 
 language: python
@@ -5,11 +6,11 @@ language: python
 services:
   - docker
 
-  python:
+python:
   - "2.7"
   - "3.6"
 
-  env:
+env:
   - CHAINER_VERSION="==4.0.0"
 
 notifications:
