@@ -1,11 +1,11 @@
 import unittest
 
-import chainer
-import chainer.functions as F
-import chainer.links as L
 import numpy as np
 
+import chainer
 from chainer import testing
+import chainer.functions as F
+import chainer.links as L
 import onnx_chainer
 
 
@@ -29,14 +29,14 @@ class TestActivations(unittest.TestCase):
             def __init__(self, ops):
                 super(Model, self).__init__()
                 with self.init_scope():
-                    self.l1 = L.Linear(5, 5)
+                    self.link = L.Linear(5, 5)
                 self.ops = ops
 
             def __call__(self, x):
-                return self.ops(self.l1(x))
+                return self.ops(self.link(x))
 
         self.model = Model(self.ops)
-        self.x = np.zeros((1, 5), dtype=np.float32)
+        self.x = np.random.randn(1, 5).astype(np.float32)
 
     def test_export_test(self):
         chainer.config.train = False

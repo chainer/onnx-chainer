@@ -50,6 +50,6 @@ class TestMathOperators(unittest.TestCase):
         chainer.config.train = False
         onnx_chainer.export(self.model, self.x)
 
-    def test_export_train(self):
-        chainer.config.train = True
-        onnx_chainer.export(self.model, self.x)
+    # def test_export_train(self):
+    #     chainer.config.train = True
+    #     onnx_chainer.export(self.model, self.x)

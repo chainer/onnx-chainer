@@ -11,7 +11,7 @@ from onnx_caffe2.helper import save_caffe2_net
 import onnx_chainer
 
 # Instantiate a Chainer model (Chain object)
-model = L.VGG16Layers()
+model = L.VGG16Layers(None)
 
 # Prepare a dummy input
 x = np.random.randn(1, 3, 224, 224).astype(np.float32)

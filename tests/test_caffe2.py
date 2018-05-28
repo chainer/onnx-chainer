@@ -1,17 +1,14 @@
 import tempfile
 import unittest
 
+import numpy as np
+import onnx
+
+from caffe2.python.onnx.backend import run_model
 import chainer
 import chainer.functions as F
 import chainer.links as L
-import numpy as np
-from caffe2.onnx.backend import Caffe2Backend
-from onnx_caffe2.backend import run_model
-from onnx_caffe2.helper import benchmark_caffe2_model
-
-import onnx
 import onnx_chainer
-
 import pytest
 
 
@@ -35,23 +32,16 @@ class SmallCNN(chainer.Chain):
 
 
 def check_output(model, x):
-    with tempfile.NamedTemporaryFile('wb') as fp:
-        onnx_chainer.export(model, x, fp)
-        onnx_model = onnx.ModelProto.FromString(open(fp.name, 'rb').read())
+    onnx_model = onnx_chainer.export(model, x)
 
-        init_net, predict_net = Caffe2Backend.onnx_graph_to_caffe2_net(
-            onnx_model.graph, device='CPU')
+    y = model(x)
+    if isinstance(y, dict):
+        y = y['prob']
+    chainer_out = y.array
+    caffe2_out = run_model(onnx_model, [x])[0]
 
-        benchmark_caffe2_model(init_net, predict_net)
-
-        y = model(x)
-        if isinstance(y, dict):
-            y = y['prob']
-        chainer_out = y.array
-        caffe2_out = run_model(onnx_model, [x])[0]
-
-        np.testing.assert_almost_equal(
-            chainer_out, caffe2_out, decimal=5)
+    np.testing.assert_almost_equal(
+        chainer_out, caffe2_out, decimal=5)
 
 
 class TestSmallCNN(unittest.TestCase):

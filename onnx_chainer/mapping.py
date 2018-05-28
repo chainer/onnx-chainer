@@ -50,8 +50,8 @@ operators = {
     'ConvolutionND': 'Conv',
     'Deconvolution2DFunction': 'ConvTranspose',
     'DeconvolutionND': 'ConvTranspose',
-    'EmbedIDFunction': 'Embedding',
-    'LinearFunction': 'FC',
+    'EmbedIDFunction': 'Gather',
+    'LinearFunction': ['Gemm', 'MatMul'],
 
     # Math
     'Add': 'Add',
@@ -64,7 +64,7 @@ operators = {
     'Clip': 'Clip',
     'Exp': 'Exp',
     'Identity': 'Identity',
-    'MatMul': 'Matmul',
+    'MatMul': 'MatMul',
     'Maximum': 'Max',
     'Minimum': 'Min',
     'Sqrt': 'Sqrt',

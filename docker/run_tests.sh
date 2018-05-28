@@ -1,5 +1,5 @@
 #!/bin/bash
 
-docker run --rm -v $PWD/../:/root/onnx-chainer \
-mitmul/onnx-chainer:latest \
-bash -c "cd /root/onnx-chainer && pip install -e . && LD_LIBRARY_PATH=/usr/local/lib py.test -vvvs tests"
+docker run --rm -v $PWD:/root/onnx-chainer \
+-ti mitmul/onnx-chainer:python2.7 \
+bash -c "cd /root/onnx-chainer && python setup.py develop && py.test -vvvs -m 'not slow' tests" && bash
