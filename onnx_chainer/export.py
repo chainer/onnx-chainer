@@ -52,8 +52,6 @@ def create_node(
     else:
         raise ValueError('{} is not supported.'.format(func_name))
     for node in nodes:
-        print(node)
-    for node in nodes:
         checker.check_node(node)
     return nodes
 
@@ -63,7 +61,7 @@ class ONNXExport(chainer.function_hook.FunctionHook):
     def __init__(self):
         self.graph = []
         self.additional_parameters = []
-        self.network_inputs = []
+        self.network_inputs = {}
 
     def backward_postprocess(self, function, in_data, out_grad):
         func_name = function.__class__.__name__
@@ -73,12 +71,14 @@ class ONNXExport(chainer.function_hook.FunctionHook):
             var = i.get_variable_or_none()
             if var is None:
                 input_names.append(str(id(i)))  # Use VariableNode
+                if str(id(i)) not in self.network_inputs:
+                    self.network_inputs[str(id(i))] = i
             else:
                 if isinstance(var, chainer.Parameter):
                     input_names.append(str(id(var)))
                 else:
                     input_names.append(str(id(var)))
-                    self.network_inputs.append(var)
+                    self.network_inputs[str(id(var))] = var
         output_names = [str(id(o())) for o in function.outputs]
         nodes = create_node(
             func_name, function, input_names, output_names,
@@ -171,7 +171,7 @@ def export(model, args, filename=None, export_params=True,
                 param_shape))
 
     # Collect the network inputs
-    for i in o.network_inputs:
+    for i in o.network_inputs.values():
         input_tensors.append(helper.make_tensor_value_info(
             str(id(i)), mapping.dtypes[i.dtype], i.shape))
 

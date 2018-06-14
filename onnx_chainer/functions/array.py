@@ -1,5 +1,6 @@
 import numpy as np
 
+import chainer
 from onnx import helper
 from onnx_chainer import mapping
 from onnx_chainer.mapping import TENSOR_TYPE_TO_NAME
@@ -67,7 +68,7 @@ def convert_Pad(func, input_names, output_names, parameters):
         node = helper.make_node(
             onnx_op_name, input_names, output_names,
             mode=func.mode,
-            pads=func.pad_bw.tolist(),
+            pads=func.pad_bw.ravel().tolist(),
         )
 
     return node,
