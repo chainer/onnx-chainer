@@ -30,10 +30,8 @@ def convert_BatchNormalization(func, input_names, output_names, parameters):
     return helper.make_node(
         onnx_op_name, input_names, output_names,
         epsilon=func.eps,
-        is_test=not chainer.config.train,
         momentum=func.decay,
         spatial=True,
-        consumed_inputs=[False, False, False, True, True],
     ),
 
 
@@ -54,20 +52,17 @@ def convert_FixedBatchNormalization(func, input_names, output_names, parameters)
     return helper.make_node(
         onnx_op_name, input_names, output_names,
         epsilon=func.eps,
-        is_test=not chainer.config.train,
         spatial=True,
-        consumed_inputs=[False, False, False, True, True],
     ),
 
 
 def convert_LocalResponseNormalization(
         func, input_names, output_names, parameters):
     onnx_op_name = mapping.operators[func.__class__.__name__]
-
     return helper.make_node(
         onnx_op_name, input_names, output_names,
-        alpha=func.alpha,
-        beta=func.beta,
-        bias=func.n,
-        size=func.k,
+        alpha=float(func.alpha),
+        beta=float(func.beta),
+        bias=float(func.n),
+        size=int(func.k),
     ),

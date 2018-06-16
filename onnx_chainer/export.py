@@ -3,14 +3,14 @@ from __future__ import print_function
 import collections
 import heapq
 
-import numpy
-import onnx
-
 import chainer
 from chainer import function_node
 from chainer import variable
+import numpy
+import onnx
+from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
+
 from onnx_chainer import functions
-from onnx_chainer import mapping
 
 try:
     from onnx import checker
@@ -64,6 +64,8 @@ class ONNXExport(chainer.function_hook.FunctionHook):
         self.network_inputs = {}
 
     def backward_postprocess(self, function, in_data, out_grad):
+        if isinstance(function, chainer.function.FunctionAdapter):
+            function = function.function
         func_name = function.__class__.__name__
         input_names = []
         for i in function.inputs:
@@ -149,7 +151,7 @@ def export(model, args, filename=None, export_params=True,
         initializers.append(convert_parameter(param))
         param_shape = (1,) if param.shape == () else param.shape
         input_tensors.append(helper.make_tensor_value_info(
-            str(id(param)), mapping.dtypes[param.array.dtype], param_shape))
+            str(id(param)), NP_TYPE_TO_TENSOR_TYPE[param.array.dtype], param_shape))
 
     with ONNXExport() as o:
         if isinstance(outputs, (list, tuple)):
@@ -167,13 +169,13 @@ def export(model, args, filename=None, export_params=True,
             initializers.append(convert_parameter(param))
             param_shape = (1,) if param.shape == () else param.shape
             input_tensors.append(helper.make_tensor_value_info(
-                str(id(param)), mapping.dtypes[param.array.dtype],
+                str(id(param)), NP_TYPE_TO_TENSOR_TYPE[param.array.dtype],
                 param_shape))
 
     # Collect the network inputs
     for i in o.network_inputs.values():
         input_tensors.append(helper.make_tensor_value_info(
-            str(id(i)), mapping.dtypes[i.dtype], i.shape))
+            str(id(i)), NP_TYPE_TO_TENSOR_TYPE[i.dtype], i.shape))
 
     # The graph must be topologically sorted
     graph = reversed(o.graph)
@@ -186,7 +188,7 @@ def export(model, args, filename=None, export_params=True,
         outputs = (outputs,)
     for output in outputs:
         output_tensors.append(helper.make_tensor_value_info(
-            str(id(output)), mapping.dtypes[output.dtype], output.shape))
+            str(id(output)), NP_TYPE_TO_TENSOR_TYPE[output.dtype], output.shape))
 
     if not export_params:
         initializers = []
@@ -195,6 +197,7 @@ def export(model, args, filename=None, export_params=True,
         graph, graph_name, input_tensors, output_tensors,
         initializer=initializers)
 
+    print(onnx_graph)
     checker.check_graph(onnx_graph)
 
     model = helper.make_model(

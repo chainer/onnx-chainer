@@ -27,7 +27,6 @@ class TestNormalizations(unittest.TestCase):
                 self.input_argname = input_argname
 
             def __call__(self, x):
-                x = F.identity(x)
                 self.args[self.input_argname] = x
                 return self.ops(**self.args)
 
@@ -55,7 +54,6 @@ class TestBatchNormalization(unittest.TestCase):
                     self.bn = L.BatchNormalization(5)
 
             def __call__(self, x):
-                x = F.identity(x)
                 return self.bn(x)
 
         self.model = Model()
@@ -65,6 +63,6 @@ class TestBatchNormalization(unittest.TestCase):
         chainer.config.train = False
         onnx_chainer.export(self.model, self.x)
 
-    # def test_export_train(self):
-    #     chainer.config.train = True
-    #     onnx_chainer.export(self.model, self.x)
+    def test_export_train(self):
+        chainer.config.train = True
+        onnx_chainer.export(self.model, self.x)

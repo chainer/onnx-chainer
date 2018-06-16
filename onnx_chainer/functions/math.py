@@ -1,7 +1,9 @@
-import numpy as np
 import chainer
+from chainer.functions.math import basic_math
+import numpy as np
 from onnx import helper
 from onnx import numpy_helper
+
 from onnx_chainer import mapping
 
 
@@ -87,19 +89,6 @@ def convert_Minimum(func, input_names, output_names, parameters):
 def convert_Sqrt(func, input_names, output_names, parameters):
     onnx_op_name = mapping.operators[func.__class__.__name__]
     return helper.make_node(onnx_op_name, input_names, output_names),
-
-
-def convert_SquaredDifference(func, input_names, output_names, parameters):
-    sub_output_names = [input_names[0] + '_sub']
-    onnx_op_name = mapping.operators[basic_math.Sub.__name__]
-    sub_node = helper.make_node(onnx_op_name, input_names, sub_output_names)
-
-    pow_node, = convert_PowVarConst(
-        basic_math.PowVarConst(2), sub_output_names, output_names,
-        parameters)
-
-    return list(reversed([sub_node, pow_node]))
-
 
 def convert_Sum(func, input_names, output_names, parameters):
     onnx_op_name = mapping.operators[func.__class__.__name__]

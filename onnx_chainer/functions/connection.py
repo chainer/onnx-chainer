@@ -1,3 +1,5 @@
+import chainer
+import numpy as np
 from onnx import helper
 
 from onnx_chainer import mapping
@@ -79,7 +81,15 @@ def convert_EmbedIDFunction(func, input_names, output_names, parameters):
 
 
 def convert_LinearFunction(func, input_names, output_names, parameters):
-    onnx_op_name = mapping.operators[func.__class__.__name__][0]
+    onnx_op_name = mapping.operators[func.__class__.__name__]
     if len(func.inputs) == 2:  # If no bias, use MatMul
-        onnx_op_name = mapping.operators[func.__class__.__name__][1]
-    return helper.make_node(onnx_op_name, input_names, output_names),
+        print('Linear', func.inputs[0].shape, func.inputs[1].shape)
+        batchsize = func.inputs[0].shape[0]
+        bias_dim = func.inputs[1].shape[0]
+        bias = np.zeros((batchsize, bias_dim), dtype=np.float32)
+        bias_param = chainer.Parameter(bias)
+        parameters.append(bias_param)
+        input_names.append(str(id(bias_param)))
+    return helper.make_node(
+        onnx_op_name, input_names, output_names,
+        alpha=1.0, beta=1.0, transA=0, transB=1),

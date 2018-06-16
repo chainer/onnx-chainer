@@ -9,6 +9,5 @@ def convert_Dropout(func, input_names, output_names, parameters):
 
     return helper.make_node(
         onnx_op_name, input_names, output_names,
-        is_test=chainer.config.train,
         ratio=func.dropout_ratio,
     ),

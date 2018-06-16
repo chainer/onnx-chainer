@@ -29,7 +29,6 @@ class TestPoolings(unittest.TestCase):
                 self.args = args
 
             def __call__(self, x):
-                x = F.identity(x)
                 return self.ops(*([x] + self.args))
 
         self.model = Model(self.ops, self.args)
@@ -39,6 +38,6 @@ class TestPoolings(unittest.TestCase):
         chainer.config.train = False
         onnx_chainer.export(self.model, self.x)
 
-    # def test_export_train(self):
-    #     chainer.config.train = True
-    #     onnx_chainer.export(self.model, self.x)
+    def test_export_train(self):
+        chainer.config.train = True
+        onnx_chainer.export(self.model, self.x)

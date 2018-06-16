@@ -15,11 +15,11 @@ setup(
     keywords='ONNX Chainer model converter deep learning',
     install_requires=[
         'chainer>=3.2.0',
-        'onnx>=1.0.0'
+        'onnx==1.2.1'
     ],
     tests_require=[
         'chainer>=3.2.0',
-        'onnx>=1.0.0',
+        'onnx==1.2.1',
         'numpy',
     ],
     license='MIT',

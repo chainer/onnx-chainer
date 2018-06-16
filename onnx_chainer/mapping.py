@@ -1,25 +1,3 @@
-from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
-
-TENSOR_TYPE_TO_NAME = {
-    1: 'FLOAT',
-    2: 'UINT8',
-    3: 'INT8',
-    4: 'UINT16',
-    5: 'INT16',
-    6: 'INT32',
-    7: 'INT64',
-    8: 'STRING',
-    9: 'BOOL',
-    10: 'FLOAT16',
-    11: 'DOUBLE',
-    12: 'UINT32',
-    13: 'UINT64',
-    14: 'COMPLEX64',
-    15: 'COMPLEX128',
-}
-
-dtypes = NP_TYPE_TO_TENSOR_TYPE
-
 operators = {
     # Activation
     'ELU': 'Elu',
@@ -51,7 +29,7 @@ operators = {
     'Deconvolution2DFunction': 'ConvTranspose',
     'DeconvolutionND': 'ConvTranspose',
     'EmbedIDFunction': 'Gather',
-    'LinearFunction': ['Gemm', 'MatMul'],
+    'LinearFunction': 'Gemm',
 
     # Math
     'Add': 'Add',
@@ -68,7 +46,6 @@ operators = {
     'Maximum': 'Max',
     'Minimum': 'Min',
     'Sqrt': 'Sqrt',
-    'SquaredDifference': ['Sub', 'Pow'],
     'Sum': 'ReduceSum',
 
     # Noise

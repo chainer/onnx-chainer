@@ -1,9 +1,9 @@
-import numpy as np
-
 import chainer
+import numpy as np
 from onnx import helper
+from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
+
 from onnx_chainer import mapping
-from onnx_chainer.mapping import TENSOR_TYPE_TO_NAME
 
 
 def convert_Cast(func, input_names, output_names, parameters):
@@ -12,7 +12,7 @@ def convert_Cast(func, input_names, output_names, parameters):
 
     return helper.make_node(
         onnx_op_name, input_names, output_names,
-        to=TENSOR_TYPE_TO_NAME[mapping.dtypes[typ]]
+        to=NP_TYPE_TO_TENSOR_TYPE[typ]
     ),
 
 
@@ -76,9 +76,15 @@ def convert_Pad(func, input_names, output_names, parameters):
 
 def convert_Reshape(func, input_names, output_names, parameters):
     onnx_op_name = mapping.operators[func.__class__.__name__]
+
+    # Add tiles and axis to graph
+    shape = np.asarray(func.shape, dtype=np.int64)
+    shape_param = chainer.Parameter(shape)
+    parameters.append(shape_param)
+    input_names.append(str(id(shape_param)))
+
     return helper.make_node(
         onnx_op_name, input_names, output_names,
-        shape=func.shape
     ),
 
 
@@ -144,7 +150,8 @@ def convert_Tile(func, input_names, output_names, parameters):
     parameters.append(tiles_param)
     input_names.append(str(id(tiles_param)))
 
-    return helper.make_node(onnx_op_name, input_names, output_names),
+    node = helper.make_node(onnx_op_name, input_names, output_names)
+    return node,
 
 
 def convert_Transpose(func, input_names, output_names, parameters):

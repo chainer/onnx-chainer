@@ -28,12 +28,10 @@ class TestActivations(unittest.TestCase):
 
             def __init__(self, ops):
                 super(Model, self).__init__()
-                with self.init_scope():
-                    self.link = L.Linear(5, 5)
                 self.ops = ops
 
             def __call__(self, x):
-                return self.ops(self.link(x))
+                return self.ops(x)
 
         self.model = Model(self.ops)
         self.x = np.random.randn(1, 5).astype(np.float32)
@@ -56,11 +54,10 @@ class TestPReLU(unittest.TestCase):
             def __init__(self):
                 super(Model, self).__init__()
                 with self.init_scope():
-                    self.l1 = L.Linear(5, 5)
                     self.prelu = L.PReLU()
 
             def __call__(self, x):
-                return self.prelu(self.l1(x))
+                return self.prelu(x)
 
         self.model = Model()
         self.x = np.zeros((1, 5), dtype=np.float32)

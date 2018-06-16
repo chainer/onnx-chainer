@@ -7,8 +7,8 @@ This is an add-on package for ONNX support by Chainer.
 
 ## Requirements
 
-- onnx==1.1.0
-- chainer==4.0.0
+- onnx==1.2.1
+- chainer>=4.0.0
 
 ## Installation
 
@@ -129,7 +129,6 @@ Currently 50 Chainer Functions are supported to export in ONNX format.
 - Maximum
 - Minimum
 - Sqrt
-- SquaredDifference
 - Sum
 
 ### Noise
