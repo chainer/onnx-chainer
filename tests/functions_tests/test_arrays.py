@@ -84,12 +84,7 @@ class TestArrayOperators(unittest.TestCase):
         self.model = Model(self.ops, self.args, self.input_argname)
         self.x = np.zeros(self.input_shape, dtype=np.float32)
 
-    def test_export_test(self):
-        chainer.config.train = False
-        onnx_chainer.export(self.model, self.x)
-
-    def test_export_train(self):
-        chainer.config.train = True
+    def test_export(self):
         onnx_chainer.export(self.model, self.x)
 
 
@@ -108,10 +103,5 @@ class TestConcat(unittest.TestCase):
         self.model = Model()
         self.x = np.zeros((1, 5), dtype=np.float32)
 
-    def test_export_test(self):
-        chainer.config.train = False
-        onnx_chainer.export(self.model, self.x)
-
-    def test_export_train(self):
-        chainer.config.train = True
+    def test_export(self):
         onnx_chainer.export(self.model, self.x)

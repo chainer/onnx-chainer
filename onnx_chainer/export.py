@@ -125,6 +125,7 @@ def export(model, args, filename=None, export_params=True,
 
     _check_available()
 
+    chainer.config.train = False
     chainer.config.enable_backprop = True
 
     model.to_cpu()
@@ -155,6 +156,12 @@ def export(model, args, filename=None, export_params=True,
 
     with ONNXExport() as o:
         if isinstance(outputs, (list, tuple)):
+            for output in outputs:
+                output.grad = numpy.ones_like(
+                    output.data, dtype=output.data.dtype)
+                output.backward()
+        elif isinstance(outputs, dict):
+            outputs = list(outputs.values())
             for output in outputs:
                 output.grad = numpy.ones_like(
                     output.data, dtype=output.data.dtype)

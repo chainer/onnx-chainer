@@ -34,10 +34,5 @@ class TestPoolings(unittest.TestCase):
         self.model = Model(self.ops, self.args)
         self.x = np.ones(self.in_shape, dtype=np.float32)
 
-    def test_export_test(self):
-        chainer.config.train = False
-        onnx_chainer.export(self.model, self.x)
-
-    def test_export_train(self):
-        chainer.config.train = True
+    def test_export(self):
         onnx_chainer.export(self.model, self.x)

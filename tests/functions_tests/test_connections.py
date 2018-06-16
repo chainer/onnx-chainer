@@ -56,10 +56,5 @@ class TestConnections(unittest.TestCase):
         self.model = Model(self.link, self.args)
         self.x = np.zeros(self.in_shape, dtype=self.in_type)
 
-    def test_export_test(self):
-        chainer.config.train = False
+    def test_export(self):
         onnx_chainer.export(self.model, self.x)
-
-    # def test_export_train(self):
-    #     chainer.config.train = True
-    #     onnx_chainer.export(self.model, self.x)

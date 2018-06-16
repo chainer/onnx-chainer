@@ -47,10 +47,5 @@ class TestMathOperators(unittest.TestCase):
             b = np.ones((2, 3), dtype=np.float32) * 2
         self.x = (a, b)
 
-    def test_export_test(self):
-        chainer.config.train = False
-        onnx_chainer.export(self.model, self.x)
-
-    def test_export_train(self):
-        chainer.config.train = True
+    def test_export(self):
         onnx_chainer.export(self.model, self.x)
