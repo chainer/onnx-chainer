@@ -197,7 +197,6 @@ def export(model, args, filename=None, export_params=True,
         graph, graph_name, input_tensors, output_tensors,
         initializer=initializers)
 
-    print(onnx_graph)
     checker.check_graph(onnx_graph)
 
     model = helper.make_model(
