@@ -9,10 +9,9 @@ from onnx_chainer import mapping
 def convert_Cast(func, input_names, output_names, parameters):
     onnx_op_name = mapping.operators[func.__class__.__name__]
     typ = func.type if isinstance(func.type, np.dtype) else np.dtype(func.type)
-
     return helper.make_node(
         onnx_op_name, input_names, output_names,
-        to=NP_TYPE_TO_TENSOR_TYPE[typ]
+        to=mapping.TENSOR_TYPE_TO_NAME[NP_TYPE_TO_TENSOR_TYPE[typ]]
     ),
 
 
@@ -77,14 +76,16 @@ def convert_Pad(func, input_names, output_names, parameters):
 def convert_Reshape(func, input_names, output_names, parameters):
     onnx_op_name = mapping.operators[func.__class__.__name__]
 
-    # Add tiles and axis to graph
-    shape = np.asarray(func.shape, dtype=np.int64)
-    shape_param = chainer.Parameter(shape)
-    parameters.append(shape_param)
-    input_names.append(str(id(shape_param)))
+    # TODO(mitmul): This part is needed for opset_version > 1
+    # # Add tiles and axis to graph
+    # shape = np.asarray(func.shape, dtype=np.int64)
+    # shape_param = chainer.Parameter(shape)
+    # parameters.append(shape_param)
+    # input_names.append(str(id(shape_param)))
 
     return helper.make_node(
         onnx_op_name, input_names, output_names,
+        shape=func.shape
     ),
 
 
@@ -149,6 +150,12 @@ def convert_Tile(func, input_names, output_names, parameters):
     tiles_param = chainer.Parameter(tiles)
     parameters.append(tiles_param)
     input_names.append(str(id(tiles_param)))
+
+    # In operater version = 1, axis also should be given
+    axis = np.array([i for i, _ in enumerate(func.reps)], dtype=np.float32)
+    axis_param = chainer.Parameter(axis)
+    parameters.append(axis_param)
+    input_names.append(str(id(axis_param)))
 
     node = helper.make_node(onnx_op_name, input_names, output_names)
     return node,

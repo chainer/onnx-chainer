@@ -220,7 +220,6 @@ def export(model, args, filename=None, export_params=True,
         producer_version=chainer.__version__)
 
     model.ir_version = onnx.IR_VERSION
-    print(model.opset_import)
 
     checker.check_model(model)
 

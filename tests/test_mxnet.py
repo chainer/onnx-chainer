@@ -17,7 +17,6 @@ import onnx_chainer
 class TestOutputWithMXNetBackend(unittest.TestCase):
 
     def setUp(self):
-        print(self.net)
         self.model = getattr(L, self.net)(None)
         self.x = np.random.randn(1, 3, 224, 224).astype(np.float32)
 
