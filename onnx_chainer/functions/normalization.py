@@ -40,7 +40,7 @@ def convert_BatchNormalization(func, input_names, output_names, parameters):
 def convert_FixedBatchNormalization(func, input_names, output_names, parameters):
     onnx_op_name = mapping.operators[func.__class__.__name__]
 
-    # Add avg_mean and avg_var to graph
+    # # Add avg_mean and avg_var to graph
     mean_arr, var_arr = [i.get_variable().array for i in func.inputs[3:]]
 
     mean_arr_param = chainer.Parameter(mean_arr)

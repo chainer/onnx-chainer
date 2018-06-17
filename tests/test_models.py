@@ -38,7 +38,7 @@ class TestVGG16(unittest.TestCase):
 
     def setUp(self):
 
-        self.model = L.VGG16Layers(None)
+        self.model = L.VGG16Layers()
         self.x = np.zeros((1, 3, 224, 224), dtype=np.float32)
 
     def test_export(self):
@@ -49,7 +49,7 @@ class TestResNet50(unittest.TestCase):
 
     def setUp(self):
 
-        self.model = L.ResNet50Layers(None)
+        self.model = L.ResNet50Layers()
         self.x = np.zeros((1, 3, 224, 224), dtype=np.float32)
 
     def test_export(self):
