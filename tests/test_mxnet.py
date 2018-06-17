@@ -4,7 +4,7 @@ import unittest
 from chainer import testing
 import chainer.links as L
 import numpy as np
-
+import os
 import mxnet as mx
 import mxnet.contrib.onnx as onnx_mxnet
 import onnx_chainer
@@ -17,8 +17,8 @@ import onnx_chainer
 class TestOutputWithMXNetBackend(unittest.TestCase):
 
     def setUp(self):
-        self.model = getattr(L, self.net)(None)
-        self.x = np.random.randn(1, 3, 224, 224).astype(np.float32)
+        self.model = getattr(L, self.net)()
+        self.x = np.random.rand(1, 3, 224, 224).astype(np.float32)
 
     def test_compatibility(self):
         self.save_as_onnx_then_import_from_mxnet(self.model, self.x, self.net)
@@ -26,14 +26,16 @@ class TestOutputWithMXNetBackend(unittest.TestCase):
     def save_as_onnx_then_import_from_mxnet(self, model, x, fn):
         chainer_out = model(x)['prob'].array
 
-        onnx_chainer.export(model, x, fn)
+        onnx_model = onnx_chainer.export(model, x, fn)
+        data_names = [onnx_model.graph.input[-1].name]
+        print(onnx_model.graph.input[-1])
         sym, arg, aux = onnx_mxnet.import_model(fn)
 
         mod = mx.mod.Module(
-            symbol=sym, data_names=['input_0'], context=mx.cpu(),
+            symbol=sym, data_names=data_names, context=mx.cpu(),
             label_names=None)
         mod.bind(
-            for_training=False, data_shapes=[('input_0', x.shape)],
+            for_training=False, data_shapes=[(data_names[0], x.shape)],
             label_shapes=None)
         mod.set_params(
             arg_params=arg, aux_params=aux, allow_missing=True,
@@ -48,3 +50,5 @@ class TestOutputWithMXNetBackend(unittest.TestCase):
 
         np.testing.assert_almost_equal(
             chainer_out, mxnet_out, decimal=5)
+
+        os.remove(fn)

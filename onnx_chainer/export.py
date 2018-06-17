@@ -67,6 +67,7 @@ class ONNXExport(chainer.function_hook.FunctionHook):
         self.graph = []
         self.additional_parameters = []
         self.network_inputs = {}
+        self.middle_output_var_to_varnode = {}
 
     def backward_postprocess(self, function, in_data, out_grad):
         if isinstance(function, chainer.function.FunctionAdapter):
@@ -81,13 +82,21 @@ class ONNXExport(chainer.function_hook.FunctionHook):
                 if i.creator is None and \
                         str(id(i)) not in self.network_inputs:
                     self.network_inputs[str(id(i))] = i
-            else:  # It is a parameter inside a Link
+            else:  # It is a parameter inside a Link or network input
                 input_names.append(str(id(var)))
                 if i.creator is None and \
                         not isinstance(var, chainer.Parameter):
                     self.network_inputs[str(id(var))] = var
+        
+        # This is to get corresponding VariableNode id from the output
+        # Variable of the network
+        for o in function.outputs:
+            var = o().get_variable_or_none()
+            if var is not None:  # If the output is kept
+                self.middle_output_var_to_varnode[id(var)] = id(o())
+
         output_names = [str(id(o())) for o in function.outputs]
-        n_additional_params = len(self.additional_parameters)
+
         nodes = create_node(
             func_name, function, input_names, output_names,
             self.additional_parameters)
@@ -136,11 +145,9 @@ def export(model, args, filename=None, export_params=True,
 
     model.to_cpu()
 
-    # Convert all args into Variable objects
+    # Make args into a list
     args = list(args) if isinstance(args, (list, tuple)) else [args]
-    for i, arg in enumerate(args):
-        if not isinstance(arg, chainer.Variable):
-            args[i] = chainer.Variable(arg)
+    # input_ids = [id(arg) for i, arg in enumerate(args)]
 
     # Forward computation
     if isinstance(args, list):
@@ -200,9 +207,14 @@ def export(model, args, filename=None, export_params=True,
         outputs = list(outputs.values())
     if not isinstance(outputs, (list, tuple)):
         outputs = (outputs,)
+
     for output in outputs:
+        if id(output) in o.middle_output_var_to_varnode:
+            output_id = str(o.middle_output_var_to_varnode[id(output)])
+        else:
+            output_id = str(id(output))
         output_tensors.append(helper.make_tensor_value_info(
-            str(id(output)), NP_TYPE_TO_TENSOR_TYPE[output.dtype],
+            output_id, NP_TYPE_TO_TENSOR_TYPE[output.dtype],
             output.shape))
 
     if not export_params:

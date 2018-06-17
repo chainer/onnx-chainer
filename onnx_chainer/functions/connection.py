@@ -82,8 +82,7 @@ def convert_EmbedIDFunction(func, input_names, output_names, parameters):
 
 def convert_LinearFunction(func, input_names, output_names, parameters):
     onnx_op_name = mapping.operators[func.__class__.__name__]
-    if len(func.inputs) == 2:  # If no bias, use MatMul
-        print('Linear', func.inputs[0].shape, func.inputs[1].shape)
+    if len(func.inputs) == 2:
         batchsize = func.inputs[0].shape[0]
         bias_dim = func.inputs[1].shape[0]
         bias = np.zeros((batchsize, bias_dim), dtype=np.float32)

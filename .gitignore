@@ -9,6 +9,8 @@ check_autopep8
 *.onnx
 *.pb
 *.pbtxt
+*.txt
+.chainer/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
