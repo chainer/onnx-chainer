@@ -79,6 +79,8 @@ class ONNXExport(chainer.function_hook.FunctionHook):
             var = i.get_variable_or_none()
             if var is None:  # No reference to Variable/Parameter
                 input_names.append(str(id(i)))  # Use VariableNode
+
+                # To support networks which have only a single layer
                 if i.creator is None and \
                         str(id(i)) not in self.network_inputs:
                     self.network_inputs[str(id(i))] = i

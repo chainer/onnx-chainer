@@ -1,10 +1,12 @@
 from collections import namedtuple
+import os
 import unittest
 
+import chainer
 from chainer import testing
 import chainer.links as L
 import numpy as np
-import os
+
 import mxnet as mx
 import mxnet.contrib.onnx as onnx_mxnet
 import onnx_chainer
@@ -24,12 +26,15 @@ class TestOutputWithMXNetBackend(unittest.TestCase):
         self.save_as_onnx_then_import_from_mxnet(self.model, self.x, self.net)
 
     def save_as_onnx_then_import_from_mxnet(self, model, x, fn):
-        chainer_out = model(x)['prob'].array
+        chainer.config.train = False
+        chainer_out_all = model(x, layers=['res5', 'prob'])
+        chainer_out = chainer_out_all['prob'].array
 
-        onnx_model = onnx_chainer.export(model, x, fn)
-        data_names = [onnx_model.graph.input[-1].name]
+        onnx_chainer.export(model, x, fn)
 
         sym, arg, aux = onnx_mxnet.import_model(fn)
+        data_names = [graph_input for graph_input in sym.list_inputs()
+                      if graph_input not in arg and graph_input not in aux]
 
         mod = mx.mod.Module(
             symbol=sym, data_names=data_names, context=mx.cpu(),
@@ -44,9 +49,38 @@ class TestOutputWithMXNetBackend(unittest.TestCase):
         Batch = namedtuple('Batch', ['data'])
         mod.forward(Batch([mx.nd.array(x)]))
 
-        mxnet_out = mod.get_outputs()[0].asnumpy()
+        # Extract intermediate layer outputs
+        relu48 = None
+        for mxnet_internal_symbol in mod.symbol.get_internals():
+            if mxnet_internal_symbol.name == 'relu48':
+                relu48 = mxnet_internal_symbol
+            print(mxnet_internal_symbol)
+        data_names = [
+            graph_input for graph_input in relu48.list_inputs()
+            if graph_input not in arg and graph_input not in aux]
+        mod3 = mx.mod.Module(
+            symbol=relu48, data_names=data_names,
+            label_names=None, context=mx.cpu())
+        mod3.bind(
+            for_training=False, data_shapes=[(data_names[0], x.shape)],
+            label_shapes=None)
+        mod3.set_params(
+            arg_params=arg, aux_params=aux, allow_missing=True,
+            allow_extra=True)
+        mod3.forward(Batch([mx.nd.array(x)]))
+        mxnet_internal_output = mod3.get_outputs()[0].asnumpy()
 
-        print(mxnet_out.shape)
+        # Chainer's intermediate layer output
+        chainer_internal_output = chainer_out_all['res5'].array
+
+        np.testing.assert_almost_equal(
+            mxnet_internal_output, chainer_internal_output, decimal=5)
+
+        mxnet_outs = mod.get_outputs()
+        mxnet_out = mxnet_outs[0].asnumpy()
+
+        print('Chainer:', np.argmax(chainer_out[0]))
+        print('MXNet:', np.argmax(mxnet_out[0]))
 
         np.testing.assert_almost_equal(
             chainer_out, mxnet_out, decimal=5)
