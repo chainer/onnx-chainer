@@ -37,6 +37,11 @@ def convert_parameter(parameter):
         array = parameter.array
     elif isinstance(parameter, numpy.ndarray):
         array = parameter
+    else:
+        raise ValueError(
+            'The type of parameter is unknown. It should be either Parameter '
+            'or Variable or ndarray, but the type was {}.'.format(
+                type(parameter)))
     if array.shape == ():
         array = array[None]
     return numpy_helper.from_array(array, str(id(parameter)))
@@ -69,19 +74,20 @@ class ONNXExport(chainer.function_hook.FunctionHook):
         func_name = function.__class__.__name__
         input_names = []
         for i in function.inputs:
-            # Check if it is a Parameter object
+            # 'i' is a VariableNode, so check if it has a Variable/Parameter
             var = i.get_variable_or_none()
-            if var is None:
+            if var is None:  # No reference to Variable/Parameter
                 input_names.append(str(id(i)))  # Use VariableNode
-                if str(id(i)) not in self.network_inputs:
+                if i.creator is None and \
+                        str(id(i)) not in self.network_inputs:
                     self.network_inputs[str(id(i))] = i
-            else:
-                if isinstance(var, chainer.Parameter):
-                    input_names.append(str(id(var)))
-                else:
-                    input_names.append(str(id(var)))
+            else:  # It is a parameter inside a Link
+                input_names.append(str(id(var)))
+                if i.creator is None and \
+                        not isinstance(var, chainer.Parameter):
                     self.network_inputs[str(id(var))] = var
         output_names = [str(id(o())) for o in function.outputs]
+        n_additional_params = len(self.additional_parameters)
         nodes = create_node(
             func_name, function, input_names, output_names,
             self.additional_parameters)
@@ -152,7 +158,8 @@ def export(model, args, filename=None, export_params=True,
         initializers.append(convert_parameter(param))
         param_shape = (1,) if param.shape == () else param.shape
         input_tensors.append(helper.make_tensor_value_info(
-            str(id(param)), NP_TYPE_TO_TENSOR_TYPE[param.array.dtype], param_shape))
+            str(id(param)), NP_TYPE_TO_TENSOR_TYPE[param.array.dtype],
+            param_shape))
 
     with ONNXExport() as o:
         if isinstance(outputs, (list, tuple)):
@@ -195,7 +202,8 @@ def export(model, args, filename=None, export_params=True,
         outputs = (outputs,)
     for output in outputs:
         output_tensors.append(helper.make_tensor_value_info(
-            str(id(output)), NP_TYPE_TO_TENSOR_TYPE[output.dtype], output.shape))
+            str(id(output)), NP_TYPE_TO_TENSOR_TYPE[output.dtype],
+            output.shape))
 
     if not export_params:
         initializers = []
@@ -212,6 +220,7 @@ def export(model, args, filename=None, export_params=True,
         producer_version=chainer.__version__)
 
     model.ir_version = onnx.IR_VERSION
+    print(model.opset_import)
 
     checker.check_model(model)
 

@@ -1,3 +1,5 @@
+OPSET_VERSION = 6
+
 operators = {
     # Activation
     'ELU': 'Elu',
