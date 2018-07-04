@@ -1,11 +1,13 @@
 import unittest
 
+import numpy as np
+
 import chainer
 import chainer.functions as F
 import chainer.links as L
-import numpy as np
-
 import onnx_chainer
+from onnx_chainer.testing import test_mxnet
+import chainercv.links as C
 
 
 class TestLeNet5(unittest.TestCase):
@@ -23,35 +25,32 @@ class TestLeNet5(unittest.TestCase):
             L.Linear(100, 10)
         )
         self.x = np.zeros((1, 3, 28, 28), dtype=np.float32)
+        self.fn = 'LeNet5.onnx'
 
-    def test_export(self):
-        onnx_chainer.export(self.model, self.x)
-
-    def test_save_text(self):
-        onnx_chainer.export(
-            self.model, self.x, 'LeNet5.onnx', export_params=False,
-            save_text=True)
+    def test_compatibility(self):
+        test_mxnet.check_compatibility(self.model, self.x, self.fn)
 
 
 class TestVGG16(unittest.TestCase):
 
     def setUp(self):
-        self.model = L.VGG16Layers()
+        self.model = C.VGG16(
+            pretrained_model=None, initialW=chainer.initializers.Uniform(1))
         self.x = np.zeros((1, 3, 224, 224), dtype=np.float32)
+        self.fn = 'VGG16.onnx'
 
-    def test_export(self):
-        onnx_chainer.export(self.model, self.x, 'VGG16.onnx')
+    def test_compatibility(self):
+        test_mxnet.check_compatibility(self.model, self.x, self.fn)
 
 
 class TestResNet50(unittest.TestCase):
 
     def setUp(self):
-        self.model = L.ResNet50Layers()
+        self.model = C.ResNet50(
+            pretrained_model=None, initialW=chainer.initializers.Uniform(1), arch='he')
+        self.model.pool1 = lambda x: F.max_pooling_2d(x, ksize=3, stride=2, cover_all=False)
         self.x = np.zeros((1, 3, 224, 224), dtype=np.float32)
+        self.fn = 'ResNet50.onnx'
 
-    def test_export(self):
-        onnx_chainer.export(self.model, self.x, 'ResNet50.onnx')
-
-    def test_save_text(self):
-        onnx_chainer.export(
-            self.model, self.x, 'ResNet50', export_params=False, save_text=True)
+    def test_compatibility(self):
+        test_mxnet.check_compatibility(self.model, self.x, self.fn)

@@ -41,6 +41,7 @@ def convert_Absolute(
 def convert_PowVarConst(
         func, input_names, output_names, parameters):
     value = np.asarray([func.value], dtype=func.inputs[0].dtype)
+    value = np.broadcast_to(value, func.inputs[0].shape)
     value_param = chainer.Parameter(value)
     parameters.append(value_param)
     input_names.append(str(id(value_param)))
@@ -69,11 +70,22 @@ def convert_Identity(func, input_names, output_names, parameters):
 
 
 def convert_MatMul(func, input_names, output_names, parameters):
-    if func.transa or func.transb:
-        raise ValueError(
-            'Current ONNX doesn\'t support transpose options for matmul ops.')
     onnx_op_name = mapping.operators[func.__class__.__name__]
-    return helper.make_node(onnx_op_name, input_names, output_names),
+
+    bias_shape = (
+        func.inputs[0].shape[-1] if func.transa else func.inputs[0].shape[-2],
+        func.inputs[1].shape[-2] if func.transb else func.inputs[1].shape[-1]
+    )
+    bias_tensor = np.zeros(bias_shape, dtype=np.float32)
+    bias_param = chainer.Parameter(bias_tensor)
+    parameters.append(bias_param)
+    input_names.append(str(id(bias_param)))
+
+    return helper.make_node(
+        onnx_op_name, input_names, output_names,
+        transA=func.transa,
+        transB=func.transb
+    ),
 
 
 def convert_Maximum(func, input_names, output_names, parameters):
@@ -89,6 +101,7 @@ def convert_Minimum(func, input_names, output_names, parameters):
 def convert_Sqrt(func, input_names, output_names, parameters):
     onnx_op_name = mapping.operators[func.__class__.__name__]
     return helper.make_node(onnx_op_name, input_names, output_names),
+
 
 def convert_Sum(func, input_names, output_names, parameters):
     onnx_op_name = mapping.operators[func.__class__.__name__]

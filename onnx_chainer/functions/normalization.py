@@ -67,6 +67,6 @@ def convert_LocalResponseNormalization(
         onnx_op_name, input_names, output_names,
         alpha=float(func.alpha),
         beta=float(func.beta),
-        bias=float(func.n),
-        size=int(func.k),
+        bias=float(func.k),
+        size=int(func.n),
     ),

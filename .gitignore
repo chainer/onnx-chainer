@@ -1,3 +1,6 @@
+vgg16.onnx
+resnet50.onnx
+
 .vscode/
 check_autopep8
 .DS_Store

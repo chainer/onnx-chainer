@@ -96,7 +96,8 @@ RUN cd /root && \
     mkdir build && cd build && \
     cmake .. && \
     cmake --build . -- -j16 && \
-    cmake --build . --target install
+    cmake --build . --target install && \
+    rm -rf /root/llvm-6.0.1.src
 
 ENV LD_LIBRARY_PATH /usr/local/lib:$LD_LIBRARY_PATH
 ENV LIBRARY_PATH /usr/local/lib:$LIBRARY_PATH

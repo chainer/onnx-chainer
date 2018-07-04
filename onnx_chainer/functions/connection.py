@@ -33,7 +33,6 @@ def convert_ConvolutionND(func, input_names, output_names, parameters):
     onnx_op_name = mapping.operators[func.__class__.__name__]
     return helper.make_node(
         onnx_op_name, input_names, output_names,
-        auto_pad='VALID',
         kernel_shape=func.inputs[1].shape[2:],
         pads=func.pad,
         strides=func.stride,
@@ -46,7 +45,6 @@ def convert_Deconvolution2DFunction(
 
     return helper.make_node(
         onnx_op_name, input_names, output_names,
-        auto_pad='VALID',
         kernel_shape=func.inputs[1].shape[2:],
         output_shape=(func.outh, func.outw),
         pads=(func.ph, func.pw),

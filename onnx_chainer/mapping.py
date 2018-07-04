@@ -61,7 +61,7 @@ operators = {
     'Clip': 'Clip',
     'Exp': 'Exp',
     'Identity': 'Identity',
-    'MatMul': 'MatMul',
+    'MatMul': 'Gemm',
     'Maximum': 'Max',
     'Minimum': 'Min',
     'Sqrt': 'Sqrt',

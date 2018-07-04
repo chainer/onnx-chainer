@@ -61,7 +61,7 @@ def create_node(
     return nodes
 
 
-class ONNXExport(chainer.function_hook.FunctionHook):
+class ONNXExport(chainer.FunctionHook):
 
     def __init__(self):
         self.graph = []
@@ -78,7 +78,7 @@ class ONNXExport(chainer.function_hook.FunctionHook):
             # 'i' is a VariableNode, so check if it has a Variable/Parameter
             var = i.get_variable_or_none()
             if var is None:  # No reference to Variable/Parameter
-                input_names.append(str(id(i)))  # Use VariableNode
+                input_names.append(str(id(i)))  # Use VariableNode as is
 
                 # To support networks which have only a single layer
                 if i.creator is None and \
@@ -89,7 +89,7 @@ class ONNXExport(chainer.function_hook.FunctionHook):
                 if i.creator is None and \
                         not isinstance(var, chainer.Parameter):
                     self.network_inputs[str(id(var))] = var
-        
+
         # This is to get corresponding VariableNode id from the output
         # Variable of the network
         for o in function.outputs:
@@ -147,19 +147,27 @@ def export(model, args, filename=None, export_params=True,
 
     model.to_cpu()
 
-    # Make args into a list
-    args = list(args) if isinstance(args, (list, tuple)) else [args]
-    # input_ids = [id(arg) for i, arg in enumerate(args)]
-
     # Forward computation
+    if isinstance(args, tuple):
+        args = list(args)
     if isinstance(args, list):
+        for i, arg in enumerate(args):
+            if isinstance(arg, numpy.ndarray):
+                args[i] = chainer.Variable(arg)
         outputs = model(*args)
     elif isinstance(args, dict):
+        for key, arg in args.items():
+            if isinstance(arg, numpy.ndarray):
+                args[key] = chainer.Variable(arg)
         outputs = model(**args)
+    elif isinstance(args, numpy.ndarray):
+        outputs = model(chainer.Variable(args))
+    elif isinstance(args, chainer.Variable):
+        outputs = model(args)
     else:
         raise ValueError(
-            'The \'args\' argument should be a list or dict. But a {} '
-            'object was given.'.format(type(args)))
+            'The \'args\' argument should be a list, tuple, dict, numpy array, '
+            'or Chainer Variable. But a {} object was given.'.format(type(args)))
 
     initializers = []
     input_tensors = []
@@ -174,16 +182,16 @@ def export(model, args, filename=None, export_params=True,
         if isinstance(outputs, (list, tuple)):
             for output in outputs:
                 output.grad = numpy.ones_like(
-                    output.data, dtype=output.data.dtype)
+                    output.array, dtype=output.array.dtype)
                 output.backward()
         elif isinstance(outputs, dict):
             outputs = list(outputs.values())
             for output in outputs:
                 output.grad = numpy.ones_like(
-                    output.data, dtype=output.data.dtype)
+                    output.array, dtype=output.array.dtype)
                 output.backward()
         elif isinstance(outputs, chainer.Variable):
-            outputs.grad = numpy.ones_like(outputs.data)
+            outputs.grad = numpy.ones_like(outputs.array)
             outputs.backward()
 
     # If additonal parameters are created during conversion
