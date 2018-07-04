@@ -10,7 +10,6 @@ import onnx
 import chainer
 from chainer import testing
 import chainer.functions as F
-import chainer.links as L
 import chainercv.links as C
 import nnvm
 import nnvm.compiler
@@ -19,10 +18,21 @@ import tvm
 
 
 @testing.parameterize(
-    {'mod': C, 'arch': 'VGG16', 'kwargs': {
-        'pretrained_model': None, 'initialW': chainer.initializers.Uniform(1)}},
-    {'mod': C, 'arch': 'ResNet50', 'kwargs': {
-        'pretrained_model': None,  'initialW': chainer.initializers.Uniform(1), 'arch': 'he'}}
+    {
+        'mod': C,
+        'arch': 'VGG16',
+        'kwargs': {
+            'pretrained_model': None,
+        }
+    },
+    {
+        'mod': C,
+        'arch': 'ResNet50',
+        'kwargs': {
+            'pretrained_model': None,
+            'arch': 'he'
+        }
+    }
 )
 class TestWithNNVMBackend(unittest.TestCase):
 
@@ -35,13 +45,15 @@ class TestWithNNVMBackend(unittest.TestCase):
                 x, ksize=3, stride=2, cover_all=False)
 
         self.x = np.random.uniform(
-            -1, 1, size=(1, 3, 224, 224)).astype(np.float32)
-        self.model(self.x)  # Prevent all NaN output
+            -5, 5, size=(1, 3, 224, 224)).astype(np.float32)
+        with chainer.using_config('train', True):
+            self.model(self.x)  # Prevent all NaN output
         self.fn = '{}.onnx'.format(self.arch)
 
     def test_compatibility(self):
         chainer.config.train = False
-        chainer_out = self.model(self.x).array
+        with chainer.using_config('train', False):
+            chainer_out = self.model(self.x).array
 
         onnx_chainer.export(self.model, self.x, self.fn)
 
