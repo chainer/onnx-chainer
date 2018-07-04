@@ -7,12 +7,17 @@ This is an add-on package for ONNX support by Chainer.
 
 ## Requirements
 
-- onnx==1.2.1
-- chainer>=4.0.0
+- onnx==1.1.1
+- chainer>=3.2.0
 
 ## Installation
 
-See [INSTALL.md](INSTALL.md)
+### On Ubuntu 14.04/16.04
+
+```bash
+pip install onnx==1.1.1
+pip install onnx-chainer==1.1.1
+```
 
 ## Quick Start
 

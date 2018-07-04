@@ -1,15 +1,21 @@
-import collections
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import os
 import unittest
 
-import mxnet
 import numpy as np
+import onnx
 
 import chainer
 from chainer import testing
 import chainer.functions as F
+import chainer.links as L
 import chainercv.links as C
+import nnvm
+import nnvm.compiler
 import onnx_chainer
+import tvm
 
 
 @testing.parameterize(
@@ -18,7 +24,7 @@ import onnx_chainer
     {'mod': C, 'arch': 'ResNet50', 'kwargs': {
         'pretrained_model': None,  'initialW': chainer.initializers.Uniform(1), 'arch': 'he'}}
 )
-class TestWithMXNetBackend(unittest.TestCase):
+class TestWithNNVMBackend(unittest.TestCase):
 
     def setUp(self):
         self.model = getattr(self.mod, self.arch)(**self.kwargs)
@@ -39,26 +45,25 @@ class TestWithMXNetBackend(unittest.TestCase):
 
         onnx_chainer.export(self.model, self.x, self.fn)
 
-        sym, arg, aux = mxnet.contrib.onnx.import_model(self.fn)
+        model_onnx = onnx.load(self.fn)
+        sym, params = nnvm.frontend.from_onnx(model_onnx)
 
-        data_names = [graph_input for graph_input in sym.list_inputs()
-                      if graph_input not in arg and graph_input not in aux]
-        mod = mxnet.mod.Module(
-            symbol=sym, data_names=data_names, context=mxnet.cpu(),
-            label_names=None)
-        mod.bind(
-            for_training=False, data_shapes=[(data_names[0], self.x.shape)],
-            label_shapes=None)
-        mod.set_params(
-            arg_params=arg, aux_params=aux, allow_missing=True,
-            allow_extra=True)
+        target = 'llvm'
+        input_name = sym.list_input_names()[0]
 
-        Batch = collections.namedtuple('Batch', ['data'])
-        mod.forward(Batch([mxnet.nd.array(self.x)]))
-        mxnet_outs = mod.get_outputs()
-        mxnet_out = mxnet_outs[0].asnumpy()
+        shape_dict = {input_name: self.x.shape}
+        graph, lib, params = nnvm.compiler.build(
+            sym, target, shape_dict, params=params)
+        module = tvm.contrib.graph_runtime.create(graph, lib, tvm.cpu(0))
+        module.set_input(input_name, tvm.nd.array(self.x))
+        module.set_input(**params)
+        module.run()
+
+        out_shape = (1, 1000)
+        output = tvm.nd.empty(out_shape, ctx=tvm.cpu(0))
+        nnvm_output = module.get_output(0, output).asnumpy()
 
         np.testing.assert_almost_equal(
-            chainer_out, mxnet_out, decimal=5)
+            chainer_out, nnvm_output, decimal=5)
 
         os.remove(self.fn)

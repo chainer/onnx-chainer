@@ -11,7 +11,6 @@ import onnx_chainer
 class TestLeNet5(unittest.TestCase):
 
     def setUp(self):
-
         self.model = chainer.Sequential(
             L.Convolution2D(None, 16, 5, 1, 2),
             F.relu,
@@ -37,7 +36,6 @@ class TestLeNet5(unittest.TestCase):
 class TestVGG16(unittest.TestCase):
 
     def setUp(self):
-
         self.model = L.VGG16Layers()
         self.x = np.zeros((1, 3, 224, 224), dtype=np.float32)
 
@@ -48,7 +46,6 @@ class TestVGG16(unittest.TestCase):
 class TestResNet50(unittest.TestCase):
 
     def setUp(self):
-
         self.model = L.ResNet50Layers()
         self.x = np.zeros((1, 3, 224, 224), dtype=np.float32)
 

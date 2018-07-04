@@ -80,7 +80,42 @@ RUN pip install --no-cache-dir \
     scipy \
     setuptools \
     tornado \
-    pytest
+    pytest \
+    future \
+    hypothesis 
 
-ENV PYTHONPATH /usr/local
+# Install Chainer
+ARG CHAINER_VERSION="4.2.0"
+RUN pip install chainer==${CHAINER_VERSION}
+
+# Build LLVM
+RUN cd /root && \
+    curl -L -O http://releases.llvm.org/6.0.1/llvm-6.0.1.src.tar.xz && \
+    tar xf llvm-6.0.1.src.tar.xz && rm -rf llvm-6.0.1.src.tar.xz && \
+    cd /root/llvm-6.0.1.src && \
+    mkdir build && cd build && \
+    cmake .. && \
+    cmake --build . -- -j16 && \
+    cmake --build . --target install
+
 ENV LD_LIBRARY_PATH /usr/local/lib:$LD_LIBRARY_PATH
+ENV LIBRARY_PATH /usr/local/lib:$LIBRARY_PATH
+
+# Install ChainerCV
+ARG CHAINERCV_VERSION="0.10.0"
+RUN pip install chainercv==${CHAINERCV_VERSION}
+
+# Install MXNet
+ARG MXNET_VERSION="1.2.0"
+RUN pip install mxnet==${MXNET_VERSION}
+
+# Install TVM
+ARG TVM_COMMIT_ID="ebdde3c277a9807a67b233cecfaf6d9f96c0c1bc"
+RUN git clone --recursive https://github.com/dmlc/tvm $HOME/tvm
+RUN cd $HOME/tvm && git checkout ${TVM_COMMIT_ID} && \
+    mkdir build && cd build \
+    && cmake -DUSE_LLVM=ON .. \
+    && make -j$(nproc) install
+RUN cd $HOME/tvm/python && python setup.py install
+RUN cd $HOME/tvm/topi/python && python setup.py install
+RUN cd $HOME/tvm/nnvm/python && python setup.py install
