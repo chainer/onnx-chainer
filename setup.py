@@ -7,7 +7,7 @@ setup(
         'onnx_chainer.functions',
         'onnx_chainer.functions',
     ],
-    version='1.0.0a1',
+    version='1.1.1a1',
     description='ONNX support for Chainer',
     author='Shunta Saito',
     author_email='shunta@preferred.jp',
