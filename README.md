@@ -20,7 +20,10 @@ This is an add-on package for ONNX support by Chainer.
 
 ### On Ubuntu 14.04/16.04
 
+**Please install Chainer first.**
+
 ```bash
+pip install chainer
 pip install onnx-chainer
 ```
 
