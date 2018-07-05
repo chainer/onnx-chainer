@@ -19,7 +19,7 @@ notifications:
   email: false
 
 before_install:
-- docker pull mitmul/onnx-chainer:python${TRAVIS_PYTHON_VERSION}-chainer${chainer_version}
+- docker pull mitmul/onnx-chainer:python${TRAVIS_PYTHON_VERSION}-chainer${CHAINER_VERSION}
 
 script:
   - bash docker/run_tests.sh
