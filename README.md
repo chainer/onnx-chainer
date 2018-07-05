@@ -189,7 +189,7 @@ np.testing.assert_almost_equal(chainer_out, nnvm_output, decimal=5)
 
 ## Supported Functions
 
-Currently 50 Chainer Functions are supported to export in ONNX format.
+Currently 49 Chainer Functions are supported to export in ONNX format.
 
 ### Activation
 
