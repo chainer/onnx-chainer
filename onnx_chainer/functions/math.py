@@ -12,6 +12,16 @@ def convert_Add(func, input_names, output_names, parameters):
     return helper.make_node(onnx_op_name, input_names, output_names),
 
 
+def convert_AddConstant(func, input_names, output_names, parameters):
+    value = np.asarray([func.value], dtype=func.inputs[0].dtype)
+    value = np.broadcast_to(value, func.inputs[0].shape)
+    value_param = chainer.Parameter(value)
+    parameters.append(value_param)
+    input_names.append(str(id(value_param)))
+    onnx_op_name = mapping.operators[func.__class__.__name__]
+    return helper.make_node(onnx_op_name, input_names, output_names),
+
+
 def convert_Sub(func, input_names, output_names, parameters):
     onnx_op_name = mapping.operators[func.__class__.__name__]
     return helper.make_node(onnx_op_name, input_names, output_names),

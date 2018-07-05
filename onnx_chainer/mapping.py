@@ -52,6 +52,7 @@ operators = {
 
     # Math
     'Add': 'Add',
+    'AddConstant': 'Add',
     'Absolute': 'Abs',
     'Div': 'Div',
     'Mul': 'Mul',
