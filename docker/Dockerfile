@@ -41,6 +41,18 @@ RUN curl -L -O https://cmake.org/files/v3.11/cmake-3.11.1-Linux-x86_64.sh && \
 
 WORKDIR /root
 
+# Build LLVM
+RUN cd /root && \
+    curl -L -O http://releases.llvm.org/6.0.1/llvm-6.0.1.src.tar.xz && \
+    tar xf llvm-6.0.1.src.tar.xz && rm -rf llvm-6.0.1.src.tar.xz && \
+    cd /root/llvm-6.0.1.src && \
+    mkdir build && cd build && \
+    cmake .. && \
+    cmake --build . -- -j16 && \
+    cmake --build . --target install && \
+    rm -rf /root/llvm-6.0.1.src
+
+# Install pyenv
 RUN curl -L -O https://github.com/pyenv/pyenv/archive/v1.2.4.tar.gz && \
     tar zxvf v1.2.4.tar.gz && rm -rf v1.2.4.tar.gz && \
     mv pyenv-1.2.4 .pyenv
@@ -87,17 +99,6 @@ RUN pip install --no-cache-dir \
 # Install Chainer
 ARG CHAINER_VERSION="4.2.0"
 RUN pip install chainer==${CHAINER_VERSION}
-
-# Build LLVM
-RUN cd /root && \
-    curl -L -O http://releases.llvm.org/6.0.1/llvm-6.0.1.src.tar.xz && \
-    tar xf llvm-6.0.1.src.tar.xz && rm -rf llvm-6.0.1.src.tar.xz && \
-    cd /root/llvm-6.0.1.src && \
-    mkdir build && cd build && \
-    cmake .. && \
-    cmake --build . -- -j16 && \
-    cmake --build . --target install && \
-    rm -rf /root/llvm-6.0.1.src
 
 ENV LD_LIBRARY_PATH /usr/local/lib:$LD_LIBRARY_PATH
 ENV LIBRARY_PATH /usr/local/lib:$LIBRARY_PATH
