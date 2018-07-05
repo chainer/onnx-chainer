@@ -1,11 +1,21 @@
 import unittest
 
-import chainer
-import chainer.links as L
-from chainer import testing
 import numpy as np
 
+import chainer
+from chainer import testing
+import chainer.links as L
 import onnx_chainer
+from onnx_chainer.testing import test_mxnet
+
+MXNET_SUPPORT = {
+    'Convolution2D': True,
+    'ConvolutionND': False,
+    'DilatedConvolution2D': True,
+    'Deconvolution2D': True,
+    'EmbedID': False,
+    'Linear': True,
+}
 
 
 @testing.parameterize(
@@ -55,11 +65,10 @@ class TestConnections(unittest.TestCase):
 
         self.model = Model(self.link, self.args)
         self.x = np.zeros(self.in_shape, dtype=self.in_type)
+        self.fn = self.link.__name__ + '.onnx'
 
-    def test_export_test(self):
-        chainer.config.train = False
-        onnx_chainer.export(self.model, self.x)
-
-    def test_export_train(self):
-        chainer.config.train = True
-        onnx_chainer.export(self.model, self.x)
+    def test_compatibility(self):
+        if MXNET_SUPPORT[self.link.__name__]:
+            test_mxnet.check_compatibility(self.model, self.x, self.fn)
+        else:
+            onnx_chainer.export(self.model, self.x)

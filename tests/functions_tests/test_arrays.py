@@ -1,12 +1,25 @@
 import unittest
 
-import chainer
-import chainer.functions as F
 import numpy as np
 
+import chainer
 from chainer import testing
+import chainer.functions as F
 import onnx_chainer
+from onnx_chainer.testing import test_mxnet
+from onnx.backend.test.case import model
 
+MXNET_SUPPORT = {
+    'cast': True,
+    'depth2space': False,
+    'pad': False,
+    'reshape': True,
+    'space2depth': False,
+    'split_axis': False,
+    'squeeze': False,
+    'tile': False,
+    'transpose': True
+}
 
 @testing.parameterize(
     {'ops': 'cast', 'input_shape': (1, 5),
@@ -83,14 +96,13 @@ class TestArrayOperators(unittest.TestCase):
 
         self.model = Model(self.ops, self.args, self.input_argname)
         self.x = np.zeros(self.input_shape, dtype=np.float32)
+        self.fn = self.ops + '.onnx'
 
-    def test_export_test(self):
-        chainer.config.train = False
-        onnx_chainer.export(self.model, self.x)
-
-    def test_export_train(self):
-        chainer.config.train = True
-        onnx_chainer.export(self.model, self.x)
+    def test_compatibility(self):
+        if MXNET_SUPPORT[self.ops]:
+            test_mxnet.check_compatibility(self.model, self.x, self.fn)
+        else:
+            onnx_chainer.export(self.model, self.x)
 
 
 class TestConcat(unittest.TestCase):
@@ -101,17 +113,15 @@ class TestConcat(unittest.TestCase):
             def __init__(self):
                 super(Model, self).__init__()
 
-            def __call__(self, x):
-                y = chainer.Variable(np.ones(x.shape).astype(x.dtype))
-                return F.concat((x, y))
+            def __call__(self, x1, x2):
+                return F.concat((x1, x2))
 
         self.model = Model()
-        self.x = np.zeros((1, 5), dtype=np.float32)
+        self.x1 = np.zeros((1, 5), dtype=np.float32)
+        self.x2 = np.ones((1, 5), dtype=np.float32)
+        self.fn = 'Concat.onnx'
 
-    def test_export_test(self):
-        chainer.config.train = False
-        onnx_chainer.export(self.model, self.x)
-
-    def test_export_train(self):
-        chainer.config.train = True
-        onnx_chainer.export(self.model, self.x)
+    def test_backend(self):
+        y = self.model(self.x1, self.x2)
+        onnx_model = onnx_chainer.export(self.model, (self.x1, self.x2))
+        model.expect(onnx_model, (self.x1,), y)

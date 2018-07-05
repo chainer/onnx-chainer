@@ -1,3 +1,6 @@
+vgg16.onnx
+resnet50.onnx
+
 .vscode/
 check_autopep8
 .DS_Store
@@ -9,6 +12,8 @@ check_autopep8
 *.onnx
 *.pb
 *.pbtxt
+*.txt
+.chainer/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

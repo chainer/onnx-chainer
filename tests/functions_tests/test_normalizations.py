@@ -1,18 +1,19 @@
 import unittest
 
-import chainer
-import chainer.functions as F
-import chainer.links as L
-from chainer import testing
 import numpy as np
 
+import chainer
+from chainer import testing
+import chainer.functions as F
+import chainer.links as L
 import onnx_chainer
+from onnx_chainer.testing import test_mxnet
 
 
 @testing.parameterize(
-    {'ops': F.local_response_normalization,
+    {'name': 'local_response_normalization',
      'input_argname': 'x',
-     'args': {'n': 5, 'k': 2, 'alpha': 1e-4, 'beta': 0.75}},
+     'args': {'k': 1, 'n': 3, 'alpha': 1e-4, 'beta': 0.75}},
 )
 class TestNormalizations(unittest.TestCase):
 
@@ -27,20 +28,16 @@ class TestNormalizations(unittest.TestCase):
                 self.input_argname = input_argname
 
             def __call__(self, x):
-                x = F.identity(x)
                 self.args[self.input_argname] = x
                 return self.ops(**self.args)
 
-        self.model = Model(self.ops, self.args, self.input_argname)
-        self.x = np.zeros((1, 5), dtype=np.float32)
+        ops = getattr(F, self.name)
+        self.model = Model(ops, self.args, self.input_argname)
+        self.x = np.zeros((1, 5, 3, 3), dtype=np.float32)
+        self.fn = self.name + '.onnx'
 
-    def test_export_test(self):
-        chainer.config.train = False
-        onnx_chainer.export(self.model, self.x)
-
-    def test_export_train(self):
-        chainer.config.train = True
-        onnx_chainer.export(self.model, self.x)
+    def test_compatibility(self):
+        test_mxnet.check_compatibility(self.model, self.x, self.fn)
 
 
 class TestBatchNormalization(unittest.TestCase):
@@ -55,16 +52,11 @@ class TestBatchNormalization(unittest.TestCase):
                     self.bn = L.BatchNormalization(5)
 
             def __call__(self, x):
-                x = F.identity(x)
                 return self.bn(x)
 
         self.model = Model()
         self.x = np.zeros((1, 5), dtype=np.float32)
+        self.fn = 'BatchNormalization.onnx'
 
-    def test_export_test(self):
-        chainer.config.train = False
-        onnx_chainer.export(self.model, self.x)
-
-    def test_export_train(self):
-        chainer.config.train = True
-        onnx_chainer.export(self.model, self.x)
+    def test_compatibility(self):
+        test_mxnet.check_compatibility(self.model, self.x, self.fn)

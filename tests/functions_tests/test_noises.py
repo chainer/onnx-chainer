@@ -1,3 +1,4 @@
+from onnx_chainer.testing import test_mxnet
 import unittest
 
 import chainer
@@ -9,7 +10,7 @@ import onnx_chainer
 
 
 @testing.parameterize(
-    {'ops': F.dropout, 'input_argname': 'x', 'args': {'ratio': 0.5}},
+    {'name': 'dropout', 'ops': lambda x: F.dropout(x, ratio=0.5)},
 )
 class TestNoises(unittest.TestCase):
 
@@ -17,24 +18,18 @@ class TestNoises(unittest.TestCase):
 
         class Model(chainer.Chain):
 
-            def __init__(self, ops, args, input_argname):
+            def __init__(self, ops):
                 super(Model, self).__init__()
                 self.ops = ops
-                self.args = args
-                self.input_argname = input_argname
 
             def __call__(self, x):
-                x = F.identity(x)
-                self.args[self.input_argname] = x
-                return self.ops(**self.args)
+                with chainer.using_config('train', True):
+                    y = self.ops(x)
+                return y
 
-        self.model = Model(self.ops, self.args, self.input_argname)
+        self.model = Model(self.ops)
         self.x = np.zeros((1, 5), dtype=np.float32)
+        self.fn = self.name + '.onnx'
 
-    def test_export_test(self):
-        chainer.config.train = False
-        onnx_chainer.export(self.model, self.x)
-
-    def test_export_train(self):
-        chainer.config.train = True
-        onnx_chainer.export(self.model, self.x)
+    def test_compatibility(self):
+        test_mxnet.check_compatibility(self.model, self.x, self.fn)

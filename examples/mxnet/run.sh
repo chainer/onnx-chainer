@@ -1,7 +1,7 @@
 #!/bin/bash
 
-docker run \
--v $PWD/../../:/root/onnx-chainer \
--v $HOME/.chainer:/root/.chainer \
--ti mitmul/onnx-chainer:latest \
-bash -c "cd /root/ && cd onnx-chainer && ls && python setup.py develop && /bin/bash"
+docker run --rm \
+-v $PWD:/root/onnx-chainer \
+-v $PWD/.chainer:/root/.chainer \
+-ti mitmul/onnx-chainer:python2.7-chainer3.5.0 \
+bash -c "cd /root/onnx-chainer && python setup.py develop && python examples/mxnet/export.py"

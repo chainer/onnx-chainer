@@ -1,89 +1,123 @@
-FROM ubuntu:trusty
+FROM ubuntu:16.04
 
 MAINTAINER Shunta Saito <shunta.saito@gmail.com>
 
-RUN apt-get update
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    cmake \
     curl \
-    git
+    wget \
+    git \
+    libgflags-dev \
+    libgtest-dev \
+    libleveldb-dev \
+    liblmdb-dev \
+    libopencv-dev \
+    libsnappy-dev \
+    libprotobuf-dev \
+    libprotoc-dev \
+    libgoogle-glog-dev \
+    protobuf-compiler \
+    python-dev \
+    python-pip \
+    python-dbg \
+    python3-dev \
+    python3-pip \
+    python3-dbg \
+    libssl-dev \
+    zlib1g-dev \
+    libbz2-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    llvm \
+    libncurses5-dev \
+    libncursesw5-dev \
+    xz-utils \
+    tk-dev
 
-RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-4.3.21-Linux-x86_64.sh -o miniconda.sh
-RUN bash miniconda.sh -b -p miniconda
-ENV PATH /miniconda/bin:$PATH
-ENV LD_LIBRARY_PATH /miniconda/lib:$LD_LIBRARY_PATH
+RUN apt-get purge -y cmake
+RUN curl -L -O https://cmake.org/files/v3.11/cmake-3.11.1-Linux-x86_64.sh && \
+    bash cmake-3.11.1-Linux-x86_64.sh --skip-license && rm -rf cmake-3.11.1-Linux-x86_64.sh
+
+WORKDIR /root
+
+# Build LLVM
+RUN cd /root && \
+    curl -L -O http://releases.llvm.org/6.0.1/llvm-6.0.1.src.tar.xz && \
+    tar xf llvm-6.0.1.src.tar.xz && rm -rf llvm-6.0.1.src.tar.xz && \
+    cd /root/llvm-6.0.1.src && \
+    mkdir build && cd build && \
+    cmake .. && \
+    cmake --build . -- -j16 && \
+    cmake --build . --target install && \
+    rm -rf /root/llvm-6.0.1.src
+
+# Install pyenv
+RUN curl -L -O https://github.com/pyenv/pyenv/archive/v1.2.4.tar.gz && \
+    tar zxvf v1.2.4.tar.gz && rm -rf v1.2.4.tar.gz && \
+    mv pyenv-1.2.4 .pyenv
+
+ENV PYENV_ROOT=/root/.pyenv
+ENV PATH $PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH
+RUN eval "$(pyenv init -)"
+
+ARG PYTHON_VERSION="3.5"
+
+RUN if [ ${PYTHON_VERSION} = "3.6" ]; then \
+        pyenv install 3.6.5; \
+        pyenv global 3.6.5; \
+        pyenv rehash; \
+    elif [ ${PYTHON_VERSION} = "3.5" ]; then \
+        pyenv install 3.5.5; \
+        pyenv global 3.5.5; \
+        pyenv rehash; \
+    elif [ ${PYTHON_VERSION} = "2.7" ]; then \
+        pyenv install 2.7.14; \
+        pyenv global 2.7.14; \
+        pyenv rehash; \
+    fi
+
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+RUN pip install --no-cache-dir future hypothesis numpy protobuf six
+RUN pip install --no-cache-dir \
+    flask \
+    graphviz \
+    jupyter \
+    matplotlib \
+    pydot \
+    python-nvd3 \
+    pyyaml \
+    requests \
+    scikit-image \
+    scipy \
+    setuptools \
+    tornado \
+    pytest \
+    future \
+    hypothesis 
+
+# Install Chainer
+ARG CHAINER_VERSION="4.2.0"
+RUN pip install chainer==${CHAINER_VERSION}
+
 ENV LD_LIBRARY_PATH /usr/local/lib:$LD_LIBRARY_PATH
-ENV LIBRARY_PATH /miniconda/lib:$LIBRARY_PATH
-ENV CPATH /miniconda/include:$CPATH
+ENV LIBRARY_PATH /usr/local/lib:$LIBRARY_PATH
 
-RUN conda config --set always_yes yes --set changeps1 no
-RUN conda install -c conda-forge protobuf
-RUN conda install -c conda-forge glog
-RUN conda install -c conda-forge numpy 
-RUN conda install -c conda-forge scipy 
-RUN conda install -c conda-forge cmake
-RUN conda install -c conda-forge gflags
-RUN conda install -c conda-forge pybind11
-
-RUN pip install chainer==3.1.0
-RUN pip install future
-RUN pip install hypothesis
-RUN pip install flake8
-RUN pip install hacking
-RUN pip install autopep8
-RUN pip install mock
-RUN pip install pytest
-RUN pip install six
-RUN pip install onnx==1.0.0
-
-RUN git clone --recursive https://github.com/caffe2/caffe2.git $HOME/caffe2
-RUN cd $HOME/caffe2 && mkdir build && cd build \
-    && cmake .. \
-    -DUSE_CUDA=OFF \
-    -DUSE_NCCL=OFF \
-    -DUSE_NNPACK=OFF \
-    -DUSE_ROCKSDB=OFF \
-    -DUSE_LEVELDB=OFF \
-    -DUSE_LMDB=OFF \
-    -DUSE_OPENCV=OFF \
-    -DBUILD_TEST=OFF \
-    -DBUILD_BENCHMARK=OFF \
-    -DPYTHON_EXECUTABLE=/miniconda/bin/python \
-    -DPYTHON_INCLUDE_DIR=/miniconda/include \
-    -DPYTHON_INCLUDE_DIR2=/miniconda/include/python3.6m \
-    -DPYTHON_LIBRARY=/miniconda/lib/libpython3.6m.so \
-    -DPYTHON_LIBRARY_DEBUG=/miniconda/lib/libpython3.6m.so \
-    -DPROTOBUF_INCLUDE_DIR=/miniconda/include \
-    -DPROTOBUF_LIBRARY=/miniconda/lib/libprotobuf.so \
-    -DPROTOBUF_LIBRARY_DEBUG=/miniconda/lib/libprotobuf.so \
-    -DPROTOBUF_LITE_LIBRARY=/miniconda/lib/libprotobuf-lite.so \
-    -DPROTOBUF_LITE_LIBRARY_DEBUG=/miniconda/lib/libprotobuf-lite.so \
-    -DPROTOBUF_PROTOC_LIBRARY=/miniconda/lib/libprotoc.so \
-    -DPROTOBUF_PROTOC_LIBRARY_DEBUG=/miniconda/lib/libprotoc.so \
-    -Dpybind11_INCLUDE_DIR=/miniconda/include/python3.6m
-RUN cd $HOME/caffe2/build && \
-    LDFLAGS="-L/miniconda/lib" LD_LIBRARY_PATH="/miniconda/lib" \
-    CFLAGS="-I/miniconda/include" CPATH="/miniconda/include" \
-    make -j"$(nproc)" install
-ENV PYTHONPATH /usr/local/
-RUN python -c 'from caffe2.python import core' 2>/dev/null && echo "Success" || echo "Failure"
-RUN pip install onnx-caffe2==1.0.0
+# Install ChainerCV
+ARG CHAINERCV_VERSION="0.10.0"
+RUN pip install chainercv==${CHAINERCV_VERSION}
 
 # Install MXNet
-RUN pip install mxnet
-RUN cd $HOME && git clone https://github.com/onnx/onnx-mxnet.git && cd onnx-mxnet && python setup.py install
-
-# Install NNVM
-RUN git clone --recursive https://github.com/dmlc/nnvm $HOME/nnvm
-RUN cd $HOME/nnvm && mkdir build && cd build \
-    && cmake -DCMAKE_INSTALL_PREFIX=../install ..
-RUN cd $HOME/nnvm/build && make -j$(nproc) install
-RUN cd $HOME/nnvm/python && python setup.py install
+ARG MXNET_VERSION="1.2.0"
+RUN pip install mxnet==${MXNET_VERSION}
 
 # Install TVM
+ARG TVM_COMMIT_ID="ebdde3c277a9807a67b233cecfaf6d9f96c0c1bc"
 RUN git clone --recursive https://github.com/dmlc/tvm $HOME/tvm
-RUN cd $HOME/tvm && mkdir build && cd build \
-    && cmake -DCMAKE_INSTALL_PREFIX=../install .. \
+RUN cd $HOME/tvm && git checkout ${TVM_COMMIT_ID} && \
+    mkdir build && cd build \
+    && cmake -DUSE_LLVM=ON .. \
     && make -j$(nproc) install
 RUN cd $HOME/tvm/python && python setup.py install
 RUN cd $HOME/tvm/topi/python && python setup.py install
+RUN cd $HOME/tvm/nnvm/python && python setup.py install

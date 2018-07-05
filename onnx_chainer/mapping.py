@@ -1,6 +1,5 @@
-from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
-
 TENSOR_TYPE_TO_NAME = {
+    0: 'UNDEFINED',
     1: 'FLOAT',
     2: 'UINT8',
     3: 'INT8',
@@ -17,8 +16,6 @@ TENSOR_TYPE_TO_NAME = {
     14: 'COMPLEX64',
     15: 'COMPLEX128',
 }
-
-dtypes = NP_TYPE_TO_TENSOR_TYPE
 
 operators = {
     # Activation
@@ -50,8 +47,8 @@ operators = {
     'ConvolutionND': 'Conv',
     'Deconvolution2DFunction': 'ConvTranspose',
     'DeconvolutionND': 'ConvTranspose',
-    'EmbedIDFunction': 'Embedding',
-    'LinearFunction': 'FC',
+    'EmbedIDFunction': 'Gather',
+    'LinearFunction': 'Gemm',
 
     # Math
     'Add': 'Add',
@@ -64,11 +61,10 @@ operators = {
     'Clip': 'Clip',
     'Exp': 'Exp',
     'Identity': 'Identity',
-    'MatMul': 'Matmul',
+    'MatMul': 'Gemm',
     'Maximum': 'Max',
     'Minimum': 'Min',
     'Sqrt': 'Sqrt',
-    'SquaredDifference': ['Sub', 'Pow'],
     'Sum': 'ReduceSum',
 
     # Noise
