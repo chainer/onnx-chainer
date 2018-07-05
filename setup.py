@@ -5,10 +5,12 @@ setup(
     packages=[
         'onnx_chainer',
         'onnx_chainer.functions',
-        'onnx_chainer.functions',
+        'onnx_chainer.testing',
     ],
     version='1.1.1a1',
-    description='ONNX support for Chainer',
+    description='Convert a Chainer model into ONNX',
+    long_description=open('README.md').read(),
+    long_description_content_type='text/markdown',
     author='Shunta Saito',
     author_email='shunta@preferred.jp',
     url='https://github.com/mitmul/onnx-chainer',
@@ -22,5 +24,5 @@ setup(
         'onnx<=1.1.2',
         'numpy',
     ],
-    license='MIT',
+    license='MIT License',
 )
