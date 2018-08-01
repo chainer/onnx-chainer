@@ -23,6 +23,13 @@ def convert_Concat(func, input_names, output_names, parameters):
     ),
 
 
+def convert_Copy(func, input_names, output_names, parameters):
+    onnx_op_name = mapping.operators[func.__class__.__name__]
+    return helper.make_node(
+        onnx_op_name, input_names, output_names
+    ),
+
+
 def convert_Depth2Space(
         func, input_names, output_names, parameters):
     onnx_op_name = mapping.operators[func.__class__.__name__]
