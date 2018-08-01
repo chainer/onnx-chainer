@@ -22,6 +22,7 @@ MXNET_SUPPORT = {
     'MatMul': True,
     'Maximum': True,
     'Minimum': True,
+    'LinearInterpolate': False,
 }
 
 
@@ -93,6 +94,41 @@ class TestBinaryMathOperators(unittest.TestCase):
         b = chainer.Variable(np.ones((2, 3), dtype=np.float32) * 2)
         self.x = (a, b)
         print(self.x)
+        self.fn = self.info + '.onnx'
+
+    def test_compatibility(self):
+        if MXNET_SUPPORT[self.info]:
+            test_mxnet.check_compatibility(self.model, self.x, self.fn)
+        else:
+            onnx_chainer.export(self.model, self.x)
+
+
+@testing.parameterize(
+    {'info': 'LinearInterpolate', 'ops': 'chainer.functions.linear_interpolate(a, b, c)'},
+)
+class TestTernaryMathOperators(unittest.TestCase):
+
+    def setUp(self):
+        class Model(chainer.Chain):
+
+            def __init__(self, ops):
+                super(Model, self).__init__()
+                self.ops = ops
+
+            def __call__(self, a, b, c):
+                if not isinstance(a, chainer.Variable):
+                    a = chainer.Varaible(a)
+                if not isinstance(b, chainer.Variable):
+                    b = chainer.Varaible(b)
+                if not isinstance(b, chainer.Variable):
+                    c = chainer.Varaible(b)
+                return eval(self.ops)
+
+        self.model = Model(self.ops)
+        a = chainer.Variable(np.ones((2, 3), dtype=np.float32))
+        b = chainer.Variable(np.ones((2, 3), dtype=np.float32) * 2)
+        c = chainer.Variable(np.ones((2, 3), dtype=np.float32) * 3)
+        self.x = (a, b, c)
         self.fn = self.info + '.onnx'
 
     def test_compatibility(self):

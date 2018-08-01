@@ -42,6 +42,7 @@ from onnx_chainer.functions.math import convert_Maximum  # NOQA
 from onnx_chainer.functions.math import convert_Minimum  # NOQA
 from onnx_chainer.functions.math import convert_Sqrt  # NOQA
 from onnx_chainer.functions.math import convert_Sum  # NOQA
+from onnx_chainer.functions.math import convert_LinearInterpolate  # NOQA
 
 from onnx_chainer.functions.noise import convert_Dropout  # NOQA
 
