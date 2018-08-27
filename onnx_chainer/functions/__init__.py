@@ -29,6 +29,7 @@ from onnx_chainer.functions.connection import convert_LinearFunction  # NOQA
 
 from onnx_chainer.functions.math import convert_Absolute  # NOQA
 from onnx_chainer.functions.math import convert_Add  # NOQA
+from onnx_chainer.functions.math import convert_AddConstant  # NOQA
 from onnx_chainer.functions.math import convert_Div  # NOQA
 from onnx_chainer.functions.math import convert_Mul  # NOQA
 from onnx_chainer.functions.math import convert_Neg  # NOQA

@@ -16,6 +16,7 @@ MXNET_SUPPORT = {
     'PowVarConst': True,
     'Sum': True,
     'Add': True,
+    'AddConst': True,
     'Sub': True,
     'Mul': True,
     'Div': True,
@@ -37,6 +38,7 @@ MXNET_SUPPORT = {
      'ops': 'chainer.functions.sum(a, axis=1)'},
     {'info': 'Sum',
      'ops': 'chainer.functions.sum(a, axis=0, keepdims=True)'},
+    {'info': 'AddConst', 'ops': 'a + 1'},
 )
 class TestUnaryMathOperators(unittest.TestCase):
 
