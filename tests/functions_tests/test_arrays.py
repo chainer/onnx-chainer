@@ -11,6 +11,7 @@ from onnx.backend.test.case import model
 
 MXNET_SUPPORT = {
     'cast': True,
+    'copy': False,
     'depth2space': False,
     'pad': False,
     'reshape': True,
@@ -77,6 +78,10 @@ MXNET_SUPPORT = {
     {'ops': 'transpose', 'input_shape': (1, 5),
      'input_argname': 'x',
      'args': {'axes': None}},
+
+    {'ops': 'copy', 'input_shape': (1, 5),
+     'input_argname': 'x',
+     'args': {'dst': -1}},
 )
 class TestArrayOperators(unittest.TestCase):
 

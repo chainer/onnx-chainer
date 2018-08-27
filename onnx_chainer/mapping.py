@@ -33,6 +33,7 @@ operators = {
     # Array
     'Cast': 'Cast',
     'Concat': 'Concat',
+    'Copy': 'Identity',
     'Depth2Space': 'DepthToSpace',
     'Pad': 'Pad',
     'Reshape': 'Reshape',
