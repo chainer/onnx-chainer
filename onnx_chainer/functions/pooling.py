@@ -3,8 +3,7 @@ from onnx import helper
 from onnx_chainer import mapping
 
 
-def convert_AveragePooling2D(func, input_names, output_names, parameters):
-    onnx_op_name = mapping.operators[func.__class__.__name__]
+def convert_AveragePooling2D(func, onnx_op_name, input_names, output_names, parameters):
     return helper.make_node(
         onnx_op_name, input_names, output_names,
         kernel_shape=(func.kh, func.kw),
@@ -13,8 +12,7 @@ def convert_AveragePooling2D(func, input_names, output_names, parameters):
     ),
 
 
-def convert_AveragePoolingND(func, input_names, output_names, parameters):
-    onnx_op_name = mapping.operators[func.__class__.__name__]
+def convert_AveragePoolingND(func, onnx_op_name, input_names, output_names, parameters):
     return helper.make_node(
         onnx_op_name, input_names, output_names,
         kernel_shape=func.ksize,
@@ -23,8 +21,7 @@ def convert_AveragePoolingND(func, input_names, output_names, parameters):
     ),
 
 
-def convert_MaxPooling2D(func, input_names, output_names, parameters):
-    onnx_op_name = mapping.operators[func.__class__.__name__]
+def convert_MaxPooling2D(func, onnx_op_name, input_names, output_names, parameters):
     return helper.make_node(
         onnx_op_name, input_names, output_names,
         kernel_shape=(func.kh, func.kw),
@@ -33,8 +30,7 @@ def convert_MaxPooling2D(func, input_names, output_names, parameters):
     ),
 
 
-def convert_MaxPoolingND(func, input_names, output_names, parameters):
-    onnx_op_name = mapping.operators[func.__class__.__name__]
+def convert_MaxPoolingND(func, onnx_op_name, input_names, output_names, parameters):
     return helper.make_node(
         onnx_op_name, input_names, output_names,
         kernel_shape=func.ksize,

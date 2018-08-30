@@ -17,21 +17,22 @@ TENSOR_TYPE_TO_NAME = {
     15: 'COMPLEX128',
 }
 
+# Chainer Function -> (ONNX Operator, Operator set ID)
 operators = {
     # Activation
-    'ELU': 'Elu',
-    'HardSigmoid': 'HardSigmoid',
-    'LeakyReLU': 'LeakyRelu',
-    'LogSoftmax': 'LogSoftmax',
-    'PReLUFunction': 'PRelu',
-    'ReLU': 'Relu',
-    'Sigmoid': 'Sigmoid',
-    'Softmax': 'Softmax',
-    'Softplus': 'Softplus',
-    'Tanh': 'Tanh',
+    'ELU': ('Elu', 6),
+    'HardSigmoid': ('HardSigmoid', 6),
+    'LeakyReLU': ('LeakyRelu', 6),
+    'LogSoftmax': ('LogSoftmax', 1),
+    'PReLUFunction': ('PRelu', 7),
+    'ReLU': ('Relu', 6),
+    'Sigmoid': ('Sigmoid', 6),
+    'Softmax': ('Softmax', 1),
+    'Softplus': ('Softplus', 1),
+    'Tanh': ('Tanh', 6),
 
     # Array
-    'Cast': 'Cast',
+    'Cast': ('Cast', 1),
     'Concat': 'Concat',
     'Copy': 'Identity',
     'Depth2Space': 'DepthToSpace',

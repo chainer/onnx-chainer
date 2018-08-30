@@ -65,7 +65,7 @@ class TestWithNNVMBackend(unittest.TestCase):
 
         shape_dict = {input_name: self.x.shape}
         graph, lib, params = nnvm.compiler.build(
-            sym, target, shape_dict, params=params)
+            sym, target, shape_dict, params=params, dtype={input_name: 'float32'})
         module = tvm.contrib.graph_runtime.create(graph, lib, tvm.cpu(0))
         module.set_input(input_name, tvm.nd.array(self.x))
         module.set_input(**params)

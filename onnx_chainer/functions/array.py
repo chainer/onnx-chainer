@@ -6,8 +6,7 @@ from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 from onnx_chainer import mapping
 
 
-def convert_Cast(func, input_names, output_names, parameters):
-    onnx_op_name = mapping.operators[func.__class__.__name__]
+def convert_Cast(func, onnx_op_name, input_names, output_names, parameters):
     typ = func.type if isinstance(func.type, np.dtype) else np.dtype(func.type)
     return helper.make_node(
         onnx_op_name, input_names, output_names,
@@ -15,40 +14,35 @@ def convert_Cast(func, input_names, output_names, parameters):
     ),
 
 
-def convert_Concat(func, input_names, output_names, parameters):
-    onnx_op_name = mapping.operators[func.__class__.__name__]
+def convert_Concat(func, onnx_op_name, input_names, output_names, parameters):
     return helper.make_node(
         onnx_op_name, input_names, output_names,
         axis=func.axis
     ),
 
 
-def convert_Copy(func, input_names, output_names, parameters):
-    onnx_op_name = mapping.operators[func.__class__.__name__]
+def convert_Copy(func, onnx_op_name, input_names, output_names, parameters):
     return helper.make_node(
         onnx_op_name, input_names, output_names
     ),
 
 
 def convert_Depth2Space(
-        func, input_names, output_names, parameters):
-    onnx_op_name = mapping.operators[func.__class__.__name__]
+        func, onnx_op_name, input_names, output_names, parameters):
     return helper.make_node(
         onnx_op_name, input_names, output_names,
         blocksize=func.r
     ),
 
 
-def convert_GetItem(func, input_names, output_names, parameters):
-    onnx_op_name = mapping.operators[func.__class__.__name__]
+def convert_GetItem(func, onnx_op_name, input_names, output_names, parameters):
     return helper.make_node(
         onnx_op_name, input_names, output_names,
         slice=func.slices
     ),
 
 
-def convert_Pad(func, input_names, output_names, parameters):
-    onnx_op_name = mapping.operators[func.__class__.__name__]
+def convert_Pad(func, onnx_op_name, input_names, output_names, parameters):
 
     if func.mode not in ['constant', 'reflect', 'edge']:
         raise ValueError(
@@ -80,32 +74,26 @@ def convert_Pad(func, input_names, output_names, parameters):
     return node,
 
 
-def convert_Reshape(func, input_names, output_names, parameters):
-    onnx_op_name = mapping.operators[func.__class__.__name__]
+def convert_Reshape(func, onnx_op_name, input_names, output_names, parameters):
 
-    # TODO(mitmul): This part is needed for opset_version > 1
-    # # Add tiles and axis to graph
-    # shape = np.asarray(func.shape, dtype=np.int64)
-    # shape_param = chainer.Parameter(shape)
-    # parameters.append(shape_param)
-    # input_names.append(str(id(shape_param)))
+    shape = np.asarray(list(func.shape), dtype=np.int64)
+    shape_param = chainer.Parameter(shape)
+    parameters.append(shape_param)
+    input_names.append(str(id(shape_param)))
 
     return helper.make_node(
         onnx_op_name, input_names, output_names,
-        shape=func.shape
     ),
 
 
-def convert_Space2Depth(func, input_names, output_names, parameters):
-    onnx_op_name = mapping.operators[func.__class__.__name__]
+def convert_Space2Depth(func, onnx_op_name, input_names, output_names, parameters):
     return helper.make_node(
         onnx_op_name, input_names, output_names,
         blocksize=func.r
     ),
 
 
-def convert_SplitAxis(func, input_names, output_names, parameters):
-    onnx_op_name = mapping.operators[func.__class__.__name__]
+def convert_SplitAxis(func, onnx_op_name, input_names, output_names, parameters):
 
     if func.indices is not None:
         indices_or_sections = func.indices
@@ -129,8 +117,7 @@ def convert_SplitAxis(func, input_names, output_names, parameters):
     ),
 
 
-def convert_Squeeze(func, input_names, output_names, parameters):
-    onnx_op_name = mapping.operators[func.__class__.__name__]
+def convert_Squeeze(func, onnx_op_name, input_names, output_names, parameters):
 
     if func.axis is None:
         axis = []
@@ -146,8 +133,7 @@ def convert_Squeeze(func, input_names, output_names, parameters):
     ),
 
 
-def convert_Tile(func, input_names, output_names, parameters):
-    onnx_op_name = mapping.operators[func.__class__.__name__]
+def convert_Tile(func, onnx_op_name, input_names, output_names, parameters):
 
     # Add tiles and axis to graph
     if isinstance(func.reps, int):
@@ -168,8 +154,7 @@ def convert_Tile(func, input_names, output_names, parameters):
     return node,
 
 
-def convert_Transpose(func, input_names, output_names, parameters):
-    onnx_op_name = mapping.operators[func.__class__.__name__]
+def convert_Transpose(func, onnx_op_name, input_names, output_names, parameters):
 
     if func.axes is None:
         node = helper.make_node(onnx_op_name, input_names, output_names)

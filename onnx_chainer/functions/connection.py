@@ -5,9 +5,7 @@ from onnx import helper
 from onnx_chainer import mapping
 
 
-def convert_Convolution2DFunction(func, input_names, output_names, parameters):
-    onnx_op_name = mapping.operators[func.__class__.__name__]
-
+def convert_Convolution2DFunction(func, onnx_op_name, input_names, output_names, parameters):
     if hasattr(func, 'dy') and hasattr(func, 'dx'):
         node = helper.make_node(
             onnx_op_name, input_names, output_names,
@@ -29,8 +27,7 @@ def convert_Convolution2DFunction(func, input_names, output_names, parameters):
     return node,
 
 
-def convert_ConvolutionND(func, input_names, output_names, parameters):
-    onnx_op_name = mapping.operators[func.__class__.__name__]
+def convert_ConvolutionND(func, onnx_op_name, input_names, output_names, parameters):
     return helper.make_node(
         onnx_op_name, input_names, output_names,
         kernel_shape=func.inputs[1].shape[2:],
@@ -39,10 +36,7 @@ def convert_ConvolutionND(func, input_names, output_names, parameters):
     ),
 
 
-def convert_Deconvolution2DFunction(
-        func, input_names, output_names, parameters):
-    onnx_op_name = mapping.operators[func.__class__.__name__]
-
+def convert_Deconvolution2DFunction(func, onnx_op_name, input_names, output_names, parameters):
     return helper.make_node(
         onnx_op_name, input_names, output_names,
         kernel_shape=func.inputs[1].shape[2:],
@@ -52,9 +46,7 @@ def convert_Deconvolution2DFunction(
     ),
 
 
-def convert_DeconvolutionND(func, input_names, output_names, parameters):
-    onnx_op_name = mapping.operators[func.__class__.__name__]
-
+def convert_DeconvolutionND(func, onnx_op_name, input_names, output_names, parameters):
     return helper.make_node(
         onnx_op_name, input_names, output_names,
         auto_pad='VALID',
@@ -65,9 +57,7 @@ def convert_DeconvolutionND(func, input_names, output_names, parameters):
     ),
 
 
-def convert_EmbedIDFunction(func, input_names, output_names, parameters):
-    onnx_op_name = mapping.operators[func.__class__.__name__]
-
+def convert_EmbedIDFunction(func, onnx_op_name, input_names, output_names, parameters):
     x_index_name, W_name = input_names
     input_names = [W_name, x_index_name]
 
@@ -78,8 +68,7 @@ def convert_EmbedIDFunction(func, input_names, output_names, parameters):
     return helper.make_node(onnx_op_name, input_names, output_names),
 
 
-def convert_LinearFunction(func, input_names, output_names, parameters):
-    onnx_op_name = mapping.operators[func.__class__.__name__]
+def convert_LinearFunction(func, onnx_op_name, input_names, output_names, parameters):
     if len(func.inputs) == 2:
         batchsize = func.inputs[0].shape[0]
         bias_dim = func.inputs[1].shape[0]

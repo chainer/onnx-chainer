@@ -11,6 +11,7 @@ import onnx
 from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 
 from onnx_chainer import functions
+from onnx_chainer import mapping
 
 try:
     from onnx import checker
@@ -48,16 +49,14 @@ def convert_parameter(parameter):
 
 
 def create_node(
-        func_name, cand, input_names, output_names, parameters):
+        func_name, onnx_op_name, func, input_names, output_names, parameters):
     converter_name = 'convert_{}'.format(func_name)
     if hasattr(functions, converter_name):
         converter = getattr(functions, converter_name)
         nodes = converter(
-            cand, input_names, output_names, parameters)
+            func, onnx_op_name, input_names, output_names, parameters)
     else:
         raise ValueError('{} is not supported.'.format(func_name))
-    for node in nodes:
-        checker.check_node(node)
     return nodes
 
 
@@ -68,6 +67,7 @@ class ONNXExport(chainer.FunctionHook):
         self.additional_parameters = []
         self.network_inputs = {}
         self.middle_output_var_to_varnode = {}
+        self.opset_ids = set()
 
     def backward_postprocess(self, function, in_data, out_grad):
         if isinstance(function, chainer.function.FunctionAdapter):
@@ -99,8 +99,12 @@ class ONNXExport(chainer.FunctionHook):
 
         output_names = [str(id(o())) for o in function.outputs]
 
+        onnx_op_name = mapping.operators[func_name]
+        if isinstance(onnx_op_name, tuple):
+            onnx_op_name, opset_id = onnx_op_name
+            self.opset_ids.add(('', opset_id))
         nodes = create_node(
-            func_name, function, input_names, output_names,
+            func_name, onnx_op_name, function, input_names, output_names,
             self.additional_parameters)
         for node in nodes:
             if node not in self.graph:
@@ -234,12 +238,16 @@ def export(model, args, filename=None, export_params=True,
         graph, graph_name, input_tensors, output_tensors,
         initializer=initializers)
 
-    checker.check_graph(onnx_graph)
+    # checker.check_graph(onnx_graph)
 
     model = helper.make_model(
         onnx_graph,
         producer_name='Chainer',
-        producer_version=chainer.__version__)
+        producer_version=chainer.__version__,
+        opset_imports=[helper.make_opsetid(*opsetid) for opsetid in o.opset_ids]
+    )
+
+    print(model)
 
     model.ir_version = onnx.IR_VERSION
 
