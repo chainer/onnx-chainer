@@ -145,6 +145,10 @@ def export(model, args, filename=None, export_params=True,
             graph in the exported ONNX model.
         save_text (bool): If True, the text format of the output ONNX model is
             also saved with ``.txt`` extention.
+        opset_version (int): The operator set version of ONNX. If not specified
+            or ``None`` is given, the latest opset version of the onnx module
+            is used. If an integer is given, it will be ensured that all the
+            operator version in the exported ONNX file is less than this value.
 
     Returns:
         A ONNX model object.
