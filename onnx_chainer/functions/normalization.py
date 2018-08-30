@@ -7,7 +7,7 @@ from onnx import numpy_helper
 from onnx_chainer import mapping
 
 
-def convert_BatchNormalization(func, onnx_op_name, input_names, output_names, parameters):
+def convert_BatchNormalization(func, onnx_op_name, opset_version, input_names, output_names, parameters):
     # Add running_mean and running_var to graph
     running_mean = chainer.Parameter(func.running_mean)
     parameters.append(running_mean)
@@ -35,7 +35,7 @@ def convert_BatchNormalization(func, onnx_op_name, input_names, output_names, pa
     ),
 
 
-def convert_FixedBatchNormalization(func, onnx_op_name, input_names, output_names, parameters):
+def convert_FixedBatchNormalization(func, onnx_op_name, opset_version, input_names, output_names, parameters):
     # Add avg_mean and avg_var to graph
     mean_arr, var_arr = [i.get_variable().array for i in func.inputs[3:]]
 
@@ -56,7 +56,7 @@ def convert_FixedBatchNormalization(func, onnx_op_name, input_names, output_name
     ),
 
 
-def convert_LocalResponseNormalization(func, onnx_op_name, input_names, output_names, parameters):
+def convert_LocalResponseNormalization(func, onnx_op_name, opset_version, input_names, output_names, parameters):
     return helper.make_node(
         onnx_op_name, input_names, output_names,
         alpha=float(func.alpha),

@@ -49,12 +49,12 @@ def convert_parameter(parameter):
 
 
 def create_node(
-        func_name, onnx_op_name, func, input_names, output_names, parameters):
+        func_name, onnx_op_name, opset_version, func, input_names, output_names, parameters):
     converter_name = 'convert_{}'.format(func_name)
     if hasattr(functions, converter_name):
         converter = getattr(functions, converter_name)
         nodes = converter(
-            func, onnx_op_name, input_names, output_names, parameters)
+            func, onnx_op_name, opset_version, input_names, output_names, parameters)
     else:
         raise ValueError('{} is not supported.'.format(func_name))
     return nodes
@@ -62,12 +62,13 @@ def create_node(
 
 class ONNXExport(chainer.FunctionHook):
 
-    def __init__(self):
+    def __init__(self, opset_version=None):
         self.graph = []
         self.additional_parameters = []
         self.network_inputs = {}
         self.middle_output_var_to_varnode = {}
         self.opset_ids = set()
+        self.specified_opset_version = opset_version
 
     def backward_postprocess(self, function, in_data, out_grad):
         if isinstance(function, chainer.function.FunctionAdapter):
@@ -99,20 +100,30 @@ class ONNXExport(chainer.FunctionHook):
 
         output_names = [str(id(o())) for o in function.outputs]
 
-        onnx_op_name = mapping.operators[func_name]
-        if isinstance(onnx_op_name, tuple):
-            onnx_op_name, opset_id = onnx_op_name
-            self.opset_ids.add(('', opset_id))
+        onnx_op_name, opset_versions = mapping.operators[func_name]
+        if isinstance(opset_versions, int):
+            self.opset_ids.add(('', opset_versions))
+            opset_version = opset_versions
+        elif self.specified_opset_version is None:
+            # If no opset version is specified, use the latest version for the operator
+            self.opset_ids.add(('', opset_versions[-1]))
+            opset_version = opset_versions[-1]
+        else:
+            # If a version is specified, use the last version <= specified one
+            for opset_version in sorted(opset_versions, reverse=True):
+                if opset_version <= self.specified_opset_version:
+                    self.opset_ids.add(('', opset_version))
+                    break
+
         nodes = create_node(
-            func_name, onnx_op_name, function, input_names, output_names,
-            self.additional_parameters)
+            func_name, onnx_op_name, opset_version, function, input_names, output_names, self.additional_parameters)
         for node in nodes:
             if node not in self.graph:
                 self.graph.append(node)
 
 
 def export(model, args, filename=None, export_params=True,
-           graph_name='Graph', save_text=False):
+           graph_name='Graph', save_text=False, opset_version=None):
     """Export function for chainer.Chain in ONNX format.
 
     This function performs a forward computation of the given
@@ -151,6 +162,9 @@ def export(model, args, filename=None, export_params=True,
 
     model.to_cpu()
 
+    if opset_version is None:
+        opset_version = int(onnx.defs.onnx_opset_version())
+
     # Forward computation
     if isinstance(args, tuple):
         args = list(args)
@@ -182,7 +196,7 @@ def export(model, args, filename=None, export_params=True,
             str(id(param)), NP_TYPE_TO_TENSOR_TYPE[param.array.dtype],
             param_shape))
 
-    with ONNXExport() as o:
+    with ONNXExport(opset_version) as o:
         if isinstance(outputs, (list, tuple)):
             for output in outputs:
                 output.grad = numpy.ones_like(
@@ -238,16 +252,13 @@ def export(model, args, filename=None, export_params=True,
         graph, graph_name, input_tensors, output_tensors,
         initializer=initializers)
 
-    # checker.check_graph(onnx_graph)
-
     model = helper.make_model(
         onnx_graph,
         producer_name='Chainer',
         producer_version=chainer.__version__,
-        opset_imports=[helper.make_opsetid(*opsetid) for opsetid in o.opset_ids]
+        opset_imports=[helper.make_opsetid(*opsetid)
+                       for opsetid in o.opset_ids]
     )
-
-    print(model)
 
     model.ir_version = onnx.IR_VERSION
 

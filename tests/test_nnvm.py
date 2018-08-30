@@ -17,6 +17,9 @@ import onnx_chainer
 import tvm
 
 
+NNVM_OPSET_VERSION = 5
+
+
 @testing.parameterize(
     {
         'mod': C,
@@ -55,7 +58,7 @@ class TestWithNNVMBackend(unittest.TestCase):
         with chainer.using_config('train', False):
             chainer_out = self.model(self.x).array
 
-        onnx_chainer.export(self.model, self.x, self.fn)
+        onnx_chainer.export(self.model, self.x, self.fn, opset_version=NNVM_OPSET_VERSION)
 
         model_onnx = onnx.load(self.fn)
         sym, params = nnvm.frontend.from_onnx(model_onnx)

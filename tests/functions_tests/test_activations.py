@@ -1,24 +1,25 @@
 import unittest
 
-import numpy as np
-
 import chainer
 from chainer import testing
 import chainer.functions as F
 import chainer.links as L
+import numpy as np
+import onnx
 import onnx_chainer
 from onnx_chainer.testing import test_mxnet
 
-MXNET_SUPPORT = {
-    'elu': True,
-    'hard_sigmoid': False,
-    'leaky_relu': True,
-    'log_softmax': False,
-    'relu': True,
-    'sigmoid': True,
-    'softmax': True,
-    'softplus': False,
-    'tanh': True,
+
+MXNET_OPSET_VERSION = {
+    'elu': (1, 6),
+    'hard_sigmoid': (6,),
+    'leaky_relu': (6,),
+    'log_softmax': (1,),
+    'relu': (1, 6),
+    'sigmoid': (1, 6),
+    'softmax': (1,),
+    'softplus': (1,),
+    'tanh': (1, 6),
 }
 
 
@@ -52,12 +53,19 @@ class TestActivations(unittest.TestCase):
         self.fn = self.name + '.onnx'
 
     def test_compatibility(self):
-        if MXNET_SUPPORT[self.name]:
-            test_mxnet.check_compatibility(self.model, self.x, self.fn)
-        else:
-            onnx_chainer.export(self.model, self.x)
+        if MXNET_OPSET_VERSION[self.name] is not None:
+            for mxnet_opset_version in MXNET_OPSET_VERSION[self.name]:
+                test_mxnet.check_compatibility(
+                    self.model, self.x, self.fn, opset_version=mxnet_opset_version)
+        for opset_version in range(1, onnx.defs.onnx_opset_version() + 1):
+            onnx_chainer.export(
+                self.model, self.x, opset_version=opset_version)
 
 
+@testing.parameterize(
+    {'opset_version': 6},
+    {'opset_version': 7},
+)
 class TestPReLU(unittest.TestCase):
 
     def setUp(self):
@@ -77,4 +85,8 @@ class TestPReLU(unittest.TestCase):
         self.fn = 'PReLU.onnx'
 
     def test_compatibility(self):
-        test_mxnet.check_compatibility(self.model, self.x, self.fn)
+        test_mxnet.check_compatibility(
+            self.model, self.x, self.fn, opset_version=self.opset_version)
+
+        onnx_chainer.export(
+            self.model, self.x, opset_version=self.opset_version)

@@ -2,14 +2,15 @@ import collections
 import os
 import warnings
 
-import numpy as np
-
 import chainer
+import numpy as np
+import onnx
 import onnx_chainer
 
 try:
     import mxnet
     MXNET_AVAILABLE = True
+    MXNET_OPSET_VERSION = 6
 except ImportError:
     warnings.warn(
         'MXNet is not installed. Please install mxnet to use '
@@ -18,7 +19,9 @@ except ImportError:
     MXNET_AVAILABLE = False
 
 
-def check_compatibility(model, x, fn, out_key='prob'):
+def check_compatibility(model, x, fn, out_key='prob', opset_version=None):
+    if opset_version is None:
+        opset_version = onnx.defs.onnx_opset_version()
     if not MXNET_AVAILABLE:
         raise ImportError('check_compatibility requires MXNet.')
 
@@ -50,7 +53,7 @@ def check_compatibility(model, x, fn, out_key='prob'):
     else:
         raise ValueError('Unknown output type: {}'.format(type(chainer_out)))
 
-    onnx_chainer.export(model, x, fn)
+    onnx_chainer.export(model, x, fn, opset_version=opset_version)
 
     sym, arg, aux = mxnet.contrib.onnx.import_model(fn)
 
