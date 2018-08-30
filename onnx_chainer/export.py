@@ -11,6 +11,7 @@ import onnx
 from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 
 from onnx_chainer import functions
+from onnx_chainer import mapping
 
 try:
     from onnx import checker
@@ -48,26 +49,25 @@ def convert_parameter(parameter):
 
 
 def create_node(
-        func_name, cand, input_names, output_names, parameters):
+        func_name, onnx_op_name, opset_version, func, input_names, output_names, parameters):
     converter_name = 'convert_{}'.format(func_name)
     if hasattr(functions, converter_name):
         converter = getattr(functions, converter_name)
         nodes = converter(
-            cand, input_names, output_names, parameters)
+            func, onnx_op_name, opset_version, input_names, output_names, parameters)
     else:
         raise ValueError('{} is not supported.'.format(func_name))
-    for node in nodes:
-        checker.check_node(node)
     return nodes
 
 
 class ONNXExport(chainer.FunctionHook):
 
-    def __init__(self):
+    def __init__(self, opset_version=None):
         self.graph = []
         self.additional_parameters = []
         self.network_inputs = {}
         self.middle_output_var_to_varnode = {}
+        self.specified_opset_version = opset_version
 
     def backward_postprocess(self, function, in_data, out_grad):
         if isinstance(function, chainer.function.FunctionAdapter):
@@ -99,16 +99,27 @@ class ONNXExport(chainer.FunctionHook):
 
         output_names = [str(id(o())) for o in function.outputs]
 
+        onnx_op_name, opset_versions = mapping.operators[func_name]
+        if isinstance(opset_versions, int):
+            opset_version = opset_versions
+        elif self.specified_opset_version is None:
+            # If no opset version is specified, use the latest version for the operator
+            opset_version = opset_versions[-1]
+        else:
+            # If a version is specified, use the last version <= specified one
+            for opset_version in sorted(opset_versions, reverse=True):
+                if opset_version <= self.specified_opset_version:
+                    break
+
         nodes = create_node(
-            func_name, function, input_names, output_names,
-            self.additional_parameters)
+            func_name, onnx_op_name, opset_version, function, input_names, output_names, self.additional_parameters)
         for node in nodes:
             if node not in self.graph:
                 self.graph.append(node)
 
 
 def export(model, args, filename=None, export_params=True,
-           graph_name='Graph', save_text=False):
+           graph_name='Graph', save_text=False, opset_version=None):
     """Export function for chainer.Chain in ONNX format.
 
     This function performs a forward computation of the given
@@ -134,6 +145,10 @@ def export(model, args, filename=None, export_params=True,
             graph in the exported ONNX model.
         save_text (bool): If True, the text format of the output ONNX model is
             also saved with ``.txt`` extention.
+        opset_version (int): The operator set version of ONNX. If not specified
+            or ``None`` is given, the latest opset version of the onnx module
+            is used. If an integer is given, it will be ensured that all the
+            operator version in the exported ONNX file is less than this value.
 
     Returns:
         A ONNX model object.
@@ -146,6 +161,9 @@ def export(model, args, filename=None, export_params=True,
     chainer.config.enable_backprop = True
 
     model.to_cpu()
+
+    if opset_version is None:
+        opset_version = int(onnx.defs.onnx_opset_version())
 
     # Forward computation
     if isinstance(args, tuple):
@@ -178,7 +196,7 @@ def export(model, args, filename=None, export_params=True,
             str(id(param)), NP_TYPE_TO_TENSOR_TYPE[param.array.dtype],
             param_shape))
 
-    with ONNXExport() as o:
+    with ONNXExport(opset_version) as o:
         if isinstance(outputs, (list, tuple)):
             for output in outputs:
                 output.grad = numpy.ones_like(
@@ -234,12 +252,12 @@ def export(model, args, filename=None, export_params=True,
         graph, graph_name, input_tensors, output_tensors,
         initializer=initializers)
 
-    checker.check_graph(onnx_graph)
-
     model = helper.make_model(
         onnx_graph,
         producer_name='Chainer',
-        producer_version=chainer.__version__)
+        producer_version=chainer.__version__,
+        opset_imports=[helper.make_opsetid('', opset_version)]
+    )
 
     model.ir_version = onnx.IR_VERSION
 

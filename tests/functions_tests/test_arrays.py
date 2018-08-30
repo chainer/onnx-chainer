@@ -1,25 +1,25 @@
 import unittest
 
-import numpy as np
-
 import chainer
 from chainer import testing
 import chainer.functions as F
+import numpy as np
+import onnx
+from onnx.backend.test.case import model
 import onnx_chainer
 from onnx_chainer.testing import test_mxnet
-from onnx.backend.test.case import model
 
-MXNET_SUPPORT = {
-    'cast': True,
-    'copy': False,
-    'depth2space': False,
-    'pad': False,
-    'reshape': True,
-    'space2depth': False,
-    'split_axis': False,
-    'squeeze': False,
-    'tile': False,
-    'transpose': True
+MXNET_OPSET_VERSION = {
+    'cast': (1,),
+    'copy': (1,),
+    'depth2space': None,
+    'pad': (2,),
+    'reshape': (1, 5),
+    'space2depth': None,
+    'split_axis': None,
+    'squeeze': (1,),
+    'tile': None,
+    'transpose': (1,),
 }
 
 @testing.parameterize(
@@ -34,15 +34,15 @@ MXNET_SUPPORT = {
      'input_argname': 'X',
      'args': {'r': 2}},
 
-    {'ops': 'pad', 'input_shape': (1, 5),
+    {'ops': 'pad', 'input_shape': (1, 2, 3, 4),
      'input_argname': 'x',
-     'args': {'pad_width': (0, 2), 'mode': 'constant'}},
-    {'ops': 'pad', 'input_shape': (1, 5),
+     'args': {'pad_width': ((0, 0), (0, 0), (2, 2), (2, 2)), 'mode': 'constant'}},
+    {'ops': 'pad', 'input_shape': (1, 2, 3, 4),
      'input_argname': 'x',
-     'args': {'pad_width': (0, 2), 'mode': 'reflect'}},
-    {'ops': 'pad', 'input_shape': (1, 5),
+     'args': {'pad_width': ((0, 0), (0, 0), (2, 2), (2, 2)), 'mode': 'reflect'}},
+    {'ops': 'pad', 'input_shape': (1, 2, 3, 4),
      'input_argname': 'x',
-     'args': {'pad_width': (0, 2), 'mode': 'edge'}},
+     'args': {'pad_width': ((0, 0), (0, 0), (2, 2), (2, 2)), 'mode': 'edge'}},
 
     {'ops': 'reshape', 'input_shape': (1, 6),
      'input_argname': 'x',
@@ -104,12 +104,18 @@ class TestArrayOperators(unittest.TestCase):
         self.fn = self.ops + '.onnx'
 
     def test_compatibility(self):
-        if MXNET_SUPPORT[self.ops]:
-            test_mxnet.check_compatibility(self.model, self.x, self.fn)
-        else:
-            onnx_chainer.export(self.model, self.x)
+        if MXNET_OPSET_VERSION[self.ops] is not None:
+            for mxnet_opset_version in MXNET_OPSET_VERSION[self.ops]:
+                test_mxnet.check_compatibility(
+                    self.model, self.x, self.fn,opset_version=mxnet_opset_version)
+        for opset_version in range(1, onnx.defs.onnx_opset_version() + 1):
+            onnx_chainer.export(self.model, self.x, opset_version=opset_version)
 
 
+@testing.parameterize(
+    {'opset_version': 1},
+    {'opset_version': 4}
+)
 class TestConcat(unittest.TestCase):
 
     def setUp(self):
@@ -127,6 +133,7 @@ class TestConcat(unittest.TestCase):
         self.fn = 'Concat.onnx'
 
     def test_backend(self):
-        y = self.model(self.x1, self.x2)
-        onnx_model = onnx_chainer.export(self.model, (self.x1, self.x2))
-        model.expect(onnx_model, (self.x1,), y)
+        test_mxnet.check_compatibility(
+                self.model, (self.x1, self.x2), self.fn,
+                opset_version=self.opset_version)
+        onnx_chainer.export(self.model, (self.x1, self.x2), opset_version=self.opset_version)

@@ -1,28 +1,28 @@
 import unittest
 
-import numpy as np
-
 import chainer
 from chainer import testing
+import numpy as np
+import onnx
 import onnx_chainer
 from onnx_chainer.testing import test_mxnet
 
-MXNET_SUPPORT = {
-    'Neg': True,
-    'Absolute': True,
-    'Clip': False,
-    'Exp': True,
-    'Sqrt': True,
-    'PowVarConst': True,
-    'Sum': True,
-    'Add': True,
-    'AddConst': True,
-    'Sub': True,
-    'Mul': True,
-    'Div': True,
-    'MatMul': True,
-    'Maximum': True,
-    'Minimum': True,
+MXNET_OPSET_VERSION = {
+    'Add': (1, 6, 7),
+    'AddConst': (1, 6, 7),
+    'Absolute': (1, 6),
+    'Div': (1, 6, 7),
+    'Mul': (1, 6, 7),
+    'Neg': (1, 6),
+    'PowVarConst': (1, 7),
+    'Sub': (1, 6, 7),
+    'Clip': (6,),
+    'Exp': (1, 6),
+    'MatMul': (1, 6, 7),
+    'Maximum': (1, 6),
+    'Minimum': (1, 6),
+    'Sqrt': (1, 6),
+    'Sum': (1,),
 }
 
 
@@ -59,9 +59,12 @@ class TestUnaryMathOperators(unittest.TestCase):
         self.fn = self.info + '.onnx'
 
     def test_compatibility(self):
-        if MXNET_SUPPORT[self.info]:
-            test_mxnet.check_compatibility(self.model, self.a, self.fn)
-        else:
+        if MXNET_OPSET_VERSION[self.info] is not None:
+            for opset_version in MXNET_OPSET_VERSION[self.info]:
+                test_mxnet.check_compatibility(
+                    self.model, self.a, self.fn, opset_version=opset_version)
+
+        for opset_version in range(1, onnx.defs.onnx_opset_version() + 1):
             onnx_chainer.export(self.model, self.a)
 
 
@@ -94,11 +97,13 @@ class TestBinaryMathOperators(unittest.TestCase):
         a = chainer.Variable(np.ones((2, 3), dtype=np.float32))
         b = chainer.Variable(np.ones((2, 3), dtype=np.float32) * 2)
         self.x = (a, b)
-        print(self.x)
         self.fn = self.info + '.onnx'
 
     def test_compatibility(self):
-        if MXNET_SUPPORT[self.info]:
-            test_mxnet.check_compatibility(self.model, self.x, self.fn)
-        else:
+        if MXNET_OPSET_VERSION[self.info] is not None:
+            for opset_version in MXNET_OPSET_VERSION[self.info]:
+                test_mxnet.check_compatibility(
+                    self.model, self.x, self.fn, opset_version=opset_version)
+
+        for opset_version in range(1, onnx.defs.onnx_opset_version() + 1):
             onnx_chainer.export(self.model, self.x)
