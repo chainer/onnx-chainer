@@ -25,14 +25,30 @@ def convert_BatchNormalization(func, onnx_op_name, opset_version, input_names, o
         unique_layer_name + '_saved_var'
     ]
 
-    return helper.make_node(
-        onnx_op_name, input_names, output_names,
-        epsilon=func.eps,
-        momentum=func.decay,
-        spatial=True,
-        # is_test=not chainer.config.train,
-        # consumed_inputs=[False, False, False, True, True],
-    ),
+    if opset_version == 1:
+        return helper.make_node(
+            onnx_op_name, input_names, output_names,
+            epsilon=func.eps,
+            momentum=func.decay,
+            spatial=True,
+            is_test=not chainer.config.train,
+            consumed_inputs=[False, False, False, True, True],
+        ),
+    elif opset_version == 6:
+        return helper.make_node(
+            onnx_op_name, input_names, output_names,
+            epsilon=func.eps,
+            momentum=func.decay,
+            spatial=True,
+            is_test=not chainer.config.train,
+        ),
+    elif opset_version == 7:
+        return helper.make_node(
+            onnx_op_name, input_names, output_names,
+            epsilon=func.eps,
+            momentum=func.decay,
+            spatial=True,
+        ),
 
 
 def convert_FixedBatchNormalization(func, onnx_op_name, opset_version, input_names, output_names, parameters):
@@ -47,20 +63,38 @@ def convert_FixedBatchNormalization(func, onnx_op_name, opset_version, input_nam
     parameters.append(var_arr_param)
     input_names[4] = str(id(var_arr_param))
 
-    return helper.make_node(
-        onnx_op_name, input_names, output_names,
-        epsilon=func.eps,
-        spatial=True,
-        # is_test=not chainer.config.train,
-        # consumed_inputs=[False, False, False, True, True],
-    ),
+    if opset_version == 1:
+        return helper.make_node(
+            onnx_op_name, input_names, output_names,
+            epsilon=func.eps,
+            momentum=0.,
+            spatial=True,
+            is_test=not chainer.config.train,
+            consumed_inputs=[False, False, False, True, True],
+        ),
+    elif opset_version == 6:
+        return helper.make_node(
+            onnx_op_name, input_names, output_names,
+            epsilon=func.eps,
+            momentum=0.,
+            spatial=True,
+            is_test=not chainer.config.train,
+        ),
+    elif opset_version == 7:
+        return helper.make_node(
+            onnx_op_name, input_names, output_names,
+            epsilon=func.eps,
+            momentum=0.,
+            spatial=True,
+        ),
 
 
 def convert_LocalResponseNormalization(func, onnx_op_name, opset_version, input_names, output_names, parameters):
-    return helper.make_node(
-        onnx_op_name, input_names, output_names,
-        alpha=float(func.alpha),
-        beta=float(func.beta),
-        bias=float(func.k),
-        size=int(func.n),
-    ),
+    if opset_version == 1:
+        return helper.make_node(
+            onnx_op_name, input_names, output_names,
+            alpha=float(func.alpha),
+            beta=float(func.beta),
+            bias=float(func.k),
+            size=int(func.n),
+        ),

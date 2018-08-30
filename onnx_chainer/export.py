@@ -67,7 +67,6 @@ class ONNXExport(chainer.FunctionHook):
         self.additional_parameters = []
         self.network_inputs = {}
         self.middle_output_var_to_varnode = {}
-        self.opset_ids = set()
         self.specified_opset_version = opset_version
 
     def backward_postprocess(self, function, in_data, out_grad):
@@ -102,17 +101,14 @@ class ONNXExport(chainer.FunctionHook):
 
         onnx_op_name, opset_versions = mapping.operators[func_name]
         if isinstance(opset_versions, int):
-            self.opset_ids.add(('', opset_versions))
             opset_version = opset_versions
         elif self.specified_opset_version is None:
             # If no opset version is specified, use the latest version for the operator
-            self.opset_ids.add(('', opset_versions[-1]))
             opset_version = opset_versions[-1]
         else:
             # If a version is specified, use the last version <= specified one
             for opset_version in sorted(opset_versions, reverse=True):
                 if opset_version <= self.specified_opset_version:
-                    self.opset_ids.add(('', opset_version))
                     break
 
         nodes = create_node(
@@ -256,8 +252,7 @@ def export(model, args, filename=None, export_params=True,
         onnx_graph,
         producer_name='Chainer',
         producer_version=chainer.__version__,
-        opset_imports=[helper.make_opsetid(*opsetid)
-                       for opsetid in o.opset_ids]
+        opset_imports=[helper.make_opsetid('', opset_version)]
     )
 
     model.ir_version = onnx.IR_VERSION

@@ -58,30 +58,30 @@ operators = {
     'Absolute': ('Abs', (1, 6)),
     'Div': ('Div', (1, 6, 7)),
     'Mul': ('Mul', (1, 6, 7)),
-    'Neg': ('Neg', 6),
-    'PowVarConst': ('Pow', 7),
-    'Sub': ('Sub', 7),
-    'Clip': ('Clip', 6),
-    'Exp': ('Exp', 6),
+    'Neg': ('Neg', (1, 6)),
+    'PowVarConst': ('Pow', (1, 7)),
+    'Sub': ('Sub', (1, 6, 7)),
+    'Clip': ('Clip', (1, 6)),
+    'Exp': ('Exp', (1, 6)),
     'Identity': ('Identity', 1),
-    'MatMul': ('Gemm', 7),
-    'Maximum': ('Max', 6),
-    'Minimum': ('Min', 6),
-    'Sqrt': ('Sqrt', 6),
+    'MatMul': ('Gemm', (1, 6, 7)),
+    'Maximum': ('Max', (1, 6)),
+    'Minimum': ('Min', (1, 6)),
+    'Sqrt': ('Sqrt', (1, 6)),
     'Sum': ('ReduceSum', 1),
 
     # Noise
     'Dropout': ('Dropout', (1, 6, 7)),
 
     # Pooling
-    'AveragePooling2D': ('AveragePool', 7),
-    'AveragePoolingND': ('AveragePool', 7),
+    'AveragePooling2D': ('AveragePool', (1, 7)),
+    'AveragePoolingND': ('AveragePool', (1, 7)),
     'MaxPooling2D': ('MaxPool', 1),
     'MaxPoolingND': ('MaxPool', 1),
 
     # Normalization
-    'BatchNormalization': ('BatchNormalization', 7),
-    'FixedBatchNormalization': ('BatchNormalization', 7),
+    'BatchNormalization': ('BatchNormalization', (1, 6, 7)),
+    'FixedBatchNormalization': ('BatchNormalization', (1, 6, 7)),
     'LocalResponseNormalization': ('LRN', 1),
 
 }

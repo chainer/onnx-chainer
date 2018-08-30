@@ -10,9 +10,7 @@ from onnx_chainer import mapping
 def convert_Add(func, onnx_op_name, opset_version, input_names, output_names, parameters):
     if opset_version == 1:
         return helper.make_node(onnx_op_name, input_names, output_names, consumed_inputs=[1, 1]),
-    elif opset_version == 6:
-        return helper.make_node(onnx_op_name, input_names, output_names),
-    elif opset_version == 7:
+    elif opset_version == 6 or opset_version == 7:
         return helper.make_node(onnx_op_name, input_names, output_names),
 
 
@@ -25,36 +23,36 @@ def convert_AddConstant(func, onnx_op_name, opset_version, input_names, output_n
 
     if opset_version == 1:
         return helper.make_node(
-            onnx_op_name, input_names, output_names, broadcast=0, consumed_inputs=[1, 1]),
-    elif opset_version == 6:
-        return helper.make_node(onnx_op_name, input_names, output_names, broadcast=0),
-    elif opset_version == 7:
+            onnx_op_name, input_names, output_names, consumed_inputs=[1, 1]),
+    elif opset_version == 6 or opset_version == 7:
         return helper.make_node(onnx_op_name, input_names, output_names),
 
 
 def convert_Sub(func, onnx_op_name, opset_version, input_names, output_names, parameters):
-    return helper.make_node(onnx_op_name, input_names, output_names),
+    if opset_version == 1:
+        return helper.make_node(onnx_op_name, input_names, output_names, consumed_inputs=[1, 1]),
+    elif opset_version == 6 or opset_version == 7:
+        return helper.make_node(onnx_op_name, input_names, output_names),
 
 
 def convert_Mul(func, onnx_op_name, opset_version, input_names, output_names, parameters):
     if opset_version == 1:
         return helper.make_node(onnx_op_name, input_names, output_names, consumed_inputs=[1, 1]),
-    elif opset_version == 6:
-        return helper.make_node(onnx_op_name, input_names, output_names, broadcast=0),
-    elif opset_version == 7:
+    elif opset_version == 6 or opset_version == 7:
         return helper.make_node(onnx_op_name, input_names, output_names),
 
 
 def convert_Neg(func, onnx_op_name, opset_version, input_names, output_names, parameters):
-    return helper.make_node(onnx_op_name, input_names, output_names),
+    if opset_version == 1:
+        return helper.make_node(onnx_op_name, input_names, output_names, consumed_inputs=[1, 1]),
+    elif opset_version == 6:
+        return helper.make_node(onnx_op_name, input_names, output_names),
 
 
 def convert_Div(func, onnx_op_name, opset_version, input_names, output_names, parameters):
     if opset_version == 1:
-        return helper.make_node(onnx_op_name, input_names, output_names, broadcast=0, consumed_inputs=[1, 1]),
-    elif opset_version == 6:
-        return helper.make_node(onnx_op_name, input_names, output_names, broadcast=0),
-    elif opset_version == 7:
+        return helper.make_node(onnx_op_name, input_names, output_names, consumed_inputs=[1, 1]),
+    elif opset_version == 6 or opset_version == 7:
         return helper.make_node(onnx_op_name, input_names, output_names),
 
 
@@ -71,19 +69,32 @@ def convert_PowVarConst(func, onnx_op_name, opset_version, input_names, output_n
     value_param = chainer.Parameter(value)
     parameters.append(value_param)
     input_names.append(str(id(value_param)))
-    return helper.make_node(onnx_op_name, input_names, output_names),
+
+    if opset_version == 1 or opset_version == 7:
+        return helper.make_node(onnx_op_name, input_names, output_names),
 
 
 def convert_Clip(func, onnx_op_name, opset_version, input_names, output_names, parameters):
-    return helper.make_node(
-        onnx_op_name, input_names, output_names,
-        max=func.x_max,
-        min=func.x_min,
-    ),
+    if opset_version == 1:
+        return helper.make_node(
+            onnx_op_name, input_names, output_names,
+            max=func.x_max,
+            min=func.x_min,
+            consumed_inputs=[1]
+        ),
+    elif opset_version == 6:
+        return helper.make_node(
+            onnx_op_name, input_names, output_names,
+            max=func.x_max,
+            min=func.x_min,
+        ),
 
 
 def convert_Exp(func, onnx_op_name, opset_version, input_names, output_names, parameters):
-    return helper.make_node(onnx_op_name, input_names, output_names),
+    if opset_version == 1:
+        return helper.make_node(onnx_op_name, input_names, output_names, consumed_inputs=[1, 1]),
+    elif opset_version == 6:
+        return helper.make_node(onnx_op_name, input_names, output_names),
 
 
 def convert_Identity(func, onnx_op_name, opset_version, input_names, output_names, parameters):
@@ -108,15 +119,24 @@ def convert_MatMul(func, onnx_op_name, opset_version, input_names, output_names,
 
 
 def convert_Maximum(func, onnx_op_name, opset_version, input_names, output_names, parameters):
-    return helper.make_node(onnx_op_name, input_names, output_names),
+    if opset_version == 1:
+        return helper.make_node(onnx_op_name, input_names, output_names, consumed_inputs=[1, 1]),
+    elif opset_version == 6:
+        return helper.make_node(onnx_op_name, input_names, output_names),
 
 
 def convert_Minimum(func, onnx_op_name, opset_version, input_names, output_names, parameters):
-    return helper.make_node(onnx_op_name, input_names, output_names),
+    if opset_version == 1:
+        return helper.make_node(onnx_op_name, input_names, output_names, consumed_inputs=[1, 1]),
+    elif opset_version == 6:
+        return helper.make_node(onnx_op_name, input_names, output_names),
 
 
 def convert_Sqrt(func, onnx_op_name, opset_version, input_names, output_names, parameters):
-    return helper.make_node(onnx_op_name, input_names, output_names),
+    if opset_version == 1:
+        return helper.make_node(onnx_op_name, input_names, output_names, consumed_inputs=[1, 1]),
+    elif opset_version == 6:
+        return helper.make_node(onnx_op_name, input_names, output_names),
 
 
 def convert_Sum(func, onnx_op_name, opset_version, input_names, output_names, parameters):

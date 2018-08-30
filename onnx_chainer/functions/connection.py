@@ -6,25 +6,25 @@ from onnx_chainer import mapping
 
 
 def convert_Convolution2DFunction(func, onnx_op_name, opset_version, input_names, output_names, parameters):
-    if hasattr(func, 'dy') and hasattr(func, 'dx'):
-        node = helper.make_node(
-            onnx_op_name, input_names, output_names,
-            dilations=(func.dy, func.dx),
-            kernel_shape=func.inputs[1].shape[2:],
-            # pads: [x1_begin, x2_begin...x1_end, x2_end,...]
-            pads=(func.ph, func.pw, func.ph, func.pw),
-            strides=(func.sy, func.sx),
-        )
-    else:
-        node = helper.make_node(
-            onnx_op_name, input_names, output_names,
-            dilations=(1, 1),
-            kernel_shape=func.inputs[1].shape[2:],
-            pads=(func.ph, func.ph, func.pw, func.pw),
-            strides=(func.sy, func.sx),
-        )
-
-    return node,
+    if opset_version == 1:
+        if hasattr(func, 'dy') and hasattr(func, 'dx'):
+            node = helper.make_node(
+                onnx_op_name, input_names, output_names,
+                dilations=(func.dy, func.dx),
+                kernel_shape=func.inputs[1].shape[2:],
+                # pads: [x1_begin, x2_begin...x1_end, x2_end,...]
+                pads=(func.ph, func.pw, func.ph, func.pw),
+                strides=(func.sy, func.sx),
+            )
+        else:
+            node = helper.make_node(
+                onnx_op_name, input_names, output_names,
+                dilations=(1, 1),
+                kernel_shape=func.inputs[1].shape[2:],
+                pads=(func.ph, func.pw, func.ph, func.pw),
+                strides=(func.sy, func.sx),
+            )
+        return node,
 
 
 def convert_ConvolutionND(func, onnx_op_name, opset_version, input_names, output_names, parameters):
@@ -37,33 +37,44 @@ def convert_ConvolutionND(func, onnx_op_name, opset_version, input_names, output
         pad.append(p)
     pad = pad * 2
 
-    return helper.make_node(
-        onnx_op_name, input_names, output_names,
-        kernel_shape=func.inputs[1].shape[2:],
-        pads=pad,
-        strides=func.stride,
-    ),
+    if opset_version == 1:
+        return helper.make_node(
+            onnx_op_name, input_names, output_names,
+            kernel_shape=func.inputs[1].shape[2:],
+            pads=pad,
+            strides=func.stride,
+        ),
 
 
 def convert_Deconvolution2DFunction(func, onnx_op_name, opset_version, input_names, output_names, parameters):
-    return helper.make_node(
-        onnx_op_name, input_names, output_names,
-        kernel_shape=func.inputs[1].shape[2:],
-        output_shape=(func.outh, func.outw),
-        pads=(func.ph, func.pw),
-        strides=(func.sy, func.sx),
-    ),
+    if opset_version == 1:
+        return helper.make_node(
+            onnx_op_name, input_names, output_names,
+            kernel_shape=func.inputs[1].shape[2:],
+            output_shape=(func.outh, func.outw),
+            pads=(func.ph, func.pw),
+            strides=(func.sy, func.sx),
+        ),
 
 
 def convert_DeconvolutionND(func, onnx_op_name, opset_version, input_names, output_names, parameters):
-    return helper.make_node(
-        onnx_op_name, input_names, output_names,
-        auto_pad='VALID',
-        kernel_shape=func.inputs[1].shape[2:],
-        output_shape=func.outs,
-        pads=func.pad,
-        strides=func.stride,
-    ),
+    pad = []
+    x_ndim = len(func.inputs[0].shape)
+    w_ndim = len(func.inputs[1].shape)
+    for _ in range(x_ndim - w_ndim):
+        pad.append(0)
+    for p in func.pad:
+        pad.append(p)
+    pad = pad * 2
+    
+    if opset_version == 1:
+        return helper.make_node(
+            onnx_op_name, input_names, output_names,
+            kernel_shape=func.inputs[1].shape[2:],
+            output_shape=func.outs,
+            pads=pad,
+            strides=func.stride,
+        ),
 
 
 def convert_EmbedIDFunction(func, onnx_op_name, opset_version, input_names, output_names, parameters):
@@ -74,7 +85,8 @@ def convert_EmbedIDFunction(func, onnx_op_name, opset_version, input_names, outp
         raise ValueError(
             'Current ONNX doesn\'t support ignore_label for EmbedID.')
 
-    return helper.make_node(onnx_op_name, input_names, output_names, axis=0),
+    if opset_version == 1:
+        return helper.make_node(onnx_op_name, input_names, output_names, axis=0),
 
 
 def convert_LinearFunction(func, onnx_op_name, opset_version, input_names, output_names, parameters):
@@ -87,11 +99,7 @@ def convert_LinearFunction(func, onnx_op_name, opset_version, input_names, outpu
         parameters.append(bias_param)
         input_names.append(str(id(bias_param)))
 
-    if opset_version == 1:
-        return helper.make_node(
-            onnx_op_name, input_names, output_names,
-            alpha=1.0, beta=1.0, broadcast=1, transA=0, transB=1),
-    elif opset_version == 6:
+    if opset_version == 1 or opset_version == 6:
         return helper.make_node(
             onnx_op_name, input_names, output_names,
             alpha=1.0, beta=1.0, broadcast=1, transA=0, transB=1),

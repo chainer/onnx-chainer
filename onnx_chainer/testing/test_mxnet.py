@@ -10,7 +10,6 @@ import onnx_chainer
 try:
     import mxnet
     MXNET_AVAILABLE = True
-    MXNET_OPSET_VERSION = 6
 except ImportError:
     warnings.warn(
         'MXNet is not installed. Please install mxnet to use '
