@@ -7,14 +7,14 @@ This is an add-on package for ONNX support by Chainer.
 
 ## Tested environment
 
-- ONNX 1.1.1
-- Chainer 3.5.0, 4.2.0
+- ONNX 1.2.2
+- Chainer 4.4.0
 - Python 2.7.14, 3.5.5, 3.6.5
 
 ### Compatibility tests
 
-- with MXNet 1.2.0
-- with NNVM (under TVM repository at commit ID = `ebdde3c277a9807a67b233cecfaf6d9f96c0c1bc`)
+- with MXNet v1.3.0b20180830
+- with TVM v0.4
 
 ## Installation
 
