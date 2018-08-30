@@ -103,8 +103,8 @@ ENV LIBRARY_PATH /usr/local/lib:$LIBRARY_PATH
 ARG MXNET_VERSION="pre"
 RUN if [ ${MXNET_VERSION} = "pre" ]; then \
         pip install mxnet --pre; \
-    else
-        pip install mxnet==${MXNET_VERSION};
+    else \
+        pip install mxnet==${MXNET_VERSION}; \
     fi
 
 # Install TVM

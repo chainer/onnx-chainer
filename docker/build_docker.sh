@@ -20,9 +20,6 @@ docker_build () {
     docker push mitmul/onnx-chainer:${docker_tag}
 }
 
-docker_build 2.7 pre 0.4 3.5.0 0.10.0
-# docker_build 2.7 pre 0.4 4.4.0 0.10.0
-# docker_build 3.5 pre 0.4 3.5.0 0.10.0
-# docker_build 3.5 pre 0.4 4.4.0 0.10.0
-# docker_build 3.6 pre 0.4 3.5.0 0.10.0
-# docker_build 3.6 pre 0.4 4.4.0 0.10.0
+docker_build 2.7 pre 0.4 4.4.0 0.10.0
+docker_build 3.5 pre 0.4 4.4.0 0.10.0
+docker_build 3.6 pre 0.4 4.4.0 0.10.0
