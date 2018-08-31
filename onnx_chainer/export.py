@@ -83,7 +83,8 @@ def rename_tensors(model):
             op.output[i] = names[op.output[i]]
 
     for v in tuple(model.graph.input) + tuple(model.graph.output):
-        v.name = names[v.name]
+        if v.name in names:
+            v.name = names[v.name]
 
 
 class ONNXExport(chainer.FunctionHook):
