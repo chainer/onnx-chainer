@@ -1,10 +1,11 @@
 import unittest
 
-import chainer
-from chainer import testing
 import numpy as np
+
+import chainer
 import onnx
 import onnx_chainer
+from chainer import testing
 from onnx_chainer.testing import test_mxnet
 
 MXNET_OPSET_VERSION = {
@@ -63,7 +64,6 @@ class TestUnaryMathOperators(unittest.TestCase):
             for opset_version in MXNET_OPSET_VERSION[self.info]:
                 test_mxnet.check_compatibility(
                     self.model, self.a, self.fn, opset_version=opset_version)
-
         for opset_version in range(1, onnx.defs.onnx_opset_version() + 1):
             onnx_chainer.export(self.model, self.a)
 
@@ -104,6 +104,5 @@ class TestBinaryMathOperators(unittest.TestCase):
             for opset_version in MXNET_OPSET_VERSION[self.info]:
                 test_mxnet.check_compatibility(
                     self.model, self.x, self.fn, opset_version=opset_version)
-
         for opset_version in range(1, onnx.defs.onnx_opset_version() + 1):
             onnx_chainer.export(self.model, self.x)

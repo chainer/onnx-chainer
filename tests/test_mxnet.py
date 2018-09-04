@@ -1,16 +1,16 @@
 import os
 import unittest
 
+import numpy as np
+
 import chainer
-from chainer import testing
 import chainer.functions as F
 import chainer.links as L
-import numpy as np
+import chainercv.links as C
 import onnx
 import onnx_chainer
+from chainer import testing
 from onnx_chainer.testing import test_mxnet
-
-import chainercv.links as C
 
 
 @testing.parameterize(*testing.product({

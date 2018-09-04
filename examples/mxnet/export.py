@@ -3,12 +3,12 @@
 
 import collections
 
-import mxnet
 import numpy as np
 
 import chainer
 import chainer.functions as F
 import chainercv.links as C
+import mxnet
 import onnx_chainer
 
 
@@ -65,7 +65,8 @@ def main():
 
     model = C.ResNet50(pretrained_model='imagenet', arch='he')
     # Change cover_all option to False to match the default behavior of MXNet's pooling
-    model.pool1 = lambda x: F.max_pooling_2d(x, ksize=3, stride=2, cover_all=False)
+    model.pool1 = lambda x: F.max_pooling_2d(
+        x, ksize=3, stride=2, cover_all=False)
     save_as_onnx_then_import_from_mxnet(model, 'resnet50.onnx')
 
 

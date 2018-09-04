@@ -1,9 +1,9 @@
+import numpy as np
+
 import chainer
 from chainer.functions.math import basic_math
-import numpy as np
 from onnx import helper
 from onnx import numpy_helper
-
 from onnx_chainer import mapping
 
 

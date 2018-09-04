@@ -169,7 +169,8 @@ shape_dict = {input_name: x.shape}
 
 # Compile the model using NNVM
 graph, lib, params = nnvm.compiler.build(
-    sym, target, shape_dict, params=params)
+    sym, target, shape_dict, params=params,
+    dtype={input_name: 'float32'})
 
 # Convert the compiled model into TVM module
 module = tvm.contrib.graph_runtime.create(graph, lib, tvm.cpu(0))

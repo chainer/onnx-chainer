@@ -1,5 +1,6 @@
-import chainer
 import numpy as np
+
+import chainer
 from onnx import TensorProto
 from onnx import helper
 from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE

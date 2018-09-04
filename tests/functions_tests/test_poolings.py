@@ -1,11 +1,12 @@
 import unittest
 
-import chainer
-from chainer import testing
-import chainer.functions as F
 import numpy as np
+
+import chainer
+import chainer.functions as F
 import onnx
 import onnx_chainer
+from chainer import testing
 from onnx_chainer.testing import test_mxnet
 
 MXNET_OPSET_VERSION = {
@@ -48,6 +49,7 @@ class TestPoolings(unittest.TestCase):
         if MXNET_OPSET_VERSION[self.name] is not None:
             for mxnet_opset_version in MXNET_OPSET_VERSION[self.name]:
                 test_mxnet.check_compatibility(
-                    self.model, self.x, self.fn,opset_version=mxnet_opset_version)
+                    self.model, self.x, self.fn, opset_version=mxnet_opset_version)
         for opset_version in range(1, onnx.defs.onnx_opset_version() + 1):
-            onnx_chainer.export(self.model, self.x, opset_version=opset_version)
+            onnx_chainer.export(self.model, self.x,
+                                opset_version=opset_version)

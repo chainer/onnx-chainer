@@ -2,8 +2,9 @@ import collections
 import os
 import warnings
 
-import chainer
 import numpy as np
+
+import chainer
 import onnx
 import onnx_chainer
 

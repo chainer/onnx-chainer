@@ -13,7 +13,8 @@ MXNET_OPSET_VERSION = {
     'ConvolutionND': (1,),
     'DilatedConvolution2D': (1,),
     'Deconvolution2D': (1,),
-    'EmbedID': None,  # See https://discuss.mxnet.io/t/mxnet-onnx-loder-does-not-support-embedding-layer/1573
+    # See https://discuss.mxnet.io/t/mxnet-onnx-loder-does-not-support-embedding-layer/1573
+    'EmbedID': None,
     'Linear': (1, 6, 7),
 }
 
@@ -76,7 +77,6 @@ class TestConnections(unittest.TestCase):
             for opset_version in MXNET_OPSET_VERSION[self.link.__name__]:
                 test_mxnet.check_compatibility(
                     self.model, self.x, self.fn, opset_version=opset_version)
-
         for opset_version in range(1, onnx.defs.onnx_opset_version() + 1):
             onnx_chainer.export(self.model, self.x,
                                 opset_version=opset_version)
