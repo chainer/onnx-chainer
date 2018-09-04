@@ -1,26 +1,24 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import os
 import unittest
 
-import chainer
-from chainer import testing
-import chainer.functions as F
 import numpy as np
-import onnx
-import onnx_chainer
 
+import chainer
+import chainer.functions as F
 import chainercv.links as C
 import nnvm
 import nnvm.compiler
+import onnx
+import onnx_chainer
 import tvm
+from chainer import testing
 
 
 @testing.parameterize(*testing.product({
     'model': [
         {'mod': C, 'arch': 'VGG16', 'kwargs': {'pretrained_model': None}},
-        {'mod': C, 'arch': 'ResNet50', 'kwargs': {'pretrained_model': None, 'arch': 'he'}},
+        {'mod': C, 'arch': 'ResNet50', 'kwargs': {
+            'pretrained_model': None, 'arch': 'he'}},
     ],
     'opset_version': [
         # 1, 2, 3, 4, 5, 6, 7
@@ -49,7 +47,8 @@ class TestWithNNVMBackend(unittest.TestCase):
         with chainer.using_config('train', False):
             chainer_out = self.model(self.x).array
 
-        onnx_chainer.export(self.model, self.x, self.fn, opset_version=self.opset_version)
+        onnx_chainer.export(self.model, self.x, self.fn,
+                            opset_version=self.opset_version)
 
         model_onnx = onnx.load(self.fn)
         sym, params = nnvm.frontend.from_onnx(model_onnx)

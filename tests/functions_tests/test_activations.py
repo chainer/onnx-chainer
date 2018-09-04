@@ -1,14 +1,14 @@
 import unittest
 
+import numpy as np
+
 import chainer
-from chainer import testing
 import chainer.functions as F
 import chainer.links as L
-import numpy as np
 import onnx
 import onnx_chainer
+from chainer import testing
 from onnx_chainer.testing import test_mxnet
-
 
 MXNET_OPSET_VERSION = {
     'elu': (1, 6),
@@ -87,6 +87,5 @@ class TestPReLU(unittest.TestCase):
     def test_compatibility(self):
         test_mxnet.check_compatibility(
             self.model, self.x, self.fn, opset_version=self.opset_version)
-
         onnx_chainer.export(
             self.model, self.x, opset_version=self.opset_version)

@@ -3,15 +3,13 @@ from __future__ import print_function
 import collections
 import heapq
 
-import chainer
-from chainer import function_node
-from chainer import variable
 import numpy
-import onnx
-from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 
-from onnx_chainer import functions
-from onnx_chainer import mapping
+import chainer
+import onnx
+from chainer import function_node, variable
+from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
+from onnx_chainer import functions, mapping
 
 try:
     from onnx import checker

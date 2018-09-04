@@ -1,7 +1,7 @@
-import chainer
 import numpy as np
-from onnx import helper
 
+import chainer
+from onnx import helper
 from onnx_chainer import mapping
 
 
@@ -66,7 +66,7 @@ def convert_DeconvolutionND(func, onnx_op_name, opset_version, input_names, outp
     for p in func.pad:
         pad.append(p)
     pad = pad * 2
-    
+
     if opset_version == 1:
         return helper.make_node(
             onnx_op_name, input_names, output_names,
@@ -90,7 +90,7 @@ def convert_EmbedIDFunction(func, onnx_op_name, opset_version, input_names, outp
 
 
 def convert_LinearFunction(func, onnx_op_name, opset_version, input_names, output_names, parameters):
-    # When the func has bias 
+    # When the func has bias
     if len(func.inputs) == 2:
         batchsize = func.inputs[0].shape[0]
         bias_dim = func.inputs[1].shape[0]

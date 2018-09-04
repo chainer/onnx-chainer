@@ -4,12 +4,12 @@
 import collections
 
 import numpy as np
-import onnx
 
 import chainer
 import chainer.functions as F
 import chainercv.links as C
 import nnvm
+import onnx
 import onnx_chainer
 import tvm
 
@@ -40,7 +40,8 @@ def save_as_onnx_then_import_from_nnvm(model, fn):
 
     # Compile the model using NNVM
     graph, lib, params = nnvm.compiler.build(
-        sym, target, shape_dict, params=params)
+        sym, target, shape_dict, params=params,
+        dtype={input_name: 'float32'})
 
     # Convert the compiled model into TVM module
     module = tvm.contrib.graph_runtime.create(graph, lib, tvm.cpu(0))
@@ -67,7 +68,8 @@ def main():
 
     model = C.ResNet50(pretrained_model='imagenet', arch='he')
     # Change cover_all option to False to match the default behavior of MXNet's pooling
-    model.pool1 = lambda x: F.max_pooling_2d(x, ksize=3, stride=2, cover_all=False)
+    model.pool1 = lambda x: F.max_pooling_2d(
+        x, ksize=3, stride=2, cover_all=False)
     save_as_onnx_then_import_from_nnvm(model, 'resnet50.onnx')
 
 

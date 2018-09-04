@@ -1,6 +1,5 @@
 import chainer
 from onnx import helper
-
 from onnx_chainer import mapping
 
 
