@@ -4,6 +4,7 @@
 ![MIT License](https://img.shields.io/github/license/mitmul/onnx-chainer.svg)
 
 This is an add-on package for ONNX support by Chainer.
+ONNX-Chainer supports opset version <= 7.
 
 ## Tested environment
 
