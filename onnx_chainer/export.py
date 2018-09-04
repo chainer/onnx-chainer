@@ -60,6 +60,32 @@ def create_node(
     return nodes
 
 
+def rename_tensors(model):
+    names = {v.name: v.name for v in model.graph.initializer}
+    op_counts = collections.defaultdict(int)
+
+    for op in model.graph.node:
+        op_name = '{}_{}'.format(op.op_type, op_counts[op.op_type])
+        op_counts[op.op_type] += 1
+
+        for i in range(len(op.input)):
+            if op.input[i] not in names:
+                names[op.input[i]] = 'Input_{}'.format(op_counts['Input'])
+                op_counts['Input'] += 1
+            op.input[i] = names[op.input[i]]
+
+        for i in range(len(op.output)):
+            if len(op.output) <= 1:
+                names[op.output[i]] = op_name
+            else:
+                names[op.output[i]] = '{}_{}'.format(op_name, i)
+            op.output[i] = names[op.output[i]]
+
+    for v in tuple(model.graph.input) + tuple(model.graph.output):
+        if v.name in names:
+            v.name = names[v.name]
+
+
 class ONNXExport(chainer.FunctionHook):
 
     def __init__(self, opset_version=None):
@@ -261,6 +287,7 @@ def export(model, args, filename=None, export_params=True,
 
     model.ir_version = onnx.IR_VERSION
 
+    rename_tensors(model)
     checker.check_model(model)
 
     if filename is not None and isinstance(filename, str):
