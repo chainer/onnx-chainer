@@ -139,6 +139,41 @@ def convert_Sqrt(func, onnx_op_name, opset_version, input_names, output_names, p
         return helper.make_node(onnx_op_name, input_names, output_names),
 
 
+def convert_LogSumExp(func, onnx_op_name, opset_version, input_names, output_names, parameters):
+    return helper.make_node(
+        onnx_op_name, input_names, output_names,
+        axes=func.axis,
+        keepdims=func.keepdims,
+    ),
+
+def convert_Max(func, onnx_op_name, opset_version, input_names, output_names, parameters):
+    return helper.make_node(
+        onnx_op_name, input_names, output_names,
+        axes=func.axis,
+        keepdims=func.keepdims,
+    ),
+
+def convert_Mean(func, onnx_op_name, opset_version, input_names, output_names, parameters):
+    return helper.make_node(
+        onnx_op_name, input_names, output_names,
+        axes=func.axis,
+        keepdims=func.keepdims,
+    ),
+
+def convert_Min(func, onnx_op_name, opset_version, input_names, output_names, parameters):
+    return helper.make_node(
+        onnx_op_name, input_names, output_names,
+        axes=func.axis,
+        keepdims=func.keepdims,
+    ),
+
+def convert_Prod(func, onnx_op_name, opset_version, input_names, output_names, parameters):
+    return helper.make_node(
+        onnx_op_name, input_names, output_names,
+        axes=func.axis,
+        keepdims=func.keepdims,
+    ),
+
 def convert_Sum(func, onnx_op_name, opset_version, input_names, output_names, parameters):
     return helper.make_node(
         onnx_op_name, input_names, output_names,
