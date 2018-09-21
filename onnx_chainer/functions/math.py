@@ -140,11 +140,19 @@ def convert_Sqrt(func, onnx_op_name, opset_version, input_names, output_names, p
 
 
 def convert_LogSumExp(func, onnx_op_name, opset_version, input_names, output_names, parameters):
-    return helper.make_node(
-        onnx_op_name, input_names, output_names,
-        axes=func.axis,
-        keepdims=func.keepdims,
-    ),
+    # Use keepdims=False by default since the chainer does not support keepdims option
+    if hasattr(func, 'keepdims'):
+        return helper.make_node(
+            onnx_op_name, input_names, output_names,
+            axes=func.axis,
+            keepdims=func.keepdims,
+        ),
+    else:
+        return helper.make_node(
+            onnx_op_name, input_names, output_names,
+            axes=func.axis,
+            keepdims=False,
+        ),
 
 def convert_Max(func, onnx_op_name, opset_version, input_names, output_names, parameters):
     return helper.make_node(
