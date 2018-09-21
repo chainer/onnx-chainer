@@ -23,6 +23,11 @@ MXNET_OPSET_VERSION = {
     'Maximum': (1, 6),
     'Minimum': (1, 6),
     'Sqrt': (1, 6),
+    'LogSumExp': (1,),
+    'Max': (1,),
+    'Mean': (1,),
+    'Min': (1,),
+    'Prod': (1,),
     'Sum': (1,),
 }
 
@@ -40,11 +45,11 @@ MXNET_OPSET_VERSION = {
     {'info': 'Sum',
      'ops': 'chainer.functions.sum(a, axis=0, keepdims=True)'},
     {'info': 'AddConst', 'ops': 'a + 1'},
-    {'info': 'Max', 'ops': 'chainer.functions.max(a)'},
-    {'info': 'Mean', 'ops': 'chainer.functions.mean(a)'},
-    {'info': 'Min', 'ops': 'chainer.functions.min(a)'},
-    {'info': 'Prod', 'ops': 'chainer.functions.prod(a)'},
-    {'info': 'LogSumExp', 'ops': 'chainer.functions.logsumexp(a)'},
+    {'info': 'Max', 'ops': 'chainer.functions.max(a, axis=0)'},
+    {'info': 'Mean', 'ops': 'chainer.functions.mean(a, axis=0)'},
+    {'info': 'Min', 'ops': 'chainer.functions.min(a, axis=0)'},
+    {'info': 'Prod', 'ops': 'chainer.functions.prod(a, axis=0)'},
+    {'info': 'LogSumExp', 'ops': 'chainer.functions.logsumexp(a, axis=0)'},
 )
 class TestUnaryMathOperators(unittest.TestCase):
 
