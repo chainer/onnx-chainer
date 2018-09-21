@@ -33,6 +33,7 @@ from onnx_chainer.functions.math import convert_Add  # NOQA
 from onnx_chainer.functions.math import convert_AddConstant  # NOQA
 from onnx_chainer.functions.math import convert_Div  # NOQA
 from onnx_chainer.functions.math import convert_Mul  # NOQA
+from onnx_chainer.functions.math import convert_MulConstant  # NOQA
 from onnx_chainer.functions.math import convert_Neg  # NOQA
 from onnx_chainer.functions.math import convert_PowVarConst  # NOQA
 from onnx_chainer.functions.math import convert_Sub  # NOQA
