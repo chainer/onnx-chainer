@@ -12,9 +12,7 @@ from onnx_chainer.testing import test_mxnet
 
 
 def _arange(*shape):
-    r = 1
-    for d in shape:
-        r *= d
+    r = np.prod(shape)
     return np.arange(r).reshape(shape).astype(np.float32)
 
 
