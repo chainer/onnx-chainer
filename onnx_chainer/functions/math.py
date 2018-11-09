@@ -41,6 +41,18 @@ def convert_Mul(func, onnx_op_name, opset_version, input_names, output_names, pa
     elif opset_version == 6 or opset_version == 7:
         return helper.make_node(onnx_op_name, input_names, output_names),
 
+def convert_MulConstant(func, onnx_op_name, opset_version, input_names, output_names, parameters):
+    value = np.asarray([func.value], dtype=func.inputs[0].dtype)
+    value = np.broadcast_to(value, func.inputs[0].shape)
+    value_param = chainer.Parameter(value)
+    parameters.append(value_param)
+    input_names.append(str(id(value_param)))
+
+    if opset_version == 1:
+        return helper.make_node(onnx_op_name, input_names, output_names, consumed_inputs=[1, 1]),
+    elif opset_version == 6 or opset_version == 7:
+        return helper.make_node(onnx_op_name, input_names, output_names),
+
 
 def convert_Neg(func, onnx_op_name, opset_version, input_names, output_names, parameters):
     if opset_version == 1:

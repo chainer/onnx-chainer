@@ -52,7 +52,8 @@ def convert_Deconvolution2DFunction(func, onnx_op_name, opset_version, input_nam
             onnx_op_name, input_names, output_names,
             kernel_shape=func.inputs[1].shape[2:],
             output_shape=(func.outh, func.outw),
-            pads=(func.ph, func.pw),
+            # pads: [x1_begin, x2_begin...x1_end, x2_end,...]
+            pads=(func.ph, func.pw, func.ph, func.pw),
             strides=(func.sy, func.sx),
         ),
 

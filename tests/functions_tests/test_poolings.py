@@ -7,14 +7,7 @@ import chainer.functions as F
 import onnx
 import onnx_chainer
 from chainer import testing
-from onnx_chainer.testing import test_mxnet
-
-MXNET_OPSET_VERSION = {
-    'average_pooling_2d': (1, 7),
-    'average_pooling_nd': None,
-    'max_pooling_2d': (1,),
-    'max_pooling_nd': None,
-}
+from onnx_chainer.testing import test_onnxruntime
 
 
 @testing.parameterize(
@@ -45,11 +38,9 @@ class TestPoolings(unittest.TestCase):
         self.x = np.ones(self.in_shape, dtype=np.float32)
         self.fn = self.name + '.onnx'
 
-    def test_compatibility(self):
-        if MXNET_OPSET_VERSION[self.name] is not None:
-            for mxnet_opset_version in MXNET_OPSET_VERSION[self.name]:
-                test_mxnet.check_compatibility(
-                    self.model, self.x, self.fn, opset_version=mxnet_opset_version)
-        for opset_version in range(1, onnx.defs.onnx_opset_version() + 1):
-            onnx_chainer.export(self.model, self.x,
-                                opset_version=opset_version)
+    def test_output(self):
+        for opset_version in range(
+                test_onnxruntime.MINIMUM_OPSET_VERSION,
+                onnx.defs.onnx_opset_version() + 1):
+            test_onnxruntime.check_output(
+                self.model, self.x, self.fn, opset_version=opset_version)
