@@ -1,46 +1,38 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import os
 import unittest
 
 import numpy as np
-import onnx
 
 import chainer
-from chainer import testing
 import chainer.functions as F
 import chainercv.links as C
 import nnvm
 import nnvm.compiler
+import onnx
 import onnx_chainer
 import tvm
+from chainer import testing
 
 
-@testing.parameterize(
-    {
-        'mod': C,
-        'arch': 'VGG16',
-        'kwargs': {
-            'pretrained_model': None,
-        }
-    },
-    {
-        'mod': C,
-        'arch': 'ResNet50',
-        'kwargs': {
-            'pretrained_model': None,
-            'arch': 'he'
-        }
-    }
-)
+@testing.parameterize(*testing.product({
+    'model': [
+        {'mod': C, 'arch': 'VGG16', 'kwargs': {'pretrained_model': None}},
+        {'mod': C, 'arch': 'ResNet50', 'kwargs': {
+            'pretrained_model': None, 'arch': 'he'}},
+    ],
+    'opset_version': [
+        # 1, 2, 3, 4, 5, 6, 7
+        7
+    ]
+}))
 class TestWithNNVMBackend(unittest.TestCase):
 
     def setUp(self):
-        self.model = getattr(self.mod, self.arch)(**self.kwargs)
+        m = self.model
+        self.model = getattr(m['mod'], m['arch'])(**m['kwargs'])
 
         # To match the behavior with MXNet's default max pooling
-        if self.arch == 'ResNet50':
+        if m['arch'] == 'ResNet50':
             self.model.pool1 = lambda x: F.max_pooling_2d(
                 x, ksize=3, stride=2, cover_all=False)
 
@@ -48,14 +40,15 @@ class TestWithNNVMBackend(unittest.TestCase):
             -5, 5, size=(1, 3, 224, 224)).astype(np.float32)
         with chainer.using_config('train', True):
             self.model(self.x)  # Prevent all NaN output
-        self.fn = '{}.onnx'.format(self.arch)
+        self.fn = '{}.onnx'.format(m['arch'])
 
     def test_compatibility(self):
         chainer.config.train = False
         with chainer.using_config('train', False):
             chainer_out = self.model(self.x).array
 
-        onnx_chainer.export(self.model, self.x, self.fn)
+        onnx_chainer.export(self.model, self.x, self.fn,
+                            opset_version=self.opset_version)
 
         model_onnx = onnx.load(self.fn)
         sym, params = nnvm.frontend.from_onnx(model_onnx)
@@ -65,7 +58,7 @@ class TestWithNNVMBackend(unittest.TestCase):
 
         shape_dict = {input_name: self.x.shape}
         graph, lib, params = nnvm.compiler.build(
-            sym, target, shape_dict, params=params)
+            sym, target, shape_dict, params=params, dtype={input_name: 'float32'})
         module = tvm.contrib.graph_runtime.create(graph, lib, tvm.cpu(0))
         module.set_input(input_name, tvm.nd.array(self.x))
         module.set_input(**params)

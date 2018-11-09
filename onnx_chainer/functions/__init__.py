@@ -11,6 +11,7 @@ from onnx_chainer.functions.activation import convert_Tanh  # NOQA
 
 from onnx_chainer.functions.array import convert_Cast  # NOQA
 from onnx_chainer.functions.array import convert_Concat  # NOQA
+from onnx_chainer.functions.array import convert_Copy  # NOQA
 from onnx_chainer.functions.array import convert_Depth2Space  # NOQA
 from onnx_chainer.functions.array import convert_Pad  # NOQA
 from onnx_chainer.functions.array import convert_Reshape  # NOQA
@@ -29,6 +30,7 @@ from onnx_chainer.functions.connection import convert_LinearFunction  # NOQA
 
 from onnx_chainer.functions.math import convert_Absolute  # NOQA
 from onnx_chainer.functions.math import convert_Add  # NOQA
+from onnx_chainer.functions.math import convert_AddConstant  # NOQA
 from onnx_chainer.functions.math import convert_Div  # NOQA
 from onnx_chainer.functions.math import convert_Mul  # NOQA
 from onnx_chainer.functions.math import convert_Neg  # NOQA

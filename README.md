@@ -4,17 +4,18 @@
 ![MIT License](https://img.shields.io/github/license/mitmul/onnx-chainer.svg)
 
 This is an add-on package for ONNX support by Chainer.
+ONNX-Chainer supports opset version <= 7.
 
 ## Tested environment
 
-- ONNX 1.1.1
-- Chainer 3.5.0, 4.2.0
+- ONNX >=1.2.1
+- Chainer 4.4.0
 - Python 2.7.14, 3.5.5, 3.6.5
 
 ### Compatibility tests
 
-- with MXNet 1.2.0
-- with NNVM (under TVM repository at commit ID = `ebdde3c277a9807a67b233cecfaf6d9f96c0c1bc`)
+- with MXNet v1.3.0b20180830
+- with TVM v0.4
 
 ## Installation
 
@@ -39,7 +40,7 @@ bash build_docker.sh
 ### 2. Run tests
 
 ```bash
-bash docker/run_tests.sh
+bash docker/run_tests.sh 3.5 4.4.0  # -> python 3.5, chainer 4.4.0
 ```
 
 ## Quick Start
@@ -63,7 +64,7 @@ onnx_chainer.export(model, x, filename='vgg16.onnx')
 
 ## Load models from MXNet
 
-Install [MXNet](https://github.com/apache/incubator-mxnet) first, then try the following code:
+Please install [MXNet 1.3.0b20180830](https://github.com/apache/incubator-mxnet) or newer one via pip: `pip install mxnet --pre`, then try the following code:
 
 ```python
 import collections
@@ -124,7 +125,7 @@ np.testing.assert_almost_equal(chainer_out, mxnet_out, decimal=5)
 
 ## Compile the Chainer model via ONNX
 
-Please install [TVM](https://github.com/dmlc/tvm/tree/ebdde3c277a9807a67b233cecfaf6d9f96c0c1bc) at a specified commit ID (ebdde3c277a9807a67b233cecfaf6d9f96c0c1bc) with NNVM first.
+Please install [TVM v0.4](https://github.com/dmlc/tvm/releases/tag/v0.4) first. You can find hwo to build it in this [Dockerfile](docker/Dockerfile).
 
 ```python
 import collections
@@ -169,7 +170,8 @@ shape_dict = {input_name: x.shape}
 
 # Compile the model using NNVM
 graph, lib, params = nnvm.compiler.build(
-    sym, target, shape_dict, params=params)
+    sym, target, shape_dict, params=params,
+    dtype={input_name: 'float32'})
 
 # Convert the compiled model into TVM module
 module = tvm.contrib.graph_runtime.create(graph, lib, tvm.cpu(0))
@@ -190,9 +192,46 @@ nnvm_output = module.get_output(0, output).asnumpy()
 np.testing.assert_almost_equal(chainer_out, nnvm_output, decimal=5)
 ```
 
+## Options of `export` function
+
+```
+Export function for chainer.Chain in ONNX format.
+
+    This function performs a forward computation of the given
+    :class:`~chainer.Chain`, ``model``, by passing the given argments ``args``
+    directly. It means, the output :class:`~chainer.Variable` object ``y`` to
+    make the computational graph will be created by:
+
+    y = model(*args)
+
+    Args:
+        model (~chainer.Chain): The model object you want to export in ONNX
+            format. It should have :meth:`__call__` method because the second
+            argment ``args`` is directly given to the model by the ``[]``
+            accessor.
+        args (list or dict): The argments which are given to the model
+            directly.
+        filename (str or file-like object): The filename used for saving the
+            resulting ONNX model. If None, nothing is saved to the disk.
+        export_params (bool): If True, this function exports all the parameters
+            included in the given model at the same time. If False, the
+            exported ONNX model doesn't include any parameter values.
+        graph_name (str): A string to be used for the ``name`` field of the
+            graph in the exported ONNX model.
+        save_text (bool): If True, the text format of the output ONNX model is
+            also saved with ``.txt`` extention.
+        opset_version (int): The operator set version of ONNX. If not specified
+            or ``None`` is given, the latest opset version of the onnx module
+            is used. If an integer is given, it will be ensured that all the
+            operator version in the exported ONNX file is less than this value.
+
+    Returns:
+        A ONNX model object.
+```
+
 ## Supported Functions
 
-Currently 49 Chainer Functions are supported to export in ONNX format.
+Currently 51 Chainer Functions are supported to export in ONNX format.
 
 ### Activation
 
@@ -211,6 +250,7 @@ Currently 49 Chainer Functions are supported to export in ONNX format.
 
 - Cast
 - Concat
+- Copy
 - Depth2Space
 - Pad <sup>[1](#pad1)</sup><sup>[2](#pad2)</sup>
 - Reshape
@@ -232,6 +272,7 @@ Currently 49 Chainer Functions are supported to export in ONNX format.
 ### Math
 
 - Add
+- AddConstant
 - Absolute
 - Div
 - Mul

@@ -94,30 +94,35 @@ RUN pip install --no-cache-dir \
     tornado \
     pytest \
     future \
-    hypothesis 
-
-# Install Chainer
-ARG CHAINER_VERSION="4.2.0"
-RUN pip install chainer==${CHAINER_VERSION}
+    hypothesis
 
 ENV LD_LIBRARY_PATH /usr/local/lib:$LD_LIBRARY_PATH
 ENV LIBRARY_PATH /usr/local/lib:$LIBRARY_PATH
 
-# Install ChainerCV
-ARG CHAINERCV_VERSION="0.10.0"
-RUN pip install chainercv==${CHAINERCV_VERSION}
-
 # Install MXNet
-ARG MXNET_VERSION="1.2.0"
-RUN pip install mxnet==${MXNET_VERSION}
+ARG MXNET_VERSION="pre"
+RUN if [ ${MXNET_VERSION} = "pre" ]; then \
+        pip install mxnet --pre; \
+    else \
+        pip install mxnet==${MXNET_VERSION}; \
+    fi
 
 # Install TVM
-ARG TVM_COMMIT_ID="ebdde3c277a9807a67b233cecfaf6d9f96c0c1bc"
-RUN git clone --recursive https://github.com/dmlc/tvm $HOME/tvm
-RUN cd $HOME/tvm && git checkout ${TVM_COMMIT_ID} && \
+ARG TVM_VERSION="0.4"
+RUN git clone https://github.com/dmlc/tvm && \
+    cd tvm && git checkout -b v0.4 refs/tags/v0.4 && \
+    git submodule update --init --recursive && \
     mkdir build && cd build \
     && cmake -DUSE_LLVM=ON .. \
     && make -j$(nproc) install
 RUN cd $HOME/tvm/python && python setup.py install
 RUN cd $HOME/tvm/topi/python && python setup.py install
 RUN cd $HOME/tvm/nnvm/python && python setup.py install
+
+# Install Chainer
+ARG CHAINER_VERSION="4.4.0"
+RUN pip install chainer==${CHAINER_VERSION}
+
+# Install ChainerCV
+ARG CHAINERCV_VERSION="0.10.0"
+RUN pip install chainercv==${CHAINERCV_VERSION}
