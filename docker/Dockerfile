@@ -94,7 +94,7 @@ RUN pip install --no-cache-dir \
     tornado \
     pytest \
     future \
-    hypothesis 
+    hypothesis
 
 ENV LD_LIBRARY_PATH /usr/local/lib:$LD_LIBRARY_PATH
 ENV LIBRARY_PATH /usr/local/lib:$LIBRARY_PATH
@@ -109,8 +109,9 @@ RUN if [ ${MXNET_VERSION} = "pre" ]; then \
 
 # Install TVM
 ARG TVM_VERSION="0.4"
-RUN git clone --recursive https://github.com/dmlc/tvm && \
-    cd tvm && git checkout -b tag refs/tags/v0.4 && \
+RUN git clone https://github.com/dmlc/tvm && \
+    cd tvm && git checkout -b v0.4 refs/tags/v0.4 && \
+    git submodule update --init --recursive && \
     mkdir build && cd build \
     && cmake -DUSE_LLVM=ON .. \
     && make -j$(nproc) install
