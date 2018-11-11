@@ -22,4 +22,5 @@ before_install:
   - docker pull mitmul/onnx-chainer:python${TRAVIS_PYTHON_VERSION}-chainer${CHAINER_VERSION}
 
 script:
-  - bash docker/run_tests.sh
+  - bash docker/run_tests.sh ${TRAVIS_PYTHON_VERSION} ${CHAINER_VERSION}
+
