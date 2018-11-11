@@ -9,7 +9,6 @@ services:
 python:
   - "3.5"
   - "3.6"
-  - "3.7"
 
 env:
   - CHAINER_VERSION=5.0.0
