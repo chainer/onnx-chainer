@@ -8,4 +8,4 @@ docker run --rm \
 -v $PWD:/root/onnx-chainer \
 -v $PWD/.chainer:/root/.chainer \
 -ti mitmul/onnx-chainer:${tag_name} \
-bash -c "pip install onnxruntime=${onnx_runtime_version} && cd /root/onnx-chainer && python setup.py develop && py.test -x -s -vvvs tests/$3"
+bash -c "pip install onnxruntime==${onnx_runtime_version} && cd /root/onnx-chainer && python setup.py develop && py.test -x -s -vvvs tests/$3"
