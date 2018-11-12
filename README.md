@@ -283,6 +283,11 @@ Currently 51 Chainer Functions are supported to export in ONNX format.
 - Maximum
 - Minimum
 - Sqrt
+- LogSumExp
+- Max
+- Mean
+- Min
+_ Prod
 - Sum
 
 ### Noise
