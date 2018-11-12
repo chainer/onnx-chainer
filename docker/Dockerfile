@@ -7,32 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cmake \
     curl \
     wget \
-    git \
-    libgflags-dev \
-    libgtest-dev \
-    libleveldb-dev \
-    liblmdb-dev \
-    libopencv-dev \
-    libsnappy-dev \
-    libprotobuf-dev \
-    libprotoc-dev \
-    libgoogle-glog-dev \
-    protobuf-compiler \
-    python-dev \
-    python-pip \
-    python-dbg \
-    python3-dev \
-    python3-pip \
-    python3-dbg \
-    libssl-dev \
-    zlib1g-dev \
-    libbz2-dev \
-    libreadline-dev \
-    libsqlite3-dev \
-    libncurses5-dev \
-    libncursesw5-dev \
-    xz-utils \
-    tk-dev
+    git
 
 RUN apt-get purge -y cmake
 RUN curl -L -O https://cmake.org/files/v3.11/cmake-3.11.1-Linux-x86_64.sh && \
