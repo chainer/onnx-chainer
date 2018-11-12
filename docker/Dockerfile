@@ -29,7 +29,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libbz2-dev \
     libreadline-dev \
     libsqlite3-dev \
-    llvm \
     libncurses5-dev \
     libncursesw5-dev \
     xz-utils \
@@ -53,15 +52,15 @@ RUN eval "$(pyenv init -)"
 ARG PYTHON_VERSION
 
 RUN if [ ${PYTHON_VERSION} = "3.7" ]; then \
-        pyenv install 3.7.1; \
+        CONFIGURE_OPTS="--enable-shared" pyenv install 3.7.1; \
         pyenv global 3.7.1; \
         pyenv rehash; \
     elif [ ${PYTHON_VERSION} = "3.6" ]; then \
-        pyenv install 3.6.7; \
+        CONFIGURE_OPTS="--enable-shared" pyenv install 3.6.7; \
         pyenv global 3.6.7; \
         pyenv rehash; \
     elif [ ${PYTHON_VERSION} = "3.5" ]; then \
-        pyenv install 3.5.5; \
+        CONFIGURE_OPTS="--enable-shared" pyenv install 3.5.5; \
         pyenv global 3.5.5; \
         pyenv rehash; \
     fi

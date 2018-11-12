@@ -8,18 +8,20 @@ services:
 
 python:
   - "3.5"
-  - "3.6"
 
 env:
   - CHAINER_VERSION=5.0.0
   - CHAINER_VERSION=6.0.0a1
+  - PYTHON_VERSION=3.5
+  - PYTHON_VERSION=3.6
+  - PYTHON_VERSION=3.7
 
 notifications:
   email: false
 
 before_install:
-  - docker pull mitmul/onnx-chainer:python${TRAVIS_PYTHON_VERSION}-chainer${CHAINER_VERSION}
+  - docker pull mitmul/onnx-chainer:python${PYTHON_VERSION}-chainer${CHAINER_VERSION}
 
 script:
-  - bash docker/run_tests.sh ${TRAVIS_PYTHON_VERSION} ${CHAINER_VERSION}
+  - bash docker/run_tests.sh ${PYTHON_VERSION} ${CHAINER_VERSION}
 
