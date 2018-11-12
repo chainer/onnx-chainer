@@ -58,6 +58,7 @@ operators = {
     'Absolute': ('Abs', (1, 6)),
     'Div': ('Div', (1, 6, 7)),
     'Mul': ('Mul', (1, 6, 7)),
+    'MulConstant': ('Mul', (1, 6, 7)),
     'Neg': ('Neg', (1, 6)),
     'PowVarConst': ('Pow', (1, 7)),
     'Sub': ('Sub', (1, 6, 7)),

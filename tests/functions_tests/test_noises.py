@@ -7,7 +7,7 @@ import chainer.functions as F
 import onnx
 import onnx_chainer
 from chainer import testing
-from onnx_chainer.testing import test_mxnet
+from onnx_chainer.testing import test_onnxruntime
 
 
 @testing.parameterize(
@@ -32,8 +32,9 @@ class TestNoises(unittest.TestCase):
         self.x = np.zeros((1, 5), dtype=np.float32)
         self.fn = self.name + '.onnx'
 
-    def test_compatibility(self):
-        test_mxnet.check_compatibility(self.model, self.x, self.fn)
-        for opset_version in range(1, onnx.defs.onnx_opset_version() + 1):
-            onnx_chainer.export(self.model, self.x,
-                                opset_version=opset_version)
+    def test_output(self):
+        for opset_version in range(
+                test_onnxruntime.MINIMUM_OPSET_VERSION,
+                onnx.defs.onnx_opset_version() + 1):
+            test_onnxruntime.check_output(
+                self.model, self.x, self.fn, opset_version=opset_version)

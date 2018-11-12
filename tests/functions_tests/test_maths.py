@@ -6,25 +6,7 @@ import chainer
 import onnx
 import onnx_chainer
 from chainer import testing
-from onnx_chainer.testing import test_mxnet
-
-MXNET_OPSET_VERSION = {
-    'Add': (1, 6, 7),
-    'AddConst': (1, 6, 7),
-    'Absolute': (1, 6),
-    'Div': (1, 6, 7),
-    'Mul': (1, 6, 7),
-    'Neg': (1, 6),
-    'PowVarConst': (1, 7),
-    'Sub': (1, 6, 7),
-    'Clip': (6,),
-    'Exp': (1, 6),
-    'MatMul': (1, 6, 7),
-    'Maximum': (1, 6),
-    'Minimum': (1, 6),
-    'Sqrt': (1, 6),
-    'Sum': (1,),
-}
+from onnx_chainer.testing import test_onnxruntime
 
 
 @testing.parameterize(
@@ -59,13 +41,12 @@ class TestUnaryMathOperators(unittest.TestCase):
         self.a = chainer.Variable(np.ones((2, 3), dtype=np.float32))
         self.fn = self.info + '.onnx'
 
-    def test_compatibility(self):
-        if MXNET_OPSET_VERSION[self.info] is not None:
-            for opset_version in MXNET_OPSET_VERSION[self.info]:
-                test_mxnet.check_compatibility(
-                    self.model, self.a, self.fn, opset_version=opset_version)
-        for opset_version in range(1, onnx.defs.onnx_opset_version() + 1):
-            onnx_chainer.export(self.model, self.a)
+    def test_output(self):
+        for opset_version in range(
+                test_onnxruntime.MINIMUM_OPSET_VERSION,
+                onnx.defs.onnx_opset_version() + 1):
+            test_onnxruntime.check_output(
+                self.model, self.a, self.fn, opset_version=opset_version)
 
 
 @testing.parameterize(
@@ -99,10 +80,9 @@ class TestBinaryMathOperators(unittest.TestCase):
         self.x = (a, b)
         self.fn = self.info + '.onnx'
 
-    def test_compatibility(self):
-        if MXNET_OPSET_VERSION[self.info] is not None:
-            for opset_version in MXNET_OPSET_VERSION[self.info]:
-                test_mxnet.check_compatibility(
-                    self.model, self.x, self.fn, opset_version=opset_version)
-        for opset_version in range(1, onnx.defs.onnx_opset_version() + 1):
-            onnx_chainer.export(self.model, self.x)
+    def test_output(self):
+        for opset_version in range(
+                test_onnxruntime.MINIMUM_OPSET_VERSION,
+                onnx.defs.onnx_opset_version() + 1):
+            test_onnxruntime.check_output(
+                self.model, self.x, self.fn, opset_version=opset_version)

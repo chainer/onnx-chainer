@@ -7,13 +7,13 @@ services:
   - docker
 
 python:
-  - "2.7"
   - "3.5"
   - "3.6"
+  - "3.7"
 
 env:
-  - CHAINER_VERSION=3.5.0
-  - CHAINER_VERSION=4.2.0
+  - CHAINER_VERSION=5.0.0
+  - CHAINER_VERSION=6.0.0a1
 
 notifications:
   email: false
