@@ -9,8 +9,8 @@ ONNX-Chainer supports opset version <= 7.
 ## Tested environment
 
 - ONNX >=1.2.1
-- Chainer 4.4.0
-- Python 2.7.14, 3.5.5, 3.6.5
+- Chainer 5.0.0, 6.0.0a1
+- Python 3.5.5, 3.6.7
 
 ### Compatibility tests
 
