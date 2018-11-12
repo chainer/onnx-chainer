@@ -292,6 +292,7 @@ Currently 51 Chainer Functions are supported to export in ONNX format.
 - Min
 _ Prod
 - Sum
+- LinearInterpolate
 
 ### Noise
 
