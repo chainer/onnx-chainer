@@ -90,10 +90,11 @@ def convert_FixedBatchNormalization(func, onnx_op_name, opset_version, input_nam
 
 def convert_LocalResponseNormalization(func, onnx_op_name, opset_version, input_names, output_names, parameters):
     if opset_version == 1:
+        size = int(func.n)
         return helper.make_node(
             onnx_op_name, input_names, output_names,
-            alpha=float(func.alpha),
+            alpha=float(func.alpha) * size,
             beta=float(func.beta),
             bias=float(func.k),
-            size=int(func.n),
+            size=size,
         ),

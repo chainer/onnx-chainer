@@ -11,6 +11,11 @@ from chainer import testing
 from onnx_chainer.testing import test_onnxruntime
 
 
+def _arange(*shape):
+    r = np.prod(shape)
+    return np.arange(r).reshape(shape).astype(np.float32)
+
+
 @testing.parameterize(
     {
         'name': 'local_response_normalization',
@@ -37,7 +42,7 @@ class TestNormalizations(unittest.TestCase):
 
         ops = getattr(F, self.name)
         self.model = Model(ops, self.args, self.input_argname)
-        self.x = np.zeros((1, 5, 3, 3), dtype=np.float32)
+        self.x = _arange(1, 5, 3, 3)
         self.fn = self.name + '.onnx'
 
     def test_output(self):
@@ -68,7 +73,7 @@ class TestBatchNormalization(unittest.TestCase):
                 return self.bn(x)
 
         self.model = Model()
-        self.x = np.zeros((1, 5), dtype=np.float32)
+        self.x = _arange(1, 5)
         self.fn = 'BatchNormalization.onnx'
 
     def test_output(self):
