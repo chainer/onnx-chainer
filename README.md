@@ -9,13 +9,9 @@ ONNX-Chainer supports opset version <= 7.
 ## Tested environment
 
 - ONNX >=1.2.1
-- Chainer 4.4.0
-- Python 2.7.14, 3.5.5, 3.6.5
-
-### Compatibility tests
-
-- with MXNet v1.3.0b20180830
-- with TVM v0.4
+- Chainer 5.0.0, 6.0.0a1
+- Python 3.5.5, 3.6.7
+- ONNX-Runtime 0.1.3
 
 ## Installation
 
@@ -40,7 +36,7 @@ bash build_docker.sh
 ### 2. Run tests
 
 ```bash
-bash docker/run_tests.sh 3.5 4.4.0  # -> python 3.5, chainer 4.4.0
+bash docker/run_all_tests.sh
 ```
 
 ## Quick Start
@@ -276,6 +272,7 @@ Currently 51 Chainer Functions are supported to export in ONNX format.
 - Absolute
 - Div
 - Mul
+- MulConstant
 - Neg
 - PowVarConst
 - Sub

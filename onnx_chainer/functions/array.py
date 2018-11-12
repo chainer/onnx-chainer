@@ -184,7 +184,7 @@ def convert_Tile(func, onnx_op_name, opset_version, input_names, output_names, p
     # Add tiles and axis to graph
     if isinstance(func.reps, int):
         func.reps = [func.reps]
-    tiles = np.asarray(func.reps, dtype=np.float32)
+    tiles = np.asarray(func.reps, dtype=np.int64)
 
     tiles_param = chainer.Parameter(tiles)
     parameters.append(tiles_param)
@@ -197,8 +197,7 @@ def convert_Tile(func, onnx_op_name, opset_version, input_names, output_names, p
         parameters.append(axis_param)
         input_names.append(str(id(axis_param)))
 
-    node = helper.make_node(onnx_op_name, input_names, output_names)
-    return node,
+    return helper.make_node(onnx_op_name, input_names, output_names),
 
 
 def convert_Transpose(func, onnx_op_name, opset_version, input_names, output_names, parameters):
