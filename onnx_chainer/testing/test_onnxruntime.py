@@ -4,7 +4,16 @@ import chainer
 import onnx
 import onnx_chainer
 
-import onnxruntime as rt
+
+try:
+    import onnxruntime as rt
+    ONNXRUNTIME_AVAILABLE = True
+except ImportError:
+    warnings.warn(
+        'ONNXRuntime is not installed. Please install it to use '
+        ' the testing utility for ONNX-Chainer\'s converters.',
+        ImportWarning)
+    ONNXRUNTIME_AVAILABLE = False
 
 
 MINIMUM_OPSET_VERSION = 7
@@ -13,6 +22,8 @@ MINIMUM_OPSET_VERSION = 7
 def check_output(model, x, fn, out_key='prob', opset_version=None):
     if opset_version is None:
         opset_version = onnx.defs.onnx_opset_version()
+    if not ONNXRUNTIME_AVAILABLE:
+        raise ImportError('check_output requires onnxruntime.')
 
     chainer.config.train = False
 

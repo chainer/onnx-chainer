@@ -54,6 +54,20 @@ def convert_MulConstant(func, onnx_op_name, opset_version, input_names, output_n
         return helper.make_node(onnx_op_name, input_names, output_names),
 
 
+def convert_MulConstant(func, onnx_op_name, opset_version, input_names, output_names, parameters):
+    value = np.asarray([func.value], dtype=func.inputs[0].dtype)
+    value = np.broadcast_to(value, func.inputs[0].shape)
+    value_param = chainer.Parameter(value)
+    parameters.append(value_param)
+    input_names.append(str(id(value_param)))
+
+    if opset_version == 1:
+        return helper.make_node(
+            onnx_op_name, input_names, output_names, consumed_inputs=[1, 1]),
+    elif opset_version == 6 or opset_version == 7:
+        return helper.make_node(onnx_op_name, input_names, output_names),
+
+
 def convert_Neg(func, onnx_op_name, opset_version, input_names, output_names, parameters):
     if opset_version == 1:
         return helper.make_node(onnx_op_name, input_names, output_names, consumed_inputs=[1, 1]),
@@ -133,14 +147,14 @@ def convert_MatMul(func, onnx_op_name, opset_version, input_names, output_names,
 def convert_Maximum(func, onnx_op_name, opset_version, input_names, output_names, parameters):
     if opset_version == 1:
         return helper.make_node(onnx_op_name, input_names, output_names, consumed_inputs=[1, 1]),
-    elif opset_version == 6:
+    elif opset_version == 6 or opset_version == 8:
         return helper.make_node(onnx_op_name, input_names, output_names),
 
 
 def convert_Minimum(func, onnx_op_name, opset_version, input_names, output_names, parameters):
     if opset_version == 1:
         return helper.make_node(onnx_op_name, input_names, output_names, consumed_inputs=[1, 1]),
-    elif opset_version == 6:
+    elif opset_version == 6 or opset_version == 8:
         return helper.make_node(onnx_op_name, input_names, output_names),
 
 
@@ -150,6 +164,49 @@ def convert_Sqrt(func, onnx_op_name, opset_version, input_names, output_names, p
     elif opset_version == 6:
         return helper.make_node(onnx_op_name, input_names, output_names),
 
+
+def convert_LogSumExp(func, onnx_op_name, opset_version, input_names, output_names, parameters):
+    # Use keepdims=False by default since the chainer does not support keepdims option
+    if hasattr(func, 'keepdims'):
+        return helper.make_node(
+            onnx_op_name, input_names, output_names,
+            axes=func.axis,
+            keepdims=func.keepdims,
+        ),
+    else:
+        return helper.make_node(
+            onnx_op_name, input_names, output_names,
+            axes=func.axis,
+            keepdims=False,
+        ),
+
+def convert_Max(func, onnx_op_name, opset_version, input_names, output_names, parameters):
+    return helper.make_node(
+        onnx_op_name, input_names, output_names,
+        axes=func.axis,
+        keepdims=func.keepdims,
+    ),
+
+def convert_Mean(func, onnx_op_name, opset_version, input_names, output_names, parameters):
+    return helper.make_node(
+        onnx_op_name, input_names, output_names,
+        axes=func.axis,
+        keepdims=func.keepdims,
+    ),
+
+def convert_Min(func, onnx_op_name, opset_version, input_names, output_names, parameters):
+    return helper.make_node(
+        onnx_op_name, input_names, output_names,
+        axes=func.axis,
+        keepdims=func.keepdims,
+    ),
+
+def convert_Prod(func, onnx_op_name, opset_version, input_names, output_names, parameters):
+    return helper.make_node(
+        onnx_op_name, input_names, output_names,
+        axes=func.axis,
+        keepdims=func.keepdims,
+    ),
 
 def convert_Sum(func, onnx_op_name, opset_version, input_names, output_names, parameters):
     return helper.make_node(

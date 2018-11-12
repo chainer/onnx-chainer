@@ -50,6 +50,11 @@ def convert_parameter(parameter):
 
 def create_node(
         func_name, onnx_op_name, opset_version, func, input_names, output_names, parameters):
+    for opver in sorted(mapping.operators[func_name][-1], reverse=True):
+        if opver <= opset_version:
+            break
+    opset_version = opver
+
     converter_name = 'convert_{}'.format(func_name)
     if hasattr(functions, converter_name):
         converter = getattr(functions, converter_name)

@@ -22,6 +22,11 @@ from onnx_chainer.testing import test_onnxruntime
     {'info': 'Sum',
      'ops': 'chainer.functions.sum(a, axis=0, keepdims=True)'},
     {'info': 'AddConst', 'ops': 'a + 1'},
+    {'info': 'Max', 'ops': 'chainer.functions.max(a, axis=0)'},
+    {'info': 'Mean', 'ops': 'chainer.functions.mean(a, axis=0)'},
+    {'info': 'Min', 'ops': 'chainer.functions.min(a, axis=0)'},
+    {'info': 'Prod', 'ops': 'chainer.functions.prod(a, axis=0)'},
+    {'info': 'LogSumExp', 'ops': 'chainer.functions.logsumexp(a, axis=0)'},
 )
 class TestUnaryMathOperators(unittest.TestCase):
 
