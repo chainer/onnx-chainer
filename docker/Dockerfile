@@ -7,33 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cmake \
     curl \
     wget \
-    git \
-    libgflags-dev \
-    libgtest-dev \
-    libleveldb-dev \
-    liblmdb-dev \
-    libopencv-dev \
-    libsnappy-dev \
-    libprotobuf-dev \
-    libprotoc-dev \
-    libgoogle-glog-dev \
-    protobuf-compiler \
-    python-dev \
-    python-pip \
-    python-dbg \
-    python3-dev \
-    python3-pip \
-    python3-dbg \
-    libssl-dev \
-    zlib1g-dev \
-    libbz2-dev \
-    libreadline-dev \
-    libsqlite3-dev \
-    llvm \
-    libncurses5-dev \
-    libncursesw5-dev \
-    xz-utils \
-    tk-dev
+    git
 
 RUN apt-get purge -y cmake
 RUN curl -L -O https://cmake.org/files/v3.11/cmake-3.11.1-Linux-x86_64.sh && \
@@ -53,15 +27,15 @@ RUN eval "$(pyenv init -)"
 ARG PYTHON_VERSION
 
 RUN if [ ${PYTHON_VERSION} = "3.7" ]; then \
-        pyenv install 3.7.1; \
+        CONFIGURE_OPTS="--enable-shared" pyenv install 3.7.1; \
         pyenv global 3.7.1; \
         pyenv rehash; \
     elif [ ${PYTHON_VERSION} = "3.6" ]; then \
-        pyenv install 3.6.7; \
+        CONFIGURE_OPTS="--enable-shared" pyenv install 3.6.7; \
         pyenv global 3.6.7; \
         pyenv rehash; \
     elif [ ${PYTHON_VERSION} = "3.5" ]; then \
-        pyenv install 3.5.5; \
+        CONFIGURE_OPTS="--enable-shared" pyenv install 3.5.5; \
         pyenv global 3.5.5; \
         pyenv rehash; \
     fi
