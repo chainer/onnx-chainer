@@ -276,6 +276,7 @@ Currently 51 Chainer Functions are supported to export in ONNX format.
 - Absolute
 - Div
 - Mul
+- MulConstant
 - Neg
 - PowVarConst
 - Sub

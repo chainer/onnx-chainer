@@ -22,6 +22,7 @@ setup(
     tests_require=[
         'chainer>=3.2.0',
         'onnx>=1.2.1',
+        'onnxruntime>=0.1.3',
         'numpy',
     ],
     license='MIT License',
