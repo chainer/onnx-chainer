@@ -17,39 +17,39 @@ TENSOR_TYPE_TO_NAME = {
     15: 'COMPLEX128',
 }
 
-# Chainer Function -> (ONNX Operator, Operator set ID)
+# Chainer Function -> (ONNX Operator, Operator set IDs)
 operators = {
     # Activation
     'ELU': ('Elu', (1, 6)),
     'HardSigmoid': ('HardSigmoid', (1, 6)),
     'LeakyReLU': ('LeakyRelu', (1, 6)),
-    'LogSoftmax': ('LogSoftmax', 1),
+    'LogSoftmax': ('LogSoftmax', (1,)),
     'PReLUFunction': ('PRelu', (1, 6, 7)),
     'ReLU': ('Relu', (1, 6)),
     'Sigmoid': ('Sigmoid', (1, 6)),
-    'Softmax': ('Softmax', 1),
-    'Softplus': ('Softplus', 1),
+    'Softmax': ('Softmax', (1,)),
+    'Softplus': ('Softplus', (1,)),
     'Tanh': ('Tanh', (1, 6)),
 
     # Array
     'Cast': ('Cast', (1, 6)),
     'Concat': ('Concat', (1, 4)),
-    'Copy': ('Identity', 1),
-    'Depth2Space': ('DepthToSpace', 1),
+    'Copy': ('Identity', (1,)),
+    'Depth2Space': ('DepthToSpace', (1,)),
     'Pad': ('Pad', (1, 2)),
     'Reshape': ('Reshape', (1, 5)),
-    'Space2Depth': ('SpaceToDepth', 1),
+    'Space2Depth': ('SpaceToDepth', (1,)),
     'SplitAxis': ('Split', (1, 2)),
-    'Squeeze': ('Squeeze', 1),
+    'Squeeze': ('Squeeze', (1,)),
     'Tile': ('Tile', (1, 6)),
-    'Transpose': ('Transpose', 1),
+    'Transpose': ('Transpose', (1,)),
 
     # Connection
-    'Convolution2DFunction': ('Conv', 1),
-    'ConvolutionND': ('Conv', 1),
-    'Deconvolution2DFunction': ('ConvTranspose', 1),
-    'DeconvolutionND': ('ConvTranspose', 1),
-    'EmbedIDFunction': ('Gather', 1),
+    'Convolution2DFunction': ('Conv', (1,)),
+    'ConvolutionND': ('Conv', (1,)),
+    'Deconvolution2DFunction': ('ConvTranspose', (1,)),
+    'DeconvolutionND': ('ConvTranspose', (1,)),
+    'EmbedIDFunction': ('Gather', (1,)),
     'LinearFunction': ('Gemm', (1, 6, 7)),
 
     # Math
@@ -64,17 +64,17 @@ operators = {
     'Sub': ('Sub', (1, 6, 7)),
     'Clip': ('Clip', (1, 6)),
     'Exp': ('Exp', (1, 6)),
-    'Identity': ('Identity', 1),
+    'Identity': ('Identity', (1,)),
     'MatMul': ('Gemm', (1, 6, 7)),
-    'Maximum': ('Max', (1, 6)),
-    'Minimum': ('Min', (1, 6)),
+    'Maximum': ('Max', (1, 6, 8)),
+    'Minimum': ('Min', (1, 6, 8)),
     'Sqrt': ('Sqrt', (1, 6)),
-    'LogSumExp': ('ReduceLogSumExp', 1),
-    'Max': ('ReduceMax', 1),
-    'Mean': ('ReduceMean', 1),
-    'Min': ('ReduceMin', 1),
-    'Prod': ('ReduceProd', 1),
-    'Sum': ('ReduceSum', 1),
+    'LogSumExp': ('ReduceLogSumExp', (1,)),
+    'Max': ('ReduceMax', (1,)),
+    'Mean': ('ReduceMean', (1,)),
+    'Min': ('ReduceMin', (1,)),
+    'Prod': ('ReduceProd', (1,)),
+    'Sum': ('ReduceSum', (1,)),
 
     # Noise
     'Dropout': ('Dropout', (1, 6, 7)),
@@ -82,12 +82,12 @@ operators = {
     # Pooling
     'AveragePooling2D': ('AveragePool', (1, 7)),
     'AveragePoolingND': ('AveragePool', (1, 7)),
-    'MaxPooling2D': ('MaxPool', 1),
-    'MaxPoolingND': ('MaxPool', 1),
+    'MaxPooling2D': ('MaxPool', (1, 8)),
+    'MaxPoolingND': ('MaxPool', (1, 8)),
 
     # Normalization
     'BatchNormalization': ('BatchNormalization', (1, 6, 7)),
     'FixedBatchNormalization': ('BatchNormalization', (1, 6, 7)),
-    'LocalResponseNormalization': ('LRN', 1),
+    'LocalResponseNormalization': ('LRN', (1,)),
 
 }

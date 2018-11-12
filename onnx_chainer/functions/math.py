@@ -147,14 +147,14 @@ def convert_MatMul(func, onnx_op_name, opset_version, input_names, output_names,
 def convert_Maximum(func, onnx_op_name, opset_version, input_names, output_names, parameters):
     if opset_version == 1:
         return helper.make_node(onnx_op_name, input_names, output_names, consumed_inputs=[1, 1]),
-    elif opset_version == 6:
+    elif opset_version == 6 or opset_version == 8:
         return helper.make_node(onnx_op_name, input_names, output_names),
 
 
 def convert_Minimum(func, onnx_op_name, opset_version, input_names, output_names, parameters):
     if opset_version == 1:
         return helper.make_node(onnx_op_name, input_names, output_names, consumed_inputs=[1, 1]),
-    elif opset_version == 6:
+    elif opset_version == 6 or opset_version == 8:
         return helper.make_node(onnx_op_name, input_names, output_names),
 
 
