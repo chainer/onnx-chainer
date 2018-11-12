@@ -214,3 +214,35 @@ def convert_Sum(func, onnx_op_name, opset_version, input_names, output_names, pa
         axes=func.axis,
         keepdims=func.keepdims,
     ),
+
+
+def convert_LinearInterpolate(func, onnx_op_name, opset_version, input_names, output_names, parameters):
+    typ = func.inputs[0].dtype if isinstance(
+        func.inputs[0].dtype, np.dtype) else np.dtype(func.inputs[0].dtype)
+
+    one = chainer.Parameter(np.array(1, dtype=typ))
+    #one = chainer.Parameter(np.ones(dtype=typ, shape=[1]*len(func.inputs[0].shape)))
+    parameters.append(one)
+
+    kwargs = {"consumed_inputs": [1, 1]} if opset_version == 1 else {}
+    kwargs2 = {} if opset_version >= 7 else {"broadcast": 1}
+
+    n1_out_name = gensym()
+    n2_out_name = gensym()
+    n3_out_name = gensym()
+
+    n1 = helper.make_node("Sub", [str(id(one)), input_names[0]], [n1_out_name], **kwargs, **kwargs2)
+    n2 = helper.make_node("Mul", [input_names[0], input_names[1]], [n2_out_name], **kwargs)
+    n3 = helper.make_node("Mul", [n1_out_name, input_names[2]], [n3_out_name], **kwargs)
+    n4 = helper.make_node("Add", [n2_out_name, n3_out_name], [output_names[0]], **kwargs)
+
+    return n4, n3, n2, n1
+
+
+dummy_objects = []
+
+
+def gensym():
+    o = object()
+    dummy_objects.append(o)
+    return str(id(o))

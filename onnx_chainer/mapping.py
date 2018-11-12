@@ -69,6 +69,7 @@ operators = {
     'Maximum': ('Max', (1, 6, 8)),
     'Minimum': ('Min', (1, 6, 8)),
     'Sqrt': ('Sqrt', (1, 6)),
+    'LinearInterpolate': (None, (1, 6, 7)),
     'LogSumExp': ('ReduceLogSumExp', (1,)),
     'Max': ('ReduceMax', (1,)),
     'Mean': ('ReduceMean', (1,)),
