@@ -85,7 +85,7 @@ class TestBinaryMathOperators(unittest.TestCase):
                 test_onnxruntime.MINIMUM_OPSET_VERSION,
                 onnx.defs.onnx_opset_version() + 1):
             test_onnxruntime.check_output(
-                self.model, self.a, self.fn, opset_version=opset_version)
+                self.model, self.x, self.fn, opset_version=opset_version)
 
 
 @testing.parameterize(
