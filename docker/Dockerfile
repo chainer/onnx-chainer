@@ -3,15 +3,25 @@ FROM ubuntu:16.04
 MAINTAINER Shunta Saito <shunta.saito@gmail.com>
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
     build-essential \
     cmake \
     curl \
     wget \
-    git
+    git \
+    libssl-dev \
+    zlib1g-dev \
+    libbz2-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    libncurses5-dev \
+    libncursesw5-dev
 
 RUN apt-get purge -y cmake
-RUN curl -L -O https://cmake.org/files/v3.11/cmake-3.11.1-Linux-x86_64.sh && \
-    bash cmake-3.11.1-Linux-x86_64.sh --skip-license && rm -rf cmake-3.11.1-Linux-x86_64.sh
+RUN curl -L -O https://github.com/Kitware/CMake/archive/v3.12.4.tar.gz && \
+    tar zxvf v3.12.4.tar.gz && rm -rf v3.12.4.tar.gz && \
+    cd CMake-3.12.4 && \
+    ./bootstrap && make -j8 && make install
 
 WORKDIR /root
 
