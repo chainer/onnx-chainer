@@ -21,3 +21,7 @@ docker_build () {
 docker_build 3.5 5.0.0 0.11.0
 docker_build 3.6 5.0.0 0.11.0
 docker_build 3.7 5.0.0 0.11.0
+
+docker_build 3.5 6.0.0a1 0.11.0
+docker_build 3.6 6.0.0a1 0.11.0
+docker_build 3.7 6.0.0a1 0.11.0
