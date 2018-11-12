@@ -23,7 +23,7 @@ operators = {
     'ELU': ('Elu', (1, 6)),
     'HardSigmoid': ('HardSigmoid', (1, 6)),
     'LeakyReLU': ('LeakyRelu', (1, 6)),
-    'LogSoftmax': ('LogSoftmax', 1),
+    'LogSoftmax': ('LogSoftmax', (1,)),
     'PReLUFunction': ('PRelu', (1, 6, 7)),
     'ReLU': ('Relu', (1, 6)),
     'Sigmoid': ('Sigmoid', (1, 6)),
