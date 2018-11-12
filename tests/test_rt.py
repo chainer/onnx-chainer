@@ -10,13 +10,9 @@ import chainercv.links as C
 import onnx
 import onnx_chainer
 from chainer import testing
-from onnx_chainer.testing import test_mxnet
+from onnx_chainer.testing import test_onnxruntime
 
 
-@testing.parameterize(*testing.product({
-    # 'opset_version': [1, 2, 3, 4, 5, 6, 7],
-    'opset_version': [7],
-}))
 class TestLeNet5(unittest.TestCase):
 
     def setUp(self):
@@ -34,15 +30,14 @@ class TestLeNet5(unittest.TestCase):
         self.x = np.zeros((1, 3, 28, 28), dtype=np.float32)
         self.fn = 'LeNet5.onnx'
 
-    def test_compatibility(self):
-        test_mxnet.check_compatibility(
-            self.model, self.x, self.fn, opset_version=self.opset_version)
+    def test_output(self):
+        for opset_version in range(
+                test_onnxruntime.MINIMUM_OPSET_VERSION,
+                onnx.defs.onnx_opset_version() + 1):
+            test_onnxruntime.check_output(
+                self.model, self.x, self.fn, opset_version=opset_version)
 
 
-@testing.parameterize(*testing.product({
-    # 'opset_version': [1, 2, 3, 4, 5, 6, 7],
-    'opset_version': [7],
-}))
 class TestVGG16(unittest.TestCase):
 
     def setUp(self):
@@ -51,15 +46,14 @@ class TestVGG16(unittest.TestCase):
         self.x = np.zeros((1, 3, 224, 224), dtype=np.float32)
         self.fn = 'VGG16.onnx'
 
-    def test_compatibility(self):
-        test_mxnet.check_compatibility(
-            self.model, self.x, self.fn, opset_version=self.opset_version)
+    def test_output(self):
+        for opset_version in range(
+                test_onnxruntime.MINIMUM_OPSET_VERSION,
+                onnx.defs.onnx_opset_version() + 1):
+            test_onnxruntime.check_output(
+                self.model, self.x, self.fn, opset_version=opset_version)
 
 
-@testing.parameterize(*testing.product({
-    # 'opset_version': [1, 2, 3, 4, 5, 6, 7],
-    'opset_version': [7],
-}))
 class TestResNet50(unittest.TestCase):
 
     def setUp(self):
@@ -70,6 +64,9 @@ class TestResNet50(unittest.TestCase):
         self.x = np.zeros((1, 3, 224, 224), dtype=np.float32)
         self.fn = 'ResNet50.onnx'
 
-    def test_compatibility(self):
-        test_mxnet.check_compatibility(
-            self.model, self.x, self.fn, opset_version=self.opset_version)
+    def test_output(self):
+        for opset_version in range(
+                test_onnxruntime.MINIMUM_OPSET_VERSION,
+                onnx.defs.onnx_opset_version() + 1):
+            test_onnxruntime.check_output(
+                self.model, self.x, self.fn, opset_version=opset_version)
