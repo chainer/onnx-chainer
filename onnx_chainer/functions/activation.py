@@ -2,6 +2,20 @@ from onnx import helper
 from onnx_chainer import mapping
 
 
+def convert_ClippedReLU(func, onnx_op_name, opset_version, input_names, output_names, parameters):
+    if opset_version == 1:
+        return helper.make_node(
+            onnx_op_name, input_names, output_names,
+            min=0.0, max=func.cap,
+            consumed_inputs=[1]
+        ),
+    elif opset_version == 6:
+        return helper.make_node(
+            onnx_op_name, input_names, output_names,
+            min=0.0, max=func.cap,
+        ),
+
+
 def convert_ELU(func, onnx_op_name, opset_version, input_names, output_names, parameters):
     if opset_version == 1:
         return helper.make_node(
