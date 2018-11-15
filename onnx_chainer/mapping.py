@@ -20,6 +20,7 @@ TENSOR_TYPE_TO_NAME = {
 # Chainer Function -> (ONNX Operator, Operator set IDs)
 operators = {
     # Activation
+    'ClippedReLU': ('Clip', (1, 6)),
     'ELU': ('Elu', (1, 6)),
     'HardSigmoid': ('HardSigmoid', (1, 6)),
     'LeakyReLU': ('LeakyRelu', (1, 6)),

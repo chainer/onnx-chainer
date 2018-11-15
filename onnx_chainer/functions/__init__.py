@@ -1,3 +1,4 @@
+from onnx_chainer.functions.activation import convert_ClippedReLU  # NOQA
 from onnx_chainer.functions.activation import convert_ELU  # NOQA
 from onnx_chainer.functions.activation import convert_HardSigmoid  # NOQA
 from onnx_chainer.functions.activation import convert_LeakyReLU  # NOQA

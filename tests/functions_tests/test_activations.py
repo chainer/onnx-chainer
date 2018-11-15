@@ -12,6 +12,7 @@ from onnx_chainer.testing import test_onnxruntime
 
 
 @testing.parameterize(
+    {'name': 'clipped_relu'},
     {'name': 'elu'},
     {'name': 'hard_sigmoid'},
     {'name': 'leaky_relu'},
