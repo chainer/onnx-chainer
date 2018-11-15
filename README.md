@@ -230,10 +230,11 @@ Export function for chainer.Chain in ONNX format.
 
 ## Supported Functions
 
-Currently 58 Chainer Functions are supported to export in ONNX format.
+Currently 59 Chainer Functions are supported to export in ONNX format.
 
 ### Activation
 
+- ClippedReLU
 - ELU
 - HardSigmoid
 - LeakyReLU
