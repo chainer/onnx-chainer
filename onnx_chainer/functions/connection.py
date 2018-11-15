@@ -15,6 +15,7 @@ def convert_Convolution2DFunction(func, onnx_op_name, opset_version, input_names
                 # pads: [x1_begin, x2_begin...x1_end, x2_end,...]
                 pads=(func.ph, func.pw, func.ph, func.pw),
                 strides=(func.sy, func.sx),
+                group=func.groups,
             )
         else:
             node = helper.make_node(
@@ -23,6 +24,7 @@ def convert_Convolution2DFunction(func, onnx_op_name, opset_version, input_names
                 kernel_shape=func.inputs[1].shape[2:],
                 pads=(func.ph, func.pw, func.ph, func.pw),
                 strides=(func.sy, func.sx),
+                group=func.groups,
             )
         return node,
 
