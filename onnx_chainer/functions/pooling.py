@@ -10,7 +10,8 @@ def convert_AveragePooling2D(
             onnx_op_name, input_names, output_names,
             kernel_shape=(func.kh, func.kw),
             pads=(func.ph, func.pw, func.ph, func.pw),
-            strides=(func.sy, func.sx)
+            strides=(func.sy, func.sx),
+            count_include_pad=1,
         ),
 
 
