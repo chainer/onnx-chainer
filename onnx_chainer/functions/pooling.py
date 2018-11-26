@@ -18,12 +18,7 @@ def convert_AveragePooling2D(
 
 
 def convert_AveragePoolingND(func, onnx_op_name, opset_version, input_names, output_names, parameters):
-    pad = []
-    x_ndim = len(func.inputs[0].shape)
-    k_ndim = len(func.ksize)
-    for _ in range(x_ndim - k_ndim):
-        pad.append(0)
-    pad.extend(func.pad)
+    pad = list(func.pad[:])
     if func.cover_all:
         # Supports cover_all by setting extra padding
         pad.extend([p + s - 1 for p, s in zip(pad, func.stride)])
@@ -49,26 +44,21 @@ def convert_MaxPooling2D(func, onnx_op_name, opset_version, input_names, output_
         return helper.make_node(
             onnx_op_name, input_names, output_names,
             kernel_shape=(func.kh, func.kw),
-            pads=(func.ph, func.pw, func.ph, func.pw),
+            pads=(func.ph, func.pw, func.ph + dph, func.pw + dpw),
             strides=(func.sy, func.sx)
         ),
     elif opset_version == 8:
         return helper.make_node(
             onnx_op_name, input_names, output_names,
             kernel_shape=(func.kh, func.kw),
-            pads=(func.ph, func.pw, func.ph, func.pw),
+            pads=(func.ph, func.pw, func.ph + dph, func.pw + dpw),
             strides=(func.sy, func.sx),
             storage_order=0,  # row major
         ),
 
 
 def convert_MaxPoolingND(func, onnx_op_name, opset_version, input_names, output_names, parameters):
-    pad = []
-    x_ndim = len(func.inputs[0].shape)
-    k_ndim = len(func.ksize)
-    for _ in range(x_ndim - k_ndim):
-        pad.append(0)
-    pad.extend(func.pad)
+    pad = list(func.pad[:])
     if func.cover_all:
         # Supports cover_all by setting extra padding
         pad.extend([p + s - 1 for p, s in zip(pad, func.stride)])
@@ -90,4 +80,3 @@ def convert_MaxPoolingND(func, onnx_op_name, opset_version, input_names, output_
             strides=func.stride,
             storage_order=0,  # row major
         ),
-
