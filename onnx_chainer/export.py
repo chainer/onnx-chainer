@@ -154,7 +154,7 @@ def export(model, args, filename=None, export_params=True,
     """Export function for chainer.Chain in ONNX format.
 
     This function performs a forward computation of the given
-    :class:`~chainer.Chain`, ``model``, by passing the given argments ``args``
+    :class:`~chainer.Chain`, ``model``, by passing the given arguments ``args``
     directly. It means, the output :class:`~chainer.Variable` object ``y`` to
     make the computational graph will be created by:
 
@@ -163,9 +163,9 @@ def export(model, args, filename=None, export_params=True,
     Args:
         model (~chainer.Chain): The model object you want to export in ONNX
             format. It should have :meth:`__call__` method because the second
-            argment ``args`` is directly given to the model by the ``[]``
+            argument ``args`` is directly given to the model by the ``[]``
             accessor.
-        args (list or dict): The argments which are given to the model
+        args (list or dict): The arguments which are given to the model
             directly.
         filename (str or file-like object): The filename used for saving the
             resulting ONNX model. If None, nothing is saved to the disk.
@@ -253,7 +253,7 @@ def export(model, args, filename=None, export_params=True,
             outputs.grad = numpy.ones_like(outputs.array)
             outputs.backward()
 
-    # If additonal parameters are created during conversion
+    # If additional parameters are created during conversion
     if o.additional_parameters:
         for param in o.additional_parameters:
             initializers.append(convert_parameter(param))

@@ -30,7 +30,8 @@ def convert_AveragePoolingND(func, onnx_op_name, opset_version, input_names, out
             onnx_op_name, input_names, output_names,
             kernel_shape=func.ksize,
             pads=pad,
-            strides=func.stride
+            strides=func.stride,
+            count_include_pad=1,
         ),
 
 
