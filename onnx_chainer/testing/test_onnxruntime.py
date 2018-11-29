@@ -63,6 +63,9 @@ def check_output(model, x, fn, out_key='prob', opset_version=None):
     input_names = [i.name for i in sess.get_inputs()]
     rt_out = sess.run(
         None, {name: array for name, array in zip(input_names, x)})
+    
+    print(onnx_model)
+    print(rt_out[0].shape, chainer_out[0].shape)
 
     for cy, my in zip(chainer_out, rt_out):
         np.testing.assert_almost_equal(cy, my, decimal=5)
