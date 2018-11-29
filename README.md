@@ -197,7 +197,7 @@ np.testing.assert_almost_equal(chainer_out, nnvm_output, decimal=5)
 Export function for chainer.Chain in ONNX format.
 
     This function performs a forward computation of the given
-    :class:`~chainer.Chain`, ``model``, by passing the given argments ``args``
+    :class:`~chainer.Chain`, ``model``, by passing the given arguments ``args``
     directly. It means, the output :class:`~chainer.Variable` object ``y`` to
     make the computational graph will be created by:
 
@@ -206,9 +206,9 @@ Export function for chainer.Chain in ONNX format.
     Args:
         model (~chainer.Chain): The model object you want to export in ONNX
             format. It should have :meth:`__call__` method because the second
-            argment ``args`` is directly given to the model by the ``[]``
+            argument ``args`` is directly given to the model by the ``[]``
             accessor.
-        args (list or dict): The argments which are given to the model
+        args (list or dict): The arguments which are given to the model
             directly.
         filename (str or file-like object): The filename used for saving the
             resulting ONNX model. If None, nothing is saved to the disk.
