@@ -2,9 +2,12 @@ from onnx import helper
 
 
 def convert_AveragePooling2D(
-        func, onnx_op_name, opset_version, input_names, output_names, parameters):
+        func, onnx_op_name, opset_version, input_names, output_names,
+        parameters):
     if opset_version == 1:
-        raise ValueError('AveragePooling2D is not compatible with ONNX\'s AveragePool-1. Use operation set version >= 7.')
+        raise ValueError(
+            'AveragePooling2D is not compatible with ONNX\'s AveragePool-1. '
+            'Use operation set version >= 7.')
     elif opset_version == 7:
         return helper.make_node(
             onnx_op_name, input_names, output_names,
@@ -15,7 +18,8 @@ def convert_AveragePooling2D(
         ),
 
 
-def convert_AveragePoolingND(func, onnx_op_name, opset_version, input_names, output_names, parameters):
+def convert_AveragePoolingND(func, onnx_op_name, opset_version, input_names,
+                             output_names, parameters):
     pad = list(func.pad) * 2
     if opset_version == 1 or opset_version == 7:
         return helper.make_node(
@@ -27,7 +31,8 @@ def convert_AveragePoolingND(func, onnx_op_name, opset_version, input_names, out
         ),
 
 
-def convert_MaxPooling2D(func, onnx_op_name, opset_version, input_names, output_names, parameters):
+def convert_MaxPooling2D(func, onnx_op_name, opset_version, input_names,
+                         output_names, parameters):
     if opset_version == 1:
         return helper.make_node(
             onnx_op_name, input_names, output_names,
@@ -45,7 +50,8 @@ def convert_MaxPooling2D(func, onnx_op_name, opset_version, input_names, output_
         ),
 
 
-def convert_MaxPoolingND(func, onnx_op_name, opset_version, input_names, output_names, parameters):
+def convert_MaxPoolingND(func, onnx_op_name, opset_version, input_names,
+                         output_names, parameters):
     pad = list(func.pad) * 2
     if opset_version == 1:
         return helper.make_node(

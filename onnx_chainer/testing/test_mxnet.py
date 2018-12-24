@@ -3,9 +3,9 @@ import os
 import warnings
 
 import numpy as np
+import onnx
 
 import chainer
-import onnx
 import onnx_chainer
 
 try:

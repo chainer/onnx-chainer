@@ -12,4 +12,3 @@ model = C.VGG16(pretrained_model='imagenet')
 x = np.zeros((1, 3, 224, 224), dtype=np.float32)
 
 onnx_chainer.export(model, x, filename='vgg16.onnx')
-
