@@ -1,11 +1,10 @@
 import unittest
 
 import numpy as np
+import onnx
 
 import chainer
 import chainer.functions as F
-import onnx
-import onnx_chainer
 from chainer import testing
 from onnx_chainer.testing import test_onnxruntime
 

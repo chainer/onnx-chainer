@@ -1,10 +1,9 @@
 import unittest
 
 import numpy as np
+import onnx
 
 import chainer
-import onnx
-import onnx_chainer
 from chainer import testing
 from onnx_chainer.testing import test_onnxruntime
 
@@ -94,7 +93,8 @@ class TestBinaryMathOperators(unittest.TestCase):
 
 
 @testing.parameterize(
-    {'info': 'LinearInterpolate', 'ops': 'chainer.functions.linear_interpolate(a, b, c)'},
+    {'info': 'LinearInterpolate',
+     'ops': 'chainer.functions.linear_interpolate(a, b, c)'},
 )
 class TestTernaryMathOperators(unittest.TestCase):
 
