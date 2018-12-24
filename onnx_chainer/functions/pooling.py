@@ -21,7 +21,11 @@ def convert_AveragePooling2D(
 def convert_AveragePoolingND(func, onnx_op_name, opset_version, input_names,
                              output_names, parameters):
     pad = list(func.pad) * 2
-    if opset_version == 1 or opset_version == 7:
+    if opset_version == 1:
+        raise ValueError(
+            'AveragePoolingND is not compatible with ONNX\'s AveragePool-1. '
+            'Use operation set version >= 7.')
+    elif opset_version == 7:
         return helper.make_node(
             onnx_op_name, input_names, output_names,
             kernel_shape=func.ksize,
