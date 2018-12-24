@@ -110,8 +110,8 @@ class TestTernaryMathOperators(unittest.TestCase):
                     a = chainer.Varaible(a)
                 if not isinstance(b, chainer.Variable):
                     b = chainer.Varaible(b)
-                if not isinstance(b, chainer.Variable):
-                    c = chainer.Varaible(b)
+                if not isinstance(c, chainer.Variable):
+                    c = chainer.Varaible(c)
                 return eval(self.ops)
 
         self.model = Model(self.ops)
