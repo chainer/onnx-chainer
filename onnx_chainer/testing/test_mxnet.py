@@ -14,7 +14,7 @@ try:
 except ImportError:
     warnings.warn(
         'MXNet is not installed. Please install mxnet to use '
-        'testing utility for compatiblity checking.',
+        'testing utility for compatibility checking.',
         ImportWarning)
     MXNET_AVAILABLE = False
 
