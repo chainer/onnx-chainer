@@ -61,6 +61,13 @@ def check_output(model, x, fn, out_key='prob', opset_version=None):
     onnx_model = onnx_chainer.export(model, x, fn, opset_version=opset_version)
     sess = rt.InferenceSession(onnx_model.SerializeToString())
     input_names = [i.name for i in sess.get_inputs()]
+    # ===
+    # Workaround: Currently, `rt.InferenceSession` ignores inputs which is not connected to any of output.
+    # These checks are required to detect unexpectedly added inputs.
+    initialized_graph_input_names = [i.name for i in onnx_model.graph.initializer]
+    graph_input_names = [i.name for i in onnx_model.graph.input if i.name not in initialized_graph_input_names]
+    assert input_names == list(sorted(graph_input_names))
+    # === 
     rt_out = sess.run(
         None, {name: array for name, array in zip(input_names, x)})
 
