@@ -1,13 +1,11 @@
 import unittest
 
 import numpy as np
+import onnx
 
 import chainer
 import chainer.functions as F
-import onnx
-import onnx_chainer
 from chainer import testing
-from onnx.backend.test.case import model
 from onnx_chainer.testing import test_onnxruntime
 
 
@@ -140,4 +138,3 @@ class TestConcat(unittest.TestCase):
             test_onnxruntime.check_output(
                 self.model, (self.x1, self.x2), self.fn,
                 opset_version=opset_version)
-

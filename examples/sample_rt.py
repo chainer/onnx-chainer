@@ -2,13 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+import onnxruntime as rt
 
-from chainercv import transforms
+import chainer
 import chainer.links as L
 import onnx_chainer
-import onnxruntime as rt
-import chainer
-import chainer.functions as F
+from chainercv import transforms
 from PIL import Image
 
 model = L.VGG16Layers()
@@ -43,7 +42,8 @@ rt_out = sess.run(
     None, {name: array for name, array in zip(input_names, (x,))})
 
 # Create a prediction result with Chainer
-with chainer.using_config('train', False), chainer.using_config('enable_backprop', False):
+with chainer.using_config('train', False), \
+        chainer.using_config('enable_backprop', False):
     chainer_out = model(x)['prob']
 
 # Calculate the highest class predicted by each model

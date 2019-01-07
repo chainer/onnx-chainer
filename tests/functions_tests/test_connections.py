@@ -1,11 +1,11 @@
 import unittest
 
-import chainer
-from chainer import testing
-import chainer.links as L
 import numpy as np
 import onnx
-import onnx_chainer
+
+import chainer
+import chainer.links as L
+from chainer import testing
 from onnx_chainer.testing import test_onnxruntime
 
 
@@ -19,7 +19,7 @@ from onnx_chainer.testing import test_onnxruntime
      'kwargs': {}},
     {'link': L.Convolution2D, 'in_shape': (1, 3, 5, 5), 'in_type': np.float32,
      'args': [None, 3, 3, 1, 1],
-     'kwargs' : {'groups': 3}},
+     'kwargs': {'groups': 3}},
 
     # ConvolutionND
     {'link': L.ConvolutionND, 'in_shape': (1, 2, 3, 5), 'in_type': np.float32,

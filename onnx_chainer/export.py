@@ -1,15 +1,13 @@
 from __future__ import print_function
 
 import collections
-import heapq
 import warnings
 
 import numpy
+import onnx
+from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 
 import chainer
-import onnx
-from chainer import function_node, variable
-from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 from onnx_chainer import functions, mapping
 from onnx_chainer.testing import test_onnxruntime
 
@@ -49,7 +47,8 @@ def convert_parameter(parameter):
 
 
 def create_node(
-        func_name, onnx_op_name, opset_version, func, input_names, output_names, parameters):
+        func_name, onnx_op_name, opset_version, func, input_names,
+        output_names, parameters):
     for opver in sorted(mapping.operators[func_name][-1], reverse=True):
         if opver <= opset_version:
             break
@@ -59,7 +58,8 @@ def create_node(
     if hasattr(functions, converter_name):
         converter = getattr(functions, converter_name)
         nodes = converter(
-            func, onnx_op_name, opset_version, input_names, output_names, parameters)
+            func, onnx_op_name, opset_version, input_names, output_names,
+            parameters)
     else:
         raise ValueError('{} is not supported.'.format(func_name))
     return nodes
@@ -134,7 +134,8 @@ class ONNXExport(chainer.FunctionHook):
         if isinstance(opset_versions, int):
             opset_version = opset_versions
         elif self.specified_opset_version is None:
-            # If no opset version is specified, use the latest version for the operator
+            # If no opset version is specified,
+            # use the latest version for the operator
             opset_version = opset_versions[-1]
         else:
             # If a version is specified, use the last version <= specified one
@@ -143,7 +144,8 @@ class ONNXExport(chainer.FunctionHook):
                     break
 
         nodes = create_node(
-            func_name, onnx_op_name, opset_version, function, input_names, output_names, self.additional_parameters)
+            func_name, onnx_op_name, opset_version, function, input_names,
+            output_names, self.additional_parameters)
         for node in nodes:
             if node not in self.graph:
                 self.graph.append(node)
@@ -225,8 +227,9 @@ def export(model, args, filename=None, export_params=True,
         outputs = model(args)
     else:
         raise ValueError(
-            'The \'args\' argument should be a list, tuple, dict, numpy array, '
-            'or Chainer Variable. But a {} object was given.'.format(type(args)))
+            'The \'args\' argument should be a list, tuple, dict, '
+            'numpy array, or Chainer Variable. But a {} object was '
+            'given.'.format(type(args)))
 
     initializers = []
     input_tensors = []

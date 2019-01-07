@@ -1,36 +1,26 @@
 import unittest
 
 import numpy as np
+import onnx
 
 import chainer
 import chainer.functions as F
-import onnx
-import onnx_chainer
 from chainer import testing
 from onnx_chainer.testing import test_onnxruntime
 
 
-@testing.parameterize(*(testing.product({
-    'name': ['max_pooling_2d'],
-    'in_shape': [(1, 3, 6, 5)],
-    'args': [[2, 2, 0]],
-    'cover_all': [False, True],
-}) + testing.product({
-    'name': ['average_pooling_2d'],
-    'in_shape': [(1, 3, 6, 5)],
-    'args': [[2, 2, 0]],
-    'cover_all': [None],
-}) + testing.product({
-    'name': ['max_pooling_nd'],
-    'in_shape': [(1, 3, 6, 5, 4)],
-    'args': [[2, 2, 0]],
-    'cover_all': [False, True],
-}) + testing.product({
-    'name': ['average_pooling_nd'],
-    'in_shape': [(1, 3, 6, 5, 4)],
-    'args': [[2, 2, 0]],
-    'cover_all': [None],
-})))
+@testing.parameterize(
+    {'name': 'average_pooling_2d', 'ops': F.average_pooling_2d,
+     'in_shape': (1, 3, 6, 6), 'args': [2, 1, 0], 'cover_all': None},
+    {'name': 'average_pooling_2d', 'ops': F.average_pooling_2d,
+     'in_shape': (1, 3, 6, 6), 'args': [3, 2, 1], 'cover_all': None},
+    {'name': 'average_pooling_nd', 'ops': F.average_pooling_nd,
+     'in_shape': (1, 3, 6, 6, 6), 'args': [2, 1, 1], 'cover_all': None},
+    {'name': 'max_pooling_2d', 'ops': F.max_pooling_2d,
+     'in_shape': (1, 3, 6, 6), 'args': [2, 1, 1], 'cover_all': False},
+    {'name': 'max_pooling_nd', 'ops': F.max_pooling_nd,
+     'in_shape': (1, 3, 6, 6, 6), 'args': [2, 1, 1], 'cover_all': False},
+)
 class TestPoolings(unittest.TestCase):
 
     def setUp(self):
@@ -47,7 +37,7 @@ class TestPoolings(unittest.TestCase):
                 self.model, self.x, self.fn, opset_version=opset_version)
 
 
-class Model(chainer.Chain): 
+class Model(chainer.Chain):
 
     def __init__(self, ops, args, cover_all):
         super(Model, self).__init__()

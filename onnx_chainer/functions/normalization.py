@@ -1,12 +1,10 @@
-import os
+from onnx import helper
 
 import chainer
-from onnx import helper
-from onnx import numpy_helper
-from onnx_chainer import mapping
 
 
-def convert_BatchNormalization(func, onnx_op_name, opset_version, input_names, output_names, parameters):
+def convert_BatchNormalization(func, onnx_op_name, opset_version, input_names,
+                               output_names, parameters):
     # Add running_mean and running_var to graph
     running_mean = chainer.Parameter(func.running_mean)
     parameters.append(running_mean)
@@ -50,7 +48,8 @@ def convert_BatchNormalization(func, onnx_op_name, opset_version, input_names, o
         ),
 
 
-def convert_FixedBatchNormalization(func, onnx_op_name, opset_version, input_names, output_names, parameters):
+def convert_FixedBatchNormalization(func, onnx_op_name, opset_version,
+                                    input_names, output_names, parameters):
     # Add avg_mean and avg_var to graph
     mean_arr, var_arr = [i.get_variable().array for i in func.inputs[3:]]
 
@@ -88,7 +87,8 @@ def convert_FixedBatchNormalization(func, onnx_op_name, opset_version, input_nam
         ),
 
 
-def convert_LocalResponseNormalization(func, onnx_op_name, opset_version, input_names, output_names, parameters):
+def convert_LocalResponseNormalization(func, onnx_op_name, opset_version,
+                                       input_names, output_names, parameters):
     if opset_version == 1:
         size = int(func.n)
         return helper.make_node(

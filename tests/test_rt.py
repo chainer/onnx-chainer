@@ -1,15 +1,12 @@
-import os
 import unittest
 
 import numpy as np
+import onnx
 
 import chainer
 import chainer.functions as F
 import chainer.links as L
 import chainercv.links as C
-import onnx
-import onnx_chainer
-from chainer import testing
 from onnx_chainer.testing import test_onnxruntime
 
 
@@ -58,7 +55,8 @@ class TestResNet50(unittest.TestCase):
 
     def setUp(self):
         self.model = C.ResNet50(
-            pretrained_model=None, initialW=chainer.initializers.Uniform(1), arch='he')
+            pretrained_model=None, initialW=chainer.initializers.Uniform(1),
+            arch='he')
         self.model.pool1 = lambda x: F.max_pooling_2d(
             x, ksize=3, stride=2, cover_all=False)
         self.x = np.zeros((1, 3, 224, 224), dtype=np.float32)
