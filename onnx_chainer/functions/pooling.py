@@ -3,11 +3,21 @@ from onnx import helper
 
 def convert_AveragePooling2D(func, onnx_op_name, opset_version, input_names,
                              output_names, parameters):
-    # Supports cover_all by setting extra padding
+    pad = [func.ph, func.pw]
+    stride = [func.sy, func.sx]
+    ksize = [func.kh, func.kw]
     if func.cover_all:
-        dph, dpw = func.sy - 1, func.sx - 1
+        # Supports cover_all by setting extra padding
+        for p, s, k in zip(pad, stride, ksize):
+            if k <= p + s - 1:
+                raise RuntimeError(
+                    'Could not correctly export in the current setting'
+                    ' (ksize={} pad={} stride={}). Please set pad or stride to'
+                    'lower value.'.format(k, p, s))
+        pad.extend([p + s - 1 for p, s in zip(pad, stride)])
     else:
-        dph, dpw = 0, 0
+        pad = pad * 2
+
     if opset_version == 1:
         raise ValueError(
             'AveragePooling2D is not compatible with ONNX\'s AveragePool-1. '
@@ -15,9 +25,9 @@ def convert_AveragePooling2D(func, onnx_op_name, opset_version, input_names,
     elif opset_version == 7:
         return helper.make_node(
             onnx_op_name, input_names, output_names,
-            kernel_shape=(func.kh, func.kw),
-            pads=(func.ph, func.pw, func.ph + dph, func.pw + dpw),
-            strides=(func.sy, func.sx),
+            kernel_shape=ksize,
+            pads=pad,
+            strides=stride,
             count_include_pad=1,
         ),
 
@@ -27,6 +37,14 @@ def convert_AveragePoolingND(func, onnx_op_name, opset_version, input_names,
     pad = list(func.pad[:])
     if func.cover_all:
         # Supports cover_all by setting extra padding
+        for p, s, k in zip(pad, func.stride, func.ksize):
+            # Raise exception because a virtual pad for cover_all must be
+            # smaller than ksize in the current ONNX
+            if k <= p + s - 1:
+                raise RuntimeError(
+                    'Could not correctly export in the current setting'
+                    ' (ksize={} pad={} stride={}). Please set pad or stride to'
+                    'lower value.'.format(k, p, s))
         pad.extend([p + s - 1 for p, s in zip(pad, func.stride)])
     else:
         pad = pad * 2
@@ -47,24 +65,34 @@ def convert_AveragePoolingND(func, onnx_op_name, opset_version, input_names,
 
 def convert_MaxPooling2D(func, onnx_op_name, opset_version, input_names,
                          output_names, parameters):
-    # Supports cover_all by setting extra padding
+    pad = [func.ph, func.pw]
+    stride = [func.sy, func.sx]
+    ksize = [func.kh, func.kw]
     if func.cover_all:
-        dph, dpw = func.sy - 1, func.sx - 1
+        # Supports cover_all by setting extra padding
+        for p, s, k in zip(pad, stride, ksize):
+            if k <= p + s - 1:
+                raise RuntimeError(
+                    'Could not correctly export in the current setting'
+                    ' (ksize={} pad={} stride={}). Please set pad or stride to'
+                    'lower value.'.format(k, p, s))
+        pad.extend([p + s - 1 for p, s in zip(pad, stride)])
     else:
-        dph, dpw = 0, 0
+        pad = pad * 2
+
     if opset_version == 1:
         return helper.make_node(
             onnx_op_name, input_names, output_names,
-            kernel_shape=(func.kh, func.kw),
-            pads=(func.ph, func.pw, func.ph + dph, func.pw + dpw),
-            strides=(func.sy, func.sx)
+            kernel_shape=ksize,
+            pads=pad,
+            strides=stride
         ),
     elif opset_version == 8:
         return helper.make_node(
             onnx_op_name, input_names, output_names,
-            kernel_shape=(func.kh, func.kw),
-            pads=(func.ph, func.pw, func.ph + dph, func.pw + dpw),
-            strides=(func.sy, func.sx),
+            kernel_shape=ksize,
+            pads=pad,
+            strides=stride,
             storage_order=0,  # row major
         ),
 
@@ -74,6 +102,14 @@ def convert_MaxPoolingND(func, onnx_op_name, opset_version, input_names,
     pad = list(func.pad[:])
     if func.cover_all:
         # Supports cover_all by setting extra padding
+        for p, s, k in zip(pad, func.stride, func.ksize):
+            # Raise exception because a virtual pad for cover_all must be
+            # smaller than ksize in the current ONNX
+            if k <= p + s - 1:
+                raise RuntimeError(
+                    'Could not correctly export in the current setting'
+                    ' (ksize={} pad={} stride={}). Please set pad or stride to'
+                    'lower value.'.format(k, p, s))
         pad.extend([p + s - 1 for p, s in zip(pad, func.stride)])
     else:
         pad = pad * 2
