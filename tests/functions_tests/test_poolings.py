@@ -43,9 +43,9 @@ class TestPoolings(unittest.TestCase):
 
 @testing.parameterize(
     {'name': 'max_pooling_2d', 'ops': F.max_pooling_2d,
-     'in_shape': (1, 3, 6, 6), 'args': [2, 2, 1], 'cover_all': True},
+     'in_shape': (1, 3, 6, 5), 'args': [2, 2, 1], 'cover_all': True},
     {'name': 'max_pooling_nd', 'ops': F.max_pooling_nd,
-     'in_shape': (1, 3, 6, 6, 6), 'args': [2, 2, 1], 'cover_all': True},
+     'in_shape': (1, 3, 6, 5, 4), 'args': [2, 2, 1], 'cover_all': True},
 )
 class TestPoolingsWithUnsupportedSettings(unittest.TestCase):
 
