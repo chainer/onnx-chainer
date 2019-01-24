@@ -91,5 +91,6 @@ operators = {
     'BatchNormalization': ('BatchNormalization', (1, 6, 7)),
     'FixedBatchNormalization': ('BatchNormalization', (1, 6, 7)),
     'LocalResponseNormalization': ('LRN', (1,)),
+    'NormalizeL2': ('LpNormalization', (1,)),
 
 }
