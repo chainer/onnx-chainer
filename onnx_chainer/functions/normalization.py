@@ -110,10 +110,9 @@ def convert_NormalizeL2(func, onnx_op_name, opset_version, input_names,
             'operation'.format(func.axis))
     if abs(func.eps - 1e-5) > sys.float_info.epsilon:
         # default value of F.normaize eps is 1e-5
-        # torelance 1e-7 is used in chainer math test.
         raise ValueError(
-            'customized eps {} is not supported in ONNX-Chainer'.format(
-                func.eps))
+            'eps is not supported in ONNX\'s LpNormalization, ONNX-Chainer '
+            'does not follow customized eps ({})'.format(func.eps))
     if opset_version == 1:
         return helper.make_node(
             onnx_op_name, input_names, output_names,
