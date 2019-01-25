@@ -1,3 +1,5 @@
+import sys
+
 from onnx import helper
 
 import chainer
@@ -91,4 +93,23 @@ def convert_LocalResponseNormalization(func, onnx_op_name, opset_version,
             beta=float(func.beta),
             bias=float(func.k),
             size=size,
+        ),
+
+
+def convert_NormalizeL2(func, onnx_op_name, opset_version, input_names,
+                        output_names, parameters):
+    if isinstance(func.axis, tuple) and len(func.axis) != 1:
+        raise ValueError(
+            'multiple axes ({}) is not supported in ONNX\'s LpNormalization '
+            'operation'.format(func.axis))
+    if abs(func.eps - 1e-5) > sys.float_info.epsilon:
+        # default value of F.normaize eps is 1e-5
+        raise ValueError(
+            'eps is not supported in ONNX\'s LpNormalization, ONNX-Chainer '
+            'does not follow customized eps ({})'.format(func.eps))
+    if opset_version == 1:
+        return helper.make_node(
+            onnx_op_name, input_names, output_names,
+            axis=int(func.axis[0]),
+            p=2,
         ),

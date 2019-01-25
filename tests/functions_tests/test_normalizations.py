@@ -22,6 +22,12 @@ def _arange(*shape):
         'args': {'k': 1, 'n': 3, 'alpha': 1e-4, 'beta': 0.75},
         'opset_version': 1
     },
+    {
+        'name': 'normalize',
+        'input_argname': 'x',
+        'args': {'axis': 1},
+        'opset_version': 1
+    }
 )
 class TestNormalizations(unittest.TestCase):
 
