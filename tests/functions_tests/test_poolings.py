@@ -77,3 +77,40 @@ class Model(chainer.Chain):
             return self.ops(*([x] + self.args), cover_all=self.cover_all)
         else:
             return self.ops(*([x] + self.args))
+
+
+class TestROIPooling2D(unittest.TestCase):
+
+    def setUp(self):
+        # these parameters are referenced from onnxruntime test
+        in_shape = (1, 3, 6, 6)
+        self.x = np.arange(np.prod(in_shape), dtype=np.float32).reshape(
+            in_shape) * 0.1
+        self.rois = np.array([
+            [0, 1, 1, 2, 3],
+            [0, 1, 1, 2, 3],
+            [0, 1, 1, 2, 3]], dtype=np.float32)
+        kwargs = {
+            'outh': 3,
+            'outw': 5,
+            'spatial_scale': 1.0
+        }
+
+        class Model(chainer.Chain):
+            def __init__(self, kwargs):
+                super(Model, self).__init__()
+                self.kwargs = kwargs
+
+            def __call__(self, x, rois):
+                return F.roi_pooling_2d(x, rois, **self.kwargs)
+
+        self.model = Model(kwargs)
+        self.fn = 'roi_pooling_2d.onnx'
+
+    def test_output(self):
+        for opset_version in range(
+                test_onnxruntime.MINIMUM_OPSET_VERSION,
+                onnx.defs.onnx_opset_version() + 1):
+            test_onnxruntime.check_output(
+                self.model, [self.x, self.rois], self.fn,
+                opset_version=opset_version)
