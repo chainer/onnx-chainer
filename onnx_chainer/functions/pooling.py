@@ -129,3 +129,13 @@ def convert_MaxPoolingND(func, onnx_op_name, opset_version, input_names,
             strides=func.stride,
             storage_order=0,  # row major
         ),
+
+
+def convert_ROIPooling2D(func, onnx_op_name, opset_version, input_names,
+                         output_names, parameters):
+    if opset_version == 1:
+        return helper.make_node(
+            onnx_op_name, input_names, output_names,
+            pooled_shape=[func.outh, func.outw],
+            spatial_scale=func.spatial_scale,
+        ),
