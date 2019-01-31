@@ -77,6 +77,7 @@ operators = {
     'Min': ('ReduceMin', (1,)),
     'Prod': ('ReduceProd', (1,)),
     'Sum': ('ReduceSum', (1,)),
+    'Square': ('Pow', (7,)),
 
     # Noise
     'Dropout': ('Dropout', (1, 6, 7)),

@@ -52,6 +52,7 @@ from onnx_chainer.functions.math import convert_Min  # NOQA
 from onnx_chainer.functions.math import convert_Prod  # NOQA
 from onnx_chainer.functions.math import convert_Sum  # NOQA
 from onnx_chainer.functions.math import convert_LinearInterpolate  # NOQA
+from onnx_chainer.functions.math import convert_Square  # NOQA
 
 from onnx_chainer.functions.noise import convert_Dropout  # NOQA
 
