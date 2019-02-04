@@ -5,6 +5,7 @@ import onnx
 
 import chainer
 from chainer import testing
+import onnx_chainer
 from onnx_chainer.testing import test_onnxruntime
 
 
@@ -47,7 +48,7 @@ class TestUnaryMathOperators(unittest.TestCase):
 
     def test_output(self):
         for opset_version in range(
-                test_onnxruntime.MINIMUM_OPSET_VERSION,
+                onnx_chainer.MINIMUM_OPSET_VERSION,
                 onnx.defs.onnx_opset_version() + 1):
             test_onnxruntime.check_output(
                 self.model, self.a, self.fn, opset_version=opset_version)
@@ -86,7 +87,7 @@ class TestBinaryMathOperators(unittest.TestCase):
 
     def test_output(self):
         for opset_version in range(
-                test_onnxruntime.MINIMUM_OPSET_VERSION,
+                onnx_chainer.MINIMUM_OPSET_VERSION,
                 onnx.defs.onnx_opset_version() + 1):
             test_onnxruntime.check_output(
                 self.model, self.x, self.fn, opset_version=opset_version)
@@ -123,7 +124,7 @@ class TestTernaryMathOperators(unittest.TestCase):
 
     def test_output(self):
         for opset_version in range(
-                test_onnxruntime.MINIMUM_OPSET_VERSION,
+                onnx_chainer.MINIMUM_OPSET_VERSION,
                 onnx.defs.onnx_opset_version() + 1):
             test_onnxruntime.check_output(
                 self.model, self.x, self.fn, opset_version=opset_version)

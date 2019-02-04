@@ -9,7 +9,6 @@ from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 
 import chainer
 from onnx_chainer import functions, mapping
-from onnx_chainer.testing import test_onnxruntime
 
 try:
     from onnx import checker
@@ -19,6 +18,8 @@ try:
     _available = True
 except ImportError:
     _available = False
+
+MINIMUM_OPSET_VERSION = 7
 
 
 def _check_available():
@@ -197,14 +198,14 @@ def export(model, args, filename=None, export_params=True,
 
     if opset_version is None:
         opset_version = int(onnx.defs.onnx_opset_version())
-    elif opset_version < test_onnxruntime.MINIMUM_OPSET_VERSION:
+    elif opset_version < MINIMUM_OPSET_VERSION:
         warnings.warn(
             'ONNX-Chainer has been tested only with opset_version >= {m}. '
             'This is because ONNXRuntime supports only opset_version >= {m}. '
             'The ONNX file exported with your requested opset_version ({o}) '
             'may cause some problems because the converters used for the '
             'opset_version have not been tested.'.format(
-                m=test_onnxruntime.MINIMUM_OPSET_VERSION,
+                m=MINIMUM_OPSET_VERSION,
                 o=opset_version)
         )
 
