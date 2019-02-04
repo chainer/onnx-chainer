@@ -73,7 +73,7 @@ def check_output(model, x, fn, out_key='prob', opset_version=None):
                          if i.name not in initialized_graph_input_names]
     print(sess.get_modelmeta().custom_metadata_map)
     assert input_names == list(sorted(graph_input_names))
-    # === 
+
     rt_out = sess.run(
         None, {name: array for name, array in zip(input_names, x)})
 
