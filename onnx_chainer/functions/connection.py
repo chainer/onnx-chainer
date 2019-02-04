@@ -1,7 +1,6 @@
+import chainer
 import numpy as np
 from onnx import helper
-
-import chainer
 
 
 def convert_Convolution2DFunction(func, onnx_op_name, opset_version,

@@ -3,11 +3,11 @@ from __future__ import print_function
 import collections
 import warnings
 
+import chainer
 import numpy
 import onnx
 from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 
-import chainer
 from onnx_chainer import functions, mapping
 
 try:

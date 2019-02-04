@@ -1,13 +1,12 @@
 import unittest
 
-import numpy as np
-import onnx
-
 import chainer
 import chainer.functions as F
 import chainer.links as L
-import chainercv.links as C
+import numpy as np
+import onnx
 
+import chainercv.links as C
 import onnx_chainer
 from onnx_chainer.testing import test_onnxruntime
 

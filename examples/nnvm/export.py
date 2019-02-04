@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import chainer
+import chainer.functions as F
 import numpy as np
 import onnx
 
-import chainer
-import chainer.functions as F
 import chainercv.links as C
 import nnvm
 import onnx_chainer
