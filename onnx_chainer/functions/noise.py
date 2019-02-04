@@ -1,6 +1,5 @@
-from onnx import helper
-
 import chainer
+from onnx import helper
 
 
 def convert_Dropout(

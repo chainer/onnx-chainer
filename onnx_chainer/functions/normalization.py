@@ -1,8 +1,7 @@
 import sys
 
-from onnx import helper
-
 import chainer
+from onnx import helper
 
 
 def convert_BatchNormalization(func, onnx_op_name, opset_version, input_names,

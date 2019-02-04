@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import numpy as np
-import onnxruntime as rt
-
 import chainer
 import chainer.links as L
+import numpy as np
+
 import onnx_chainer
+import onnxruntime as rt
 from chainercv import transforms
 from PIL import Image
 
