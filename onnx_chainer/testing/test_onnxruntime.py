@@ -67,8 +67,8 @@ def check_output(model, x, fn, out_key='prob', opset_version=None):
     #                network inputs, does not include internal inputs such as
     #                weight attribute etc. so that need to collect network
     #                inputs from `onnx_model`.
-    initialized_graph_input_names = [
-        i.name for i in onnx_model.graph.initializer]
+    initialized_graph_input_names = {
+        i.name for i in onnx_model.graph.initializer}
     graph_input_names = [i.name for i in onnx_model.graph.input
                          if i.name not in initialized_graph_input_names]
     assert input_names == list(sorted(graph_input_names))
