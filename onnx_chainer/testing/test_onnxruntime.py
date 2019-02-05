@@ -64,8 +64,8 @@ def check_output(model, x, fn, out_key='prob', opset_version=None):
 
     # To detect unexpected inputs created by exporter, check input names
     # TODO(disktnk): `input_names` got from onnxruntime session includes only
-    #                network inputs, does not includes internal inputs such as
-    #                weight attribute etc. so that need to collect networks
+    #                network inputs, does not include internal inputs such as
+    #                weight attribute etc. so that need to collect network
     #                inputs from `onnx_model`.
     initialized_graph_input_names = [
         i.name for i in onnx_model.graph.initializer]
