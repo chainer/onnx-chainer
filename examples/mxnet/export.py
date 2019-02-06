@@ -3,10 +3,10 @@
 
 import collections
 
-import numpy as np
-
 import chainer
 import chainer.functions as F
+import numpy as np
+
 import chainercv.links as C
 import mxnet
 import onnx_chainer

@@ -1,9 +1,9 @@
 import warnings
 
+import chainer
 import numpy as np
 import onnx
 
-import chainer
 import onnx_chainer
 
 try:
@@ -61,6 +61,18 @@ def check_output(model, x, fn, out_key='prob', opset_version=None):
     onnx_model = onnx_chainer.export(model, x, fn, opset_version=opset_version)
     sess = rt.InferenceSession(onnx_model.SerializeToString())
     input_names = [i.name for i in sess.get_inputs()]
+
+    # To detect unexpected inputs created by exporter, check input names
+    # TODO(disktnk): `input_names` got from onnxruntime session includes only
+    #                network inputs, does not include internal inputs such as
+    #                weight attribute etc. so that need to collect network
+    #                inputs from `onnx_model`.
+    initialized_graph_input_names = {
+        i.name for i in onnx_model.graph.initializer}
+    graph_input_names = [i.name for i in onnx_model.graph.input
+                         if i.name not in initialized_graph_input_names]
+    assert input_names == list(sorted(graph_input_names))
+
     rt_out = sess.run(
         None, {name: array for name, array in zip(input_names, x)})
 

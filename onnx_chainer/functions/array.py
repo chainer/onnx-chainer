@@ -1,8 +1,8 @@
+import chainer
 import numpy as np
 from onnx import helper
 from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 
-import chainer
 from onnx_chainer import mapping
 
 

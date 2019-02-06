@@ -1,7 +1,6 @@
+import chainer
 import numpy as np
 from onnx import helper
-
-import chainer
 
 
 def convert_Add(func, onnx_op_name, opset_version, input_names, output_names,

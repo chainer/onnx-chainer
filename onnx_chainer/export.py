@@ -3,13 +3,13 @@ from __future__ import print_function
 import collections
 import warnings
 
+import chainer
 import numpy
 import onnx
 from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 
-import chainer
-from onnx_chainer import functions, mapping
-from onnx_chainer.testing import test_onnxruntime
+from onnx_chainer import functions
+from onnx_chainer import mapping
 
 try:
     from onnx import checker
@@ -19,6 +19,8 @@ try:
     _available = True
 except ImportError:
     _available = False
+
+MINIMUM_OPSET_VERSION = 7
 
 
 def _check_available():
@@ -96,7 +98,6 @@ class ONNXExport(chainer.FunctionHook):
     def __init__(self, opset_version=None):
         self.graph = []
         self.additional_parameters = []
-        self.network_inputs = {}
         self.middle_output_var_to_varnode = {}
         self.specified_opset_version = opset_version
 
@@ -110,16 +111,8 @@ class ONNXExport(chainer.FunctionHook):
             var = i.get_variable_or_none()
             if var is None:  # No reference to Variable/Parameter
                 input_names.append(str(id(i)))  # Use VariableNode as is
-
-                # To support networks which have only a single layer
-                if i.creator is None and \
-                        str(id(i)) not in self.network_inputs:
-                    self.network_inputs[str(id(i))] = i
             else:  # It is a parameter inside a Link or network input
                 input_names.append(str(id(var)))
-                if i.creator is None and \
-                        not isinstance(var, chainer.Parameter):
-                    self.network_inputs[str(id(var))] = var
 
         # This is to get corresponding VariableNode id from the output
         # Variable of the network
@@ -197,33 +190,39 @@ def export(model, args, filename=None, export_params=True,
 
     if opset_version is None:
         opset_version = int(onnx.defs.onnx_opset_version())
-    elif opset_version < test_onnxruntime.MINIMUM_OPSET_VERSION:
+    elif opset_version < MINIMUM_OPSET_VERSION:
         warnings.warn(
             'ONNX-Chainer has been tested only with opset_version >= {m}. '
             'This is because ONNXRuntime supports only opset_version >= {m}. '
             'The ONNX file exported with your requested opset_version ({o}) '
             'may cause some problems because the converters used for the '
             'opset_version have not been tested.'.format(
-                m=test_onnxruntime.MINIMUM_OPSET_VERSION,
+                m=MINIMUM_OPSET_VERSION,
                 o=opset_version)
         )
 
     # Forward computation
+    network_inputs = []
     if isinstance(args, tuple):
         args = list(args)
     if isinstance(args, list):
         for i, arg in enumerate(args):
             if isinstance(arg, numpy.ndarray):
                 args[i] = chainer.Variable(arg)
+                network_inputs.append(args[i])
         outputs = model(*args)
     elif isinstance(args, dict):
         for key, arg in args.items():
             if isinstance(arg, numpy.ndarray):
                 args[key] = chainer.Variable(arg)
+                network_inputs.append(args[key])
         outputs = model(**args)
     elif isinstance(args, numpy.ndarray):
-        outputs = model(chainer.Variable(args))
+        args = chainer.Variable(args)
+        network_inputs.append(args)
+        outputs = model(args)
     elif isinstance(args, chainer.Variable):
+        network_inputs.append(args)
         outputs = model(args)
     else:
         raise ValueError(
@@ -239,6 +238,10 @@ def export(model, args, filename=None, export_params=True,
         input_tensors.append(helper.make_tensor_value_info(
             str(id(param)), NP_TYPE_TO_TENSOR_TYPE[param.array.dtype],
             param_shape))
+
+    for i in network_inputs:
+        input_tensors.append(helper.make_tensor_value_info(
+            str(id(i)), NP_TYPE_TO_TENSOR_TYPE[i.dtype], i.shape))
 
     with ONNXExport(opset_version) as o:
         if isinstance(outputs, (list, tuple)):
@@ -264,11 +267,6 @@ def export(model, args, filename=None, export_params=True,
             input_tensors.append(helper.make_tensor_value_info(
                 str(id(param)), NP_TYPE_TO_TENSOR_TYPE[param.array.dtype],
                 param_shape))
-
-    # Collect the network inputs
-    for i in o.network_inputs.values():
-        input_tensors.append(helper.make_tensor_value_info(
-            str(id(i)), NP_TYPE_TO_TENSOR_TYPE[i.dtype], i.shape))
 
     # The graph must be topologically sorted
     graph = reversed(o.graph)
