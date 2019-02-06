@@ -278,9 +278,10 @@ def gensym():
 
 def convert_Square(func, onnx_op_name, opset_version, input_names,
                    output_names, parameters):
-    # 'Pow' operator's exponent accepts only floating value
-    exponent = chainer.Parameter(np.array(2, dtype=np.float32))
-    parameters.append(exponent)
-    input_names.append(str(id(exponent)))
-    if opset_version == 7:
-        return helper.make_node(onnx_op_name, input_names, output_names),
+    if opset_version == 1:
+        return helper.make_node(
+            onnx_op_name, [input_names[0], input_names[0]], output_names,
+            consumed_inputs=[1, 1]),
+    elif opset_version == 6 or opset_version == 7:
+        return helper.make_node(
+            onnx_op_name, [input_names[0], input_names[0]], output_names),
