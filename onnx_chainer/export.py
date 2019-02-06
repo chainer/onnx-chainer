@@ -97,7 +97,6 @@ class ONNXExport(chainer.FunctionHook):
     def __init__(self, opset_version=None):
         self.graph = []
         self.additional_parameters = []
-        self.network_inputs = {}
         self.middle_output_var_to_varnode = {}
         self.specified_opset_version = opset_version
 
@@ -111,16 +110,8 @@ class ONNXExport(chainer.FunctionHook):
             var = i.get_variable_or_none()
             if var is None:  # No reference to Variable/Parameter
                 input_names.append(str(id(i)))  # Use VariableNode as is
-
-                # To support networks which have only a single layer
-                if i.creator is None and \
-                        str(id(i)) not in self.network_inputs:
-                    self.network_inputs[str(id(i))] = i
             else:  # It is a parameter inside a Link or network input
                 input_names.append(str(id(var)))
-                if i.creator is None and \
-                        not isinstance(var, chainer.Parameter):
-                    self.network_inputs[str(id(var))] = var
 
         # This is to get corresponding VariableNode id from the output
         # Variable of the network
@@ -210,21 +201,27 @@ def export(model, args, filename=None, export_params=True,
         )
 
     # Forward computation
+    network_inputs = []
     if isinstance(args, tuple):
         args = list(args)
     if isinstance(args, list):
         for i, arg in enumerate(args):
             if isinstance(arg, numpy.ndarray):
                 args[i] = chainer.Variable(arg)
+                network_inputs.append(args[i])
         outputs = model(*args)
     elif isinstance(args, dict):
         for key, arg in args.items():
             if isinstance(arg, numpy.ndarray):
                 args[key] = chainer.Variable(arg)
+                network_inputs.append(args[key])
         outputs = model(**args)
     elif isinstance(args, numpy.ndarray):
-        outputs = model(chainer.Variable(args))
+        args = chainer.Variable(args)
+        network_inputs.append(args)
+        outputs = model(args)
     elif isinstance(args, chainer.Variable):
+        network_inputs.append(args)
         outputs = model(args)
     else:
         raise ValueError(
@@ -240,6 +237,10 @@ def export(model, args, filename=None, export_params=True,
         input_tensors.append(helper.make_tensor_value_info(
             str(id(param)), NP_TYPE_TO_TENSOR_TYPE[param.array.dtype],
             param_shape))
+
+    for i in network_inputs:
+        input_tensors.append(helper.make_tensor_value_info(
+            str(id(i)), NP_TYPE_TO_TENSOR_TYPE[i.dtype], i.shape))
 
     with ONNXExport(opset_version) as o:
         if isinstance(outputs, (list, tuple)):
@@ -265,11 +266,6 @@ def export(model, args, filename=None, export_params=True,
             input_tensors.append(helper.make_tensor_value_info(
                 str(id(param)), NP_TYPE_TO_TENSOR_TYPE[param.array.dtype],
                 param_shape))
-
-    # Collect the network inputs
-    for i in o.network_inputs.values():
-        input_tensors.append(helper.make_tensor_value_info(
-            str(id(i)), NP_TYPE_TO_TENSOR_TYPE[i.dtype], i.shape))
 
     # The graph must be topologically sorted
     graph = reversed(o.graph)
