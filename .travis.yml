@@ -13,7 +13,7 @@ env:
   - PYTHON_VERSION=3.5 CHAINER_VERSION=5.0.0
   - PYTHON_VERSION=3.6 CHAINER_VERSION=5.0.0
   - PYTHON_VERSION=3.5 CHAINER_VERSION=6.0.0a1
-  - PYTHON_VERSION=3.6 CHAINER_VERSION=6.0.0a1
+  - PYTHON_VERSION=3.6 CHAINER_VERSION=6.0.0a1 ONNX_CHAINER_DEPLOY_JOB=1
 
 notifications:
   email: false
@@ -27,3 +27,10 @@ script:
   - autopep8 -r . --dif --exit-code
   - bash docker/run_tests.sh ${PYTHON_VERSION} ${CHAINER_VERSION}
 
+deploy:
+  - provider: pypi
+    user: $PYPI_MAINTAINER_NAME
+    password: $PYPI_MAINTAINER_PASS
+    on:
+      tags: true
+      condition: $ONNX_CHAINER_DEPLOY_JOB == 1
