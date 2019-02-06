@@ -311,6 +311,13 @@ Currently 59 Chainer Functions are supported to export in ONNX format.
 - BatchNormalization
 - FixedBatchNormalization
 - LocalResponseNormalization
+- NormalizeL2
+
+## Contribution
+
+Any contribution to ONNX-Chainer is welcome!
+
+- Python codes follow [Chainer Coding Guidelines](https://docs.chainer.org/en/stable/contribution.html#coding-guidelines)
 
 ---
 
