@@ -5,9 +5,9 @@ import chainer
 import chainer.links as L
 import numpy as np
 
+from chainercv import transforms
 import onnx_chainer
 import onnxruntime as rt
-from chainercv import transforms
 from PIL import Image
 
 model = L.VGG16Layers()
