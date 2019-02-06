@@ -19,8 +19,11 @@ notifications:
   email: false
 
 before_install:
+  - pip install autopep8 flake8
   - docker pull mitmul/onnx-chainer:python${PYTHON_VERSION}-chainer${CHAINER_VERSION}
 
 script:
+  - flake8
+  - autopep8 -r . --dif --exit-code
   - bash docker/run_tests.sh ${PYTHON_VERSION} ${CHAINER_VERSION}
 
