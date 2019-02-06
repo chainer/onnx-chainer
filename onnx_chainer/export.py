@@ -8,7 +8,8 @@ import numpy
 import onnx
 from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 
-from onnx_chainer import functions, mapping
+from onnx_chainer import functions
+from onnx_chainer import mapping
 
 try:
     from onnx import checker

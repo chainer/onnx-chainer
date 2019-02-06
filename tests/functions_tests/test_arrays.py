@@ -2,9 +2,9 @@ import unittest
 
 import chainer
 import chainer.functions as F
+from chainer import testing
 import numpy as np
 import onnx
-from chainer import testing
 
 import onnx_chainer
 from onnx_chainer.testing import test_onnxruntime
