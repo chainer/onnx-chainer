@@ -73,6 +73,12 @@ def convert_GetItem(func, onnx_op_name, opset_version, input_names,
             starts.append(idx)
             ends.append(idx+1)
             squeeze_idxs.append(axis)
+        elif isinstance(idx, np.ndarray) and idx.ndim == 0:
+            scalar_idx = np.asscalar(idx)
+            axes.append(axis)
+            starts.append(scalar_idx)
+            ends.append(scalar_idx+1)
+            squeeze_idxs.append(axis)
         elif idx is None:
             unsqueeze_idxs.append(i - len(squeeze_idxs) + skipped)
         elif idx is Ellipsis:
