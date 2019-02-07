@@ -14,6 +14,7 @@ from onnx_chainer.functions.array import convert_Cast  # NOQA
 from onnx_chainer.functions.array import convert_Concat  # NOQA
 from onnx_chainer.functions.array import convert_Copy  # NOQA
 from onnx_chainer.functions.array import convert_Depth2Space  # NOQA
+from onnx_chainer.functions.array import convert_GetItem  # NOQA
 from onnx_chainer.functions.array import convert_Pad  # NOQA
 from onnx_chainer.functions.array import convert_Reshape  # NOQA
 from onnx_chainer.functions.array import convert_Space2Depth  # NOQA
