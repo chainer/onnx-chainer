@@ -83,6 +83,24 @@ from onnx_chainer.testing import test_onnxruntime
     {'ops': 'copy', 'input_shape': (1, 5),
      'input_argname': 'x',
      'args': {'dst': -1}},
+
+    # get_item
+    {'ops': 'get_item', 'input_shape': (2, 2, 3),
+     'input_argname': 'x',
+     'args': {'slices': slice(0, 2)}},
+    {'ops': 'get_item', 'input_shape': (2, 2, 3),
+     'input_argname': 'x',
+     'args': {'slices': 0}},
+    {'ops': 'get_item', 'input_shape': (2, 2, 3),
+     'input_argname': 'x',
+     'args': {'slices': (None, slice(0, 2))}},
+    {'ops': 'get_item', 'input_shape': (2, 2, 3),
+     'input_argname': 'x',
+     'args': {'slices': (Ellipsis, slice(0, 2))}},
+    # get_item, combine newaxis, slice, single index, ellipsis
+    {'ops': 'get_item', 'input_shape': (2, 2, 3, 3, 3, 4),
+     'input_argname': 'x',
+     'args': {'slices': (0, None, Ellipsis, 0, None, slice(0, 2), None, 0)}},
 )
 class TestArrayOperators(unittest.TestCase):
 
