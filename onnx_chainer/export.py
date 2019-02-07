@@ -4,7 +4,6 @@ import collections
 import warnings
 
 import chainer
-import numpy
 import onnx
 from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 
@@ -36,13 +35,14 @@ def convert_parameter(parameter):
         array = parameter.array
     elif isinstance(parameter, chainer.Variable):
         array = parameter.array
-    elif isinstance(parameter, numpy.ndarray):
+    elif isinstance(parameter, chainer.get_array_types()):
         array = parameter
     else:
         raise ValueError(
             'The type of parameter is unknown. It should be either Parameter '
             'or Variable or ndarray, but the type was {}.'.format(
                 type(parameter)))
+    array = chainer.cuda.to_cpu(array)
     if array.shape == ():
         array = array[None]
     return numpy_helper.from_array(array, str(id(parameter)))
@@ -186,8 +186,6 @@ def export(model, args, filename=None, export_params=True,
     chainer.config.train = False
     chainer.config.enable_backprop = True
 
-    model.to_cpu()
-
     if opset_version is None:
         opset_version = int(onnx.defs.onnx_opset_version())
     elif opset_version < MINIMUM_OPSET_VERSION:
@@ -207,17 +205,17 @@ def export(model, args, filename=None, export_params=True,
         args = list(args)
     if isinstance(args, list):
         for i, arg in enumerate(args):
-            if isinstance(arg, numpy.ndarray):
+            if isinstance(arg, chainer.get_array_types()):
                 args[i] = chainer.Variable(arg)
                 network_inputs.append(args[i])
         outputs = model(*args)
     elif isinstance(args, dict):
         for key, arg in args.items():
-            if isinstance(arg, numpy.ndarray):
+            if isinstance(arg, chainer.get_array_types()):
                 args[key] = chainer.Variable(arg)
                 network_inputs.append(args[key])
         outputs = model(**args)
-    elif isinstance(args, numpy.ndarray):
+    elif isinstance(args, chainer.get_array_types()):
         args = chainer.Variable(args)
         network_inputs.append(args)
         outputs = model(args)
@@ -246,17 +244,17 @@ def export(model, args, filename=None, export_params=True,
     with ONNXExport(opset_version) as o:
         if isinstance(outputs, (list, tuple)):
             for output in outputs:
-                output.grad = numpy.ones_like(
+                output.grad = model.xp.ones_like(
                     output.array, dtype=output.array.dtype)
                 output.backward()
         elif isinstance(outputs, dict):
             outputs = list(outputs.values())
             for output in outputs:
-                output.grad = numpy.ones_like(
+                output.grad = model.xp.ones_like(
                     output.array, dtype=output.array.dtype)
                 output.backward()
         elif isinstance(outputs, chainer.Variable):
-            outputs.grad = numpy.ones_like(outputs.array)
+            outputs.grad = model.xp.ones_like(outputs.array)
             outputs.backward()
 
     # If additional parameters are created during conversion
