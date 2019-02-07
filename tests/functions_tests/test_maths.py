@@ -27,6 +27,7 @@ from onnx_chainer.testing import test_onnxruntime
     {'info': 'Min', 'ops': 'chainer.functions.min(a, axis=0)'},
     {'info': 'Prod', 'ops': 'chainer.functions.prod(a, axis=0)'},
     {'info': 'LogSumExp', 'ops': 'chainer.functions.logsumexp(a, axis=0)'},
+    {'info': 'Square', 'ops': 'chainer.functions.square(a)'},
 )
 class TestUnaryMathOperators(unittest.TestCase):
 
