@@ -25,12 +25,14 @@ before_install:
 script:
   - flake8
   - autopep8 -r . --dif --exit-code
+  - pip install -e .  # test plain install before test on docker
   - bash docker/run_tests.sh ${PYTHON_VERSION} ${CHAINER_VERSION}
 
 deploy:
   - provider: pypi
     user: $PYPI_MAINTAINER_NAME
     password: $PYPI_MAINTAINER_PASS
+    skip_cleanup: true
     on:
       tags: true
       condition: $ONNX_CHAINER_DEPLOY_JOB == 1
