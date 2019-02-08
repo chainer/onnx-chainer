@@ -4,10 +4,7 @@ import chainer
 import chainer.functions as F
 import chainer.links as L
 import numpy as np
-import onnx
 
-import chainercv.links as C
-import onnx_chainer
 from onnx_chainer.testing import test_onnxruntime
 
 
@@ -23,7 +20,7 @@ class TestMultipleInputs(unittest.TestCase):
                     self.prelu = L.PReLU()
 
             def __call__(self, x, y, z):
-                return F.relu(x) + y * z
+                return F.relu(x) + self.prelu(y) * z
 
         self.model = Model()
         self.ins = (np.zeros((1, 5), dtype=np.float32),
@@ -36,4 +33,15 @@ class TestMultipleInputs(unittest.TestCase):
 
     def test_variables(self):
         ins = [chainer.Variable(i) for i in self.ins]
+        test_onnxruntime.check_output(self.model, ins, self.fn)
+
+    def test_array_dicts(self):
+        arg_names = ['x', 'y', 'z']  # current exporter ignores these names
+        ins = {arg_names[i]: v for i, v in enumerate(self.ins)}
+        test_onnxruntime.check_output(self.model, ins, self.fn)
+
+    def test_variable_dicts(self):
+        arg_names = ['x', 'y', 'z']  # current exporter ignores these names
+        ins = {arg_names[i]: chainer.Variable(v)
+               for i, v in enumerate(self.ins)}
         test_onnxruntime.check_output(self.model, ins, self.fn)

@@ -35,6 +35,9 @@ def check_output(model, x, fn, out_key='prob', opset_version=None):
         chainer_out = model(*x)
         x_rt = tuple(
             _x.array if isinstance(_x, chainer.Variable) else _x for _x in x)
+    elif isinstance(x, dict):
+        chainer_out = model(**x)
+        x_rt = tuple(_x.array if isinstance(_x, chainer.Variable) else _x for _, _x in x.items())
     elif isinstance(x, np.ndarray):
         chainer_out = model(chainer.Variable(x))
         x_rt = x,
@@ -43,9 +46,10 @@ def check_output(model, x, fn, out_key='prob', opset_version=None):
         x_rt = x.array,
     else:
         raise ValueError(
-            'The \'x\' argument should be a list or tuple of numpy.ndarray or '
-            'chainer.Variable, or simply a numpy.ndarray or a chainer.Variable'
-            ' itself. But a {} object was given.'.format(type(x)))
+            'The \'x\' argument should be a list, tuple or dict of '
+            'numpy.ndarray or chainer.Variable, or simply a numpy.ndarray or a'
+            ' chainer.Variable itself. But a {} object was given.'.format(
+                type(x)))
 
     if isinstance(chainer_out, (list, tuple)):
         chainer_out = (y.array for y in chainer_out)
