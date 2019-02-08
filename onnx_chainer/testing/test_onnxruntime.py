@@ -33,14 +33,10 @@ def check_output(model, x, fn, out_key='prob', opset_version=None):
         for i in x:
             assert isinstance(i, (np.ndarray, chainer.Variable))
         chainer_out = model(*x)
-        x = tuple(
-            _x.array if isinstance(_x, chainer.Variable) else _x for _x in x)
     elif isinstance(x, np.ndarray):
         chainer_out = model(chainer.Variable(x))
-        x = (x,)
     elif isinstance(x, chainer.Variable):
         chainer_out = model(x)
-        x = (x.array,)
     else:
         raise ValueError(
             'The \'x\' argument should be a list or tuple of numpy.ndarray or '
