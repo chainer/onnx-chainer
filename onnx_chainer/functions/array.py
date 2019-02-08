@@ -52,10 +52,80 @@ def convert_Depth2Space(func, onnx_op_name, opset_version, input_names,
 
 def convert_GetItem(func, onnx_op_name, opset_version, input_names,
                     output_names, parameters):
-    return helper.make_node(
-        onnx_op_name, input_names, output_names,
-        slice=func.slices
-    ),
+    x = func.inputs[0]
+    axes, starts, ends = [], [], []
+    squeeze_idxs, unsqueeze_idxs = [], []
+    skipped = 0  # when set ellipsis, need to skip index rolling
+
+    for i, idx in enumerate(func.slices):
+        # axis means the index of input x, adjust None and Ellipsis counts
+        axis = i - len(unsqueeze_idxs) + skipped
+        if isinstance(idx, slice):
+            if idx.step is not None and idx.step != 1:
+                raise ValueError(
+                    'GetItem with {}step slicing is not supported in ONNX '
+                    'Slice operator'.format(idx.step))
+            axes.append(axis)
+            starts.append(0 if idx.start is None else idx.start)
+            ends.append(x.shape[axis] if idx.stop is None else idx.stop)
+        elif isinstance(idx, int):
+            axes.append(axis)
+            starts.append(idx)
+            ends.append(idx+1)
+            squeeze_idxs.append(axis)
+        elif isinstance(idx, np.ndarray) and idx.ndim == 0:
+            scalar_idx = np.asscalar(idx)
+            axes.append(axis)
+            starts.append(scalar_idx)
+            ends.append(scalar_idx+1)
+            squeeze_idxs.append(axis)
+        elif idx is None:
+            unsqueeze_idxs.append(i - len(squeeze_idxs) + skipped)
+        elif idx is Ellipsis:
+            # calculate rest slice number except None, GetItem does not allow
+            # multiple Ellipsis, so ignore latter Ellipsis count
+            rest_slice_len = len(
+                [idx_ for idx_ in func.slices[i+1:] if idx_ is not None])
+            assert skipped == 0
+            skipped = len(x.shape) - axis - rest_slice_len - 1
+        else:
+            # not support advanced index like `array[[0,1], [0, 1]]`
+            raise ValueError(
+                'GetItem with type {} cannot handle in ONNX Slice, so that '
+                'ONNX-Chainer does not accept the type'.format(type(idx)))
+    nodes = []
+    slice_out_names = output_names
+
+    if unsqueeze_idxs:
+        unsqueeze_object = object()
+        dummy_objects.append(unsqueeze_object)
+        unsqueeze_object_name = str(id(unsqueeze_object))
+        slice_out_names = [unsqueeze_object_name]
+        nodes.append(helper.make_node(
+            'Unsqueeze', [unsqueeze_object_name], output_names,
+            axes=unsqueeze_idxs))
+
+    if squeeze_idxs:
+        squeeze_object = object()
+        dummy_objects.append(squeeze_object)
+        squeeze_object_name = str(id(squeeze_object))
+        slice_out_names = [squeeze_object_name]
+        if unsqueeze_idxs:
+            squeeze_out_names = [unsqueeze_object_name]
+        else:
+            squeeze_out_names = output_names
+        nodes.append(helper.make_node(
+            'Squeeze', [squeeze_object_name], squeeze_out_names,
+            axes=squeeze_idxs))
+
+    nodes.append(helper.make_node(
+        onnx_op_name, input_names, slice_out_names,
+        axes=axes, starts=starts, ends=ends))
+
+    return tuple(nodes)
+
+
+dummy_objects = []
 
 
 def convert_Pad(func, onnx_op_name, opset_version, input_names, output_names,

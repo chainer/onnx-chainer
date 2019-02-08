@@ -37,6 +37,7 @@ operators = {
     'Concat': ('Concat', (1, 4)),
     'Copy': ('Identity', (1,)),
     'Depth2Space': ('DepthToSpace', (1,)),
+    'GetItem': ('Slice', (1,)),
     'Pad': ('Pad', (1, 2)),
     'Reshape': ('Reshape', (1, 5)),
     'Space2Depth': ('SpaceToDepth', (1,)),
