@@ -37,7 +37,8 @@ def check_output(model, x, fn, out_key='prob', opset_version=None):
             _x.array if isinstance(_x, chainer.Variable) else _x for _x in x)
     elif isinstance(x, dict):
         chainer_out = model(**x)
-        x_rt = tuple(_x.array if isinstance(_x, chainer.Variable) else _x for _, _x in x.items())
+        x_rt = tuple(_x.array if isinstance(_x, chainer.Variable) else _x
+                     for _, _x in x.items())
     elif isinstance(x, np.ndarray):
         chainer_out = model(chainer.Variable(x))
         x_rt = x,
