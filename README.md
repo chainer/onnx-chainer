@@ -252,6 +252,7 @@ Currently 59 Chainer Functions are supported to export in ONNX format.
 - Concat
 - Copy
 - Depth2Space
+- GetItem
 - Pad <sup>[1](#pad1)</sup><sup>[2](#pad2)</sup>
 - Reshape
 - Space2Depth
@@ -287,6 +288,7 @@ Currently 59 Chainer Functions are supported to export in ONNX format.
 - Maximum
 - Minimum
 - Sqrt
+- Square
 - LogSumExp
 - Max
 - Mean
