@@ -97,6 +97,7 @@ class ONNXExport(chainer.FunctionHook):
 
     def __init__(self, opset_version=None):
         self.graph = []
+        self.inputs = {}
         self.additional_parameters = []
         self.middle_output_var_to_varnode = {}
         self.specified_opset_version = opset_version
@@ -110,9 +111,11 @@ class ONNXExport(chainer.FunctionHook):
             # 'i' is a VariableNode, so check if it has a Variable/Parameter
             var = i.get_variable_or_none()
             if var is None:  # No reference to Variable/Parameter
-                input_names.append(str(id(i)))  # Use VariableNode as is
+                input_name = str(id(i))  # Use VariableNode as is
             else:  # It is a parameter inside a Link or network input
-                input_names.append(str(id(var)))
+                input_name = str(id(var))
+                self.inputs[input_name] = var
+            input_names.append(input_name)
 
         # This is to get corresponding VariableNode id from the output
         # Variable of the network
@@ -232,14 +235,18 @@ def export(model, args, filename=None, export_params=True,
 
     initializers = []
     input_tensors = []
+    param_names = set()
     for param in model.params():
+        param_names.add(str(id(param)))
         initializers.append(convert_parameter(param))
         param_shape = (1,) if param.shape == () else param.shape
         input_tensors.append(helper.make_tensor_value_info(
             str(id(param)), NP_TYPE_TO_TENSOR_TYPE[param.array.dtype],
             param_shape))
 
+    network_input_names = set()
     for i in network_inputs:
+        network_input_names.add(str(id(i)))
         input_tensors.append(helper.make_tensor_value_info(
             str(id(i)), NP_TYPE_TO_TENSOR_TYPE[i.dtype], i.shape))
 
@@ -258,6 +265,16 @@ def export(model, args, filename=None, export_params=True,
         elif isinstance(outputs, chainer.Variable):
             outputs.grad = numpy.ones_like(outputs.array)
             outputs.backward()
+
+    out_scoped_param_names = set(o.inputs.keys()) - param_names -\
+        network_input_names
+    if out_scoped_param_names:
+        for name in out_scoped_param_names:
+            param = o.inputs[name]
+            initializers.append(convert_parameter(param))
+            param_shape = (1,) if param.shape == () else param.shape
+            input_tensors.append(helper.make_tensor_value_info(
+                name, NP_TYPE_TO_TENSOR_TYPE[param.array.dtype], param_shape))
 
     # If additional parameters are created during conversion
     if o.additional_parameters:
