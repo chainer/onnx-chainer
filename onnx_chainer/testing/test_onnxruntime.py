@@ -33,19 +33,24 @@ def check_output(model, x, fn, out_key='prob', opset_version=None):
         for i in x:
             assert isinstance(i, (np.ndarray, chainer.Variable))
         chainer_out = model(*x)
-        x = tuple(
+        x_rt = tuple(
             _x.array if isinstance(_x, chainer.Variable) else _x for _x in x)
+    elif isinstance(x, dict):
+        chainer_out = model(**x)
+        x_rt = tuple(_x.array if isinstance(_x, chainer.Variable) else _x
+                     for _, _x in x.items())
     elif isinstance(x, np.ndarray):
         chainer_out = model(chainer.Variable(x))
-        x = (x,)
+        x_rt = x,
     elif isinstance(x, chainer.Variable):
         chainer_out = model(x)
-        x = (x.array,)
+        x_rt = x.array,
     else:
         raise ValueError(
-            'The \'x\' argument should be a list or tuple of numpy.ndarray or '
-            'chainer.Variable, or simply a numpy.ndarray or a chainer.Variable'
-            ' itself. But a {} object was given.'.format(type(x)))
+            'The \'x\' argument should be a list, tuple or dict of '
+            'numpy.ndarray or chainer.Variable, or simply a numpy.ndarray or a'
+            ' chainer.Variable itself. But a {} object was given.'.format(
+                type(x)))
 
     if isinstance(chainer_out, (list, tuple)):
         chainer_out = (y.array for y in chainer_out)
@@ -74,7 +79,7 @@ def check_output(model, x, fn, out_key='prob', opset_version=None):
     assert input_names == list(sorted(graph_input_names))
 
     rt_out = sess.run(
-        None, {name: array for name, array in zip(input_names, x)})
+        None, {name: array for name, array in zip(input_names, x_rt)})
 
     for cy, my in zip(chainer_out, rt_out):
         np.testing.assert_almost_equal(cy, my, decimal=5)

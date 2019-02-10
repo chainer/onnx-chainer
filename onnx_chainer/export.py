@@ -212,13 +212,13 @@ def export(model, args, filename=None, export_params=True,
         for i, arg in enumerate(args):
             if isinstance(arg, numpy.ndarray):
                 args[i] = chainer.Variable(arg)
-                network_inputs.append(args[i])
+            network_inputs.append(args[i])
         outputs = model(*args)
     elif isinstance(args, dict):
         for key, arg in args.items():
             if isinstance(arg, numpy.ndarray):
                 args[key] = chainer.Variable(arg)
-                network_inputs.append(args[key])
+            network_inputs.append(args[key])
         outputs = model(**args)
     elif isinstance(args, numpy.ndarray):
         args = chainer.Variable(args)
