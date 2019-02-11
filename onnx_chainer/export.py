@@ -266,15 +266,14 @@ def export(model, args, filename=None, export_params=True,
             outputs.grad = numpy.ones_like(outputs.array)
             outputs.backward()
 
-    out_scoped_param_names = set(o.inputs.keys()) - param_names -\
+    implicit_input_names = set(o.inputs.keys()) - param_names -\
         network_input_names
-    if out_scoped_param_names:
-        for name in out_scoped_param_names:
-            param = o.inputs[name]
-            initializers.append(convert_parameter(param))
-            param_shape = (1,) if param.shape == () else param.shape
-            input_tensors.append(helper.make_tensor_value_info(
-                name, NP_TYPE_TO_TENSOR_TYPE[param.array.dtype], param_shape))
+    for name in implicit_input_names:
+        param = o.inputs[name]
+        initializers.append(convert_parameter(param))
+        param_shape = (1,) if param.shape == () else param.shape
+        input_tensors.append(helper.make_tensor_value_info(
+            name, NP_TYPE_TO_TENSOR_TYPE[param.array.dtype], param_shape))
 
     # If additional parameters are created during conversion
     if o.additional_parameters:

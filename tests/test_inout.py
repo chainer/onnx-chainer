@@ -47,7 +47,7 @@ class TestMultipleInputs(unittest.TestCase):
         test_onnxruntime.check_output(self.model, ins, self.fn)
 
 
-class TestOutScopeNodeParam(unittest.TestCase):
+class TestImplicitInput(unittest.TestCase):
 
     def setUp(self):
 
@@ -62,8 +62,8 @@ class TestOutScopeNodeParam(unittest.TestCase):
                 return x / self.frac
 
         self.model = Model()
-        self.fn = 'OutScopeNodeParam.onnx'
+        self.fn = 'ImplicitInput.onnx'
 
-    def test_out_scope_node_input(self):
+    def test_implicit_input(self):
         x = chainer.Variable(np.array(1, dtype=np.float32))
         test_onnxruntime.check_output(self.model, x, self.fn)
