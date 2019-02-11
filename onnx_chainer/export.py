@@ -43,8 +43,6 @@ def convert_parameter(parameter):
             'The type of parameter is unknown. It should be either Parameter '
             'or Variable or ndarray, but the type was {}.'.format(
                 type(parameter)))
-    if array.shape == ():
-        array = array[None]
     return numpy_helper.from_array(array, str(id(parameter)))
 
 
