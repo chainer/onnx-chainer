@@ -239,7 +239,6 @@ def export(model, args, filename=None, export_params=True,
     for param in model.params():
         param_names.add(str(id(param)))
         initializers.append(convert_parameter(param))
-        param_shape = (1,) if param.shape == () else param.shape
         input_tensors.append(helper.make_tensor_value_info(
             str(id(param)), NP_TYPE_TO_TENSOR_TYPE[param.array.dtype],
             param_shape))
@@ -271,7 +270,6 @@ def export(model, args, filename=None, export_params=True,
     for name in implicit_input_names:
         param = o.inputs[name]
         initializers.append(convert_parameter(param))
-        param_shape = (1,) if param.shape == () else param.shape
         input_tensors.append(helper.make_tensor_value_info(
             name, NP_TYPE_TO_TENSOR_TYPE[param.array.dtype], param_shape))
 
