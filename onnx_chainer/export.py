@@ -238,10 +238,10 @@ def export(model, args, filename=None, export_params=True,
     param_names = set()
     for param in model.params():
         param_names.add(str(id(param)))
-        initializers.append(convert_parameter(param))
+        tensor = convert_parameter(param)
+        initializers.append(tensor)
         input_tensors.append(helper.make_tensor_value_info(
-            str(id(param)), NP_TYPE_TO_TENSOR_TYPE[param.array.dtype],
-            param_shape))
+            str(id(param)), tensor.data_type, tensor.dims))
 
     network_input_names = set()
     for i in network_inputs:
@@ -268,19 +268,18 @@ def export(model, args, filename=None, export_params=True,
     implicit_input_names = set(o.inputs.keys()) - param_names -\
         network_input_names
     for name in implicit_input_names:
-        param = o.inputs[name]
-        initializers.append(convert_parameter(param))
+        tensor = convert_parameter(o.inputs[name])
+        initializers.append(tensor)
         input_tensors.append(helper.make_tensor_value_info(
-            name, NP_TYPE_TO_TENSOR_TYPE[param.array.dtype], param_shape))
+            name, tensor.data_type, tensor.dims))
 
     # If additional parameters are created during conversion
     if o.additional_parameters:
         for param in o.additional_parameters:
-            initializers.append(convert_parameter(param))
-            param_shape = (1,) if param.shape == () else param.shape
+            tensor = convert_parameter(param)
+            initializers.append(tensor)
             input_tensors.append(helper.make_tensor_value_info(
-                str(id(param)), NP_TYPE_TO_TENSOR_TYPE[param.array.dtype],
-                param_shape))
+                str(id(param)), tensor.data_type, tensor.dims))
 
     # The graph must be topologically sorted
     graph = reversed(o.graph)
