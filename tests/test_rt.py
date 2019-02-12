@@ -3,6 +3,7 @@ import unittest
 import chainer
 import chainer.functions as F
 import chainer.links as L
+from chainer.testing import attr
 import numpy as np
 import onnx
 
@@ -28,12 +29,20 @@ class TestLeNet5(unittest.TestCase):
         self.x = np.zeros((1, 3, 28, 28), dtype=np.float32)
         self.fn = 'LeNet5.onnx'
 
-    def test_output(self):
+    def check_output(self, use_gpu=False):
         for opset_version in range(
                 onnx_chainer.MINIMUM_OPSET_VERSION,
                 onnx.defs.onnx_opset_version() + 1):
             test_onnxruntime.check_output(
-                self.model, self.x, self.fn, opset_version=opset_version)
+                self.model, self.x, self.fn,
+                opset_version=opset_version, use_gpu=use_gpu)
+
+    def test_output(self):
+        self.check_output()
+
+    @attr.gpu
+    def test_output_gpu(self):
+        self.check_output(use_gpu=True)
 
 
 class TestVGG16(unittest.TestCase):
@@ -44,12 +53,20 @@ class TestVGG16(unittest.TestCase):
         self.x = np.zeros((1, 3, 224, 224), dtype=np.float32)
         self.fn = 'VGG16.onnx'
 
-    def test_output(self):
+    def check_output(self, use_gpu=False):
         for opset_version in range(
                 onnx_chainer.MINIMUM_OPSET_VERSION,
                 onnx.defs.onnx_opset_version() + 1):
             test_onnxruntime.check_output(
-                self.model, self.x, self.fn, opset_version=opset_version)
+                self.model, self.x, self.fn,
+                opset_version=opset_version, use_gpu=use_gpu)
+
+    def test_output(self):
+        self.check_output()
+
+    @attr.gpu
+    def test_output_gpu(self):
+        self.check_output(use_gpu=True)
 
 
 class TestResNet50(unittest.TestCase):
@@ -63,9 +80,17 @@ class TestResNet50(unittest.TestCase):
         self.x = np.zeros((1, 3, 224, 224), dtype=np.float32)
         self.fn = 'ResNet50.onnx'
 
-    def test_output(self):
+    def check_output(self, use_gpu=False):
         for opset_version in range(
                 onnx_chainer.MINIMUM_OPSET_VERSION,
                 onnx.defs.onnx_opset_version() + 1):
             test_onnxruntime.check_output(
-                self.model, self.x, self.fn, opset_version=opset_version)
+                self.model, self.x, self.fn,
+                opset_version=opset_version, use_gpu=use_gpu)
+
+    def test_output(self):
+        self.check_output()
+
+    @attr.gpu
+    def test_output_gpu(self):
+        self.check_output(use_gpu=True)
