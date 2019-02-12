@@ -20,8 +20,7 @@ except ImportError:
 MINIMUM_OPSET_VERSION = 7
 
 
-def check_output(model, x, fn, out_key='prob',
-                 opset_version=None, use_gpu=False):
+def check_output(model, x, fn, out_key='prob', opset_version=None):
     if opset_version is None:
         opset_version = onnx.defs.onnx_opset_version()
     if not ONNXRUNTIME_AVAILABLE:
@@ -32,7 +31,8 @@ def check_output(model, x, fn, out_key='prob',
     # Forward computation
     if isinstance(x, (list, tuple)):
         for i in x:
-            assert isinstance(i, (np.ndarray, chainer.Variable))
+            assert isinstance(i,
+                              chainer.get_array_types() + (chainer.Variable,))
         chainer_out = model(*x)
         x_rt = tuple(
             _x.array if isinstance(_x, chainer.Variable) else _x for _x in x)
@@ -40,7 +40,7 @@ def check_output(model, x, fn, out_key='prob',
         chainer_out = model(**x)
         x_rt = tuple(_x.array if isinstance(_x, chainer.Variable) else _x
                      for _, _x in x.items())
-    elif isinstance(x, np.ndarray):
+    elif isinstance(x, chainer.get_array_types()):
         chainer_out = model(chainer.Variable(x))
         x_rt = x,
     elif isinstance(x, chainer.Variable):
@@ -64,14 +64,11 @@ def check_output(model, x, fn, out_key='prob',
     else:
         raise ValueError('Unknown output type: {}'.format(type(chainer_out)))
 
-    chainer_in = x
-    if use_gpu:
-        model.to_gpu()
-        chainer_in = [chainer.cuda.to_gpu(v) for v in x]
-    onnx_model = onnx_chainer.export(model, chainer_in, fn,
+    x_rt = tuple(chainer.cuda.to_cpu(x) for x in x_rt)
+    chainer_out = tuple(chainer.cuda.to_cpu(x) for x in chainer_out)
+
+    onnx_model = onnx_chainer.export(model, x, fn,
                                      opset_version=opset_version)
-    if use_gpu:
-        model.to_cpu()
 
     sess = rt.InferenceSession(onnx_model.SerializeToString())
     input_names = [i.name for i in sess.get_inputs()]
