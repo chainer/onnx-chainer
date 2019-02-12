@@ -45,3 +45,25 @@ class TestMultipleInputs(unittest.TestCase):
         ins = {arg_names[i]: chainer.Variable(v)
                for i, v in enumerate(self.ins)}
         test_onnxruntime.check_output(self.model, ins, self.fn)
+
+
+class TestImplicitInput(unittest.TestCase):
+
+    def setUp(self):
+
+        class Model(chainer.Chain):
+
+            def __init__(self):
+                super(Model, self).__init__()
+
+                self.frac = chainer.Parameter(np.array(2, dtype=np.float32))
+
+            def __call__(self, x):
+                return x / self.frac
+
+        self.model = Model()
+        self.fn = 'ImplicitInput.onnx'
+
+    def test_implicit_input(self):
+        x = chainer.Variable(np.array(1, dtype=np.float32))
+        test_onnxruntime.check_output(self.model, x, self.fn)
