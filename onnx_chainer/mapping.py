@@ -58,6 +58,7 @@ operators = {
     'Add': ('Add', (1, 6, 7)),
     'AddConstant': ('Add', (1, 6, 7)),
     'Absolute': ('Abs', (1, 6)),
+    'BroadcastTo': ('Expand', (8,)),
     'Div': ('Div', (1, 6, 7)),
     'Mul': ('Mul', (1, 6, 7)),
     'MulConstant': ('Mul', (1, 6, 7)),
