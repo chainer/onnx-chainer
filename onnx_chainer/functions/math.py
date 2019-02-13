@@ -48,8 +48,6 @@ def convert_Mul(func, onnx_op_name, opset_version, input_names, output_names,
 def convert_MulConstant(func, onnx_op_name, opset_version, input_names,
                         output_names, parameters):
     value = np.asarray([func.value], dtype=func.inputs[0].dtype)
-    if func.inputs[0].shape:
-        value = np.broadcast_to(value, func.inputs[0].shape)
     value_param = chainer.Parameter(value)
     parameters.append(value_param)
     input_names.append(str(id(value_param)))
