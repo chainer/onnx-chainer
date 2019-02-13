@@ -59,9 +59,7 @@ class TestUnaryMathOperators(unittest.TestCase):
 
     def test_output(self):
         opset_ids = onnx_chainer.mapping.operators[self.info][1]
-        minimum_version = onnx_chainer.MINIMUM_OPSET_VERSION if\
-            onnx_chainer.MINIMUM_OPSET_VERSION > opset_ids[0] else\
-            opset_ids[0]
+        minimum_version = max(onnx_chainer.MINIMUM_OPSET_VERSION, opset_ids[0])
 
         for opset_version in range(
                 minimum_version,
