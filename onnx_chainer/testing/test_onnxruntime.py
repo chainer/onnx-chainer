@@ -31,7 +31,8 @@ def check_output(model, x, fn, out_key='prob', opset_version=None):
     # Forward computation
     if isinstance(x, (list, tuple)):
         for i in x:
-            assert isinstance(i, (np.ndarray, chainer.Variable))
+            assert isinstance(i,
+                              chainer.get_array_types() + (chainer.Variable,))
         chainer_out = model(*x)
         x_rt = tuple(
             _x.array if isinstance(_x, chainer.Variable) else _x for _x in x)
@@ -39,7 +40,7 @@ def check_output(model, x, fn, out_key='prob', opset_version=None):
         chainer_out = model(**x)
         x_rt = tuple(_x.array if isinstance(_x, chainer.Variable) else _x
                      for _, _x in x.items())
-    elif isinstance(x, np.ndarray):
+    elif isinstance(x, chainer.get_array_types()):
         chainer_out = model(chainer.Variable(x))
         x_rt = x,
     elif isinstance(x, chainer.Variable):
@@ -63,7 +64,12 @@ def check_output(model, x, fn, out_key='prob', opset_version=None):
     else:
         raise ValueError('Unknown output type: {}'.format(type(chainer_out)))
 
-    onnx_model = onnx_chainer.export(model, x, fn, opset_version=opset_version)
+    x_rt = tuple(chainer.cuda.to_cpu(x) for x in x_rt)
+    chainer_out = tuple(chainer.cuda.to_cpu(x) for x in chainer_out)
+
+    onnx_model = onnx_chainer.export(model, x, fn,
+                                     opset_version=opset_version)
+
     sess = rt.InferenceSession(onnx_model.SerializeToString())
     input_names = [i.name for i in sess.get_inputs()]
 
