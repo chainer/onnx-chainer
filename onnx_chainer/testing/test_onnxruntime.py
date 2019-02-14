@@ -82,7 +82,7 @@ def check_output(model, x, fn, out_key='prob', opset_version=None):
         i.name for i in onnx_model.graph.initializer}
     graph_input_names = [i.name for i in onnx_model.graph.input
                          if i.name not in initialized_graph_input_names]
-    assert input_names == list(sorted(graph_input_names))
+    assert list(sorted(input_names)) == list(sorted(graph_input_names))
 
     rt_out = sess.run(
         None, {name: array for name, array in zip(input_names, x_rt)})
