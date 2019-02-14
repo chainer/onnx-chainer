@@ -1,3 +1,4 @@
+import os
 import warnings
 
 import chainer
@@ -19,8 +20,13 @@ except ImportError:
 
 MINIMUM_OPSET_VERSION = 7
 
+TEST_OUT_DIR = 'out'
 
-def check_output(model, x, fn, out_key='prob', opset_version=None):
+
+def check_output(model, x, filename, out_key='prob', opset_version=None):
+    os.makedirs(TEST_OUT_DIR, exist_ok=True)
+    filename = os.path.join(TEST_OUT_DIR, filename)
+
     if opset_version is None:
         opset_version = onnx.defs.onnx_opset_version()
     if not ONNXRUNTIME_AVAILABLE:
@@ -67,7 +73,7 @@ def check_output(model, x, fn, out_key='prob', opset_version=None):
     x_rt = tuple(chainer.cuda.to_cpu(x) for x in x_rt)
     chainer_out = tuple(chainer.cuda.to_cpu(x) for x in chainer_out)
 
-    onnx_model = onnx_chainer.export(model, x, fn,
+    onnx_model = onnx_chainer.export(model, x, filename,
                                      opset_version=opset_version)
 
     sess = rt.InferenceSession(onnx_model.SerializeToString())
