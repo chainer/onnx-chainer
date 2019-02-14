@@ -290,3 +290,13 @@ def convert_Transpose(func, onnx_op_name, opset_version, input_names,
         )
 
     return node,
+
+
+def convert_ExpandDims(func, onnx_op_name, opset_version, input_names,
+                       output_names, parameters):
+    axis = func.axis
+    if axis < 0:
+        axis = len(func.inputs[0].shape) + 1 + axis
+
+    return helper.make_node(
+        onnx_op_name, input_names, output_names, axes=[axis]),
