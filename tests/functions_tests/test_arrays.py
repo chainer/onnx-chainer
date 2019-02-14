@@ -110,6 +110,14 @@ from onnx_chainer.testing import test_onnxruntime
     {'ops': 'get_item', 'input_shape': (2, 2, 3, 3, 3, 4),
      'input_argname': 'x',
      'args': {'slices': (0, None, Ellipsis, 0, None, slice(0, 2), None, 0)}},
+
+    # expand_dims
+    {'ops': 'expand_dims', 'input_shape': (3,),
+     'input_argname': 'x', 'args': {'axis': 0}},
+    {'ops': 'expand_dims', 'input_shape': (3,),
+     'input_argname': 'x', 'args': {'axis': 1}},
+    {'ops': 'expand_dims', 'input_shape': (3,),
+     'input_argname': 'x', 'args': {'axis': -2}},
 )
 class TestArrayOperators(unittest.TestCase):
 
