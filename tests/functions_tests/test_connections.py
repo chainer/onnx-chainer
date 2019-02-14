@@ -7,6 +7,7 @@ import numpy as np
 import onnx
 
 import onnx_chainer
+from onnx_chainer.testing import input_generator
 from onnx_chainer.testing import test_onnxruntime
 
 
@@ -16,7 +17,7 @@ from onnx_chainer.testing import test_onnxruntime
      'args': [None, 3, 3, 1, 1],
      'kwargs': {}},
     {'link': L.Convolution2D, 'in_shape': (1, 3, 5, 5), 'in_type': np.float32,
-     'args': [None, 3, 3, 1, 1, True],
+     'args': [None, 3, 3, 1, 1, 2, False],
      'kwargs': {}},
     {'link': L.Convolution2D, 'in_shape': (1, 3, 5, 5), 'in_type': np.float32,
      'args': [None, 3, 3, 1, 1],
@@ -82,7 +83,8 @@ class TestConnections(unittest.TestCase):
             self.x = np.random.randint(0, self.args[0], size=self.in_shape)
             self.x = self.x.astype(self.in_type)
         else:
-            self.x = np.zeros(self.in_shape, dtype=self.in_type)
+            self.x = input_generator.increasing(
+                *self.in_shape, dtype=self.in_type)
         self.fn = self.link.__name__ + '.onnx'
 
     def test_output(self):

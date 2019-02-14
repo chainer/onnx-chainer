@@ -4,16 +4,11 @@ import chainer
 import chainer.functions as F
 import chainer.links as L
 from chainer import testing
-import numpy as np
 import onnx
 
 import onnx_chainer
+from onnx_chainer.testing import input_generator
 from onnx_chainer.testing import test_onnxruntime
-
-
-def _arange(*shape):
-    r = np.prod(shape)
-    return np.arange(r).reshape(shape).astype(np.float32)
 
 
 @testing.parameterize(
@@ -48,7 +43,7 @@ class TestNormalizations(unittest.TestCase):
 
         ops = getattr(F, self.name)
         self.model = Model(ops, self.args, self.input_argname)
-        self.x = _arange(1, 5, 3, 3)
+        self.x = input_generator.increasing(2, 5, 3, 3)
         self.fn = self.name + '.onnx'
 
     def test_output(self):
@@ -79,7 +74,7 @@ class TestBatchNormalization(unittest.TestCase):
                 return self.bn(x)
 
         self.model = Model(**self.kwargs)
-        self.x = _arange(1, 5)
+        self.x = input_generator.increasing(2, 5)
         self.fn = 'BatchNormalization.onnx'
 
     def test_output(self):
