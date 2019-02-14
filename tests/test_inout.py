@@ -1,9 +1,9 @@
 import unittest
 
-import numpy as np
 import chainer
 import chainer.functions as F
 import chainer.links as L
+import numpy as np
 
 from onnx_chainer.testing import input_generator
 from onnx_chainer.testing import test_onnxruntime
