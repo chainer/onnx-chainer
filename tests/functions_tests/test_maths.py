@@ -20,7 +20,7 @@ from onnx_chainer.testing import test_onnxruntime
     {'info': 'Sum', 'ops': 'chainer.functions.sum(a)'},
     {'info': 'Sum', 'ops': 'chainer.functions.sum(a, axis=1)'},
     {'info': 'Sum', 'ops': 'chainer.functions.sum(a, keepdims=True)'},
-    {'info': 'AddConst', 'ops': 'a + 1'},
+    {'info': 'AddConstant', 'ops': 'a + 1'},
     {'info': 'Max', 'ops': 'chainer.functions.max(a)'},
     {'info': 'Max', 'ops': 'chainer.functions.max(a, axis=0)'},
     {'info': 'Max', 'ops': 'chainer.functions.max(a, keepdims=True)'},
@@ -36,6 +36,8 @@ from onnx_chainer.testing import test_onnxruntime
     {'info': 'LogSumExp', 'ops': 'chainer.functions.logsumexp(a)'},
     {'info': 'LogSumExp', 'ops': 'chainer.functions.logsumexp(a, axis=0)'},
     {'info': 'Square', 'ops': 'chainer.functions.square(a)'},
+    {'info': 'BroadcastTo',
+     'ops': 'chainer.functions.broadcast_to(a, (2,2,3))'},
 )
 class TestUnaryMathOperators(unittest.TestCase):
 
@@ -56,8 +58,11 @@ class TestUnaryMathOperators(unittest.TestCase):
         self.fn = self.info + '.onnx'
 
     def test_output(self):
+        opset_ids = onnx_chainer.mapping.operators[self.info][1]
+        minimum_version = max(onnx_chainer.MINIMUM_OPSET_VERSION, opset_ids[0])
+
         for opset_version in range(
-                onnx_chainer.MINIMUM_OPSET_VERSION,
+                minimum_version,
                 onnx.defs.onnx_opset_version() + 1):
             test_onnxruntime.check_output(
                 self.model, self.a, self.fn, opset_version=opset_version)

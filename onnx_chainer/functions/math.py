@@ -278,3 +278,11 @@ def convert_Square(func, onnx_op_name, opset_version, input_names,
     elif opset_version == 6 or opset_version == 7:
         return helper.make_node(
             onnx_op_name, [input_names[0], input_names[0]], output_names),
+
+
+def convert_BroadcastTo(func, onnx_op_name, opset_version, input_names,
+                        output_names, parameters):
+    shape = np.array(func._shape)
+    parameters.append(shape)
+    input_names.append(str(id(shape)))
+    return helper.make_node(onnx_op_name, input_names, output_names),
