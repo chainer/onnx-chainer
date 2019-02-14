@@ -24,10 +24,7 @@ TEST_OUT_DIR = 'out'
 
 
 def check_output(model, x, filename, out_key='prob', opset_version=None):
-    try:
-        os.makedirs(TEST_OUT_DIR)
-    except FileExistsError:
-        pass
+    os.makedirs(TEST_OUT_DIR, exist_ok=True)
     filename = os.path.join(TEST_OUT_DIR, filename)
 
     if opset_version is None:
