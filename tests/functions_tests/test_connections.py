@@ -16,7 +16,7 @@ from onnx_chainer.testing import test_onnxruntime
      'args': [None, 3, 3, 1, 1],
      'kwargs': {}},
     {'link': L.Convolution2D, 'in_shape': (1, 3, 5, 5), 'in_type': np.float32,
-     'args': [None, 3, 3, 1, 1, True],
+     'args': [None, 3, 3, 1, 1, 2, False],
      'kwargs': {}},
     {'link': L.Convolution2D, 'in_shape': (1, 3, 5, 5), 'in_type': np.float32,
      'args': [None, 3, 3, 1, 1],
