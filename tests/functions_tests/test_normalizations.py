@@ -62,6 +62,7 @@ class TestNormalizations(unittest.TestCase):
 @testing.parameterize(
     {'kwargs': {}},
     {'kwargs': {'use_beta': False}},
+    {'kwargs': {'use_gamma': False}},
 )
 class TestBatchNormalization(unittest.TestCase):
 
