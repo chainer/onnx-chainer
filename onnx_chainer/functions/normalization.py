@@ -1,6 +1,7 @@
 import sys
 
 import chainer
+import numpy as np
 from onnx import helper
 
 
@@ -58,6 +59,17 @@ def convert_FixedBatchNormalization(func, onnx_op_name, opset_version,
     var_arr_param = chainer.Parameter(var_arr)
     parameters.append(var_arr_param)
     input_names[4] = str(id(var_arr_param))
+
+    # if `use_beta=False`, passed None value to the functions
+    if func.inputs[2].get_variable_or_none() is None:
+        beta = chainer.Parameter(np.zeros_like(mean_arr, dtype=mean_arr.dtype))
+        parameters.append(beta)
+        input_names[2] = str(id(beta))
+    # `use_gamma=False` is same
+    if func.inputs[1].get_variable_or_none() is None:
+        gamma = chainer.Parameter(np.ones_like(mean_arr, dtype=mean_arr.dtype))
+        parameters.append(gamma)
+        input_names[1] = str(id(gamma))
 
     if opset_version == 1:
         return helper.make_node(
