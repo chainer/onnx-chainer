@@ -48,7 +48,7 @@ class TestUnaryMathOperators(unittest.TestCase):
 
             def __call__(self, a):
                 if not isinstance(a, chainer.Variable):
-                    a = chainer.Varaible(a)
+                    a = chainer.Variable(a)
                 return eval(self.ops)
 
         self.model = Model(self.ops)
@@ -83,9 +83,9 @@ class TestBinaryMathOperators(unittest.TestCase):
 
             def __call__(self, a, b):
                 if not isinstance(a, chainer.Variable):
-                    a = chainer.Varaible(a)
+                    a = chainer.Variable(a)
                 if not isinstance(b, chainer.Variable):
-                    b = chainer.Varaible(b)
+                    b = chainer.Variable(b)
                 return eval(self.ops)
 
         self.model = Model(self.ops)
@@ -117,11 +117,11 @@ class TestTernaryMathOperators(unittest.TestCase):
 
             def __call__(self, a, b, c):
                 if not isinstance(a, chainer.Variable):
-                    a = chainer.Varaible(a)
+                    a = chainer.Variable(a)
                 if not isinstance(b, chainer.Variable):
-                    b = chainer.Varaible(b)
+                    b = chainer.Variable(b)
                 if not isinstance(c, chainer.Variable):
-                    c = chainer.Varaible(c)
+                    c = chainer.Variable(c)
                 return eval(self.ops)
 
         self.model = Model(self.ops)
