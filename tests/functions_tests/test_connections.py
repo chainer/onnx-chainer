@@ -7,6 +7,7 @@ import numpy as np
 import onnx
 
 import onnx_chainer
+from onnx_chainer.testing import input_generator
 from onnx_chainer.testing import test_onnxruntime
 
 
@@ -82,7 +83,8 @@ class TestConnections(unittest.TestCase):
             self.x = np.random.randint(0, self.args[0], size=self.in_shape)
             self.x = self.x.astype(self.in_type)
         else:
-            self.x = np.zeros(self.in_shape, dtype=self.in_type)
+            self.x = input_generator.increasing(
+                *self.in_shape, dtype=self.in_type)
         self.fn = self.link.__name__ + '.onnx'
 
     def test_output(self):

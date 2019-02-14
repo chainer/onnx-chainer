@@ -4,10 +4,10 @@ import chainer
 import chainer.functions as F
 import chainer.links as L
 from chainer import testing
-import numpy as np
 import onnx
 
 import onnx_chainer
+from onnx_chainer.testing import input_generator
 from onnx_chainer.testing import test_onnxruntime
 
 
@@ -38,7 +38,7 @@ class TestActivations(unittest.TestCase):
 
         ops = getattr(F, self.name)
         self.model = Model(ops)
-        self.x = np.random.randn(1, 5).astype(np.float32)
+        self.x = input_generator.increasing(2, 5)
         self.fn = self.name + '.onnx'
 
     def test_output(self):
@@ -64,7 +64,7 @@ class TestPReLU(unittest.TestCase):
                 return self.prelu(x)
 
         self.model = Model()
-        self.x = np.zeros((1, 5), dtype=np.float32)
+        self.x = input_generator.increasing(2, 5)
         self.fn = 'PReLU.onnx'
 
     def test_output(self):
