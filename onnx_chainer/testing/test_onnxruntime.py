@@ -88,4 +88,4 @@ def check_output(model, x, fn, out_key='prob', opset_version=None):
         None, {name: array for name, array in zip(input_names, x_rt)})
 
     for cy, my in zip(chainer_out, rt_out):
-        np.testing.assert_almost_equal(cy, my, decimal=5)
+        np.testing.assert_allclose(cy, my, rtol=1e-5, atol=1e-5)

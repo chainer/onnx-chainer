@@ -3,10 +3,10 @@ import unittest
 import chainer
 import chainer.functions as F
 from chainer import testing
-import numpy as np
 import onnx
 
 import onnx_chainer
+from onnx_chainer.testing import input_generator
 from onnx_chainer.testing import test_onnxruntime
 
 
@@ -31,7 +31,7 @@ class TestPoolings(unittest.TestCase):
     def setUp(self):
         ops = getattr(F, self.name)
         self.model = Model(ops, self.args, self.cover_all)
-        self.x = np.ones(self.in_shape, dtype=np.float32)
+        self.x = input_generator.increasing(*self.in_shape)
         self.fn = self.name + '.onnx'
 
     def test_output(self):
@@ -53,7 +53,7 @@ class TestPoolingsWithUnsupportedSettings(unittest.TestCase):
     def setUp(self):
         ops = getattr(F, self.name)
         self.model = Model(ops, self.args, self.cover_all)
-        self.x = np.ones(self.in_shape, dtype=np.float32)
+        self.x = input_generator.increasing(*self.in_shape)
         self.fn = self.name + '.onnx'
 
     def test_output(self):

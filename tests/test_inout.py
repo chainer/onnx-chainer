@@ -1,10 +1,11 @@
 import unittest
 
+import numpy as np
 import chainer
 import chainer.functions as F
 import chainer.links as L
-import numpy as np
 
+from onnx_chainer.testing import input_generator
 from onnx_chainer.testing import test_onnxruntime
 
 
@@ -23,9 +24,9 @@ class TestMultipleInputs(unittest.TestCase):
                 return F.relu(x) + self.prelu(y) * z
 
         self.model = Model()
-        self.ins = (np.zeros((1, 5), dtype=np.float32),
-                    np.zeros((1, 5), dtype=np.float32),
-                    np.zeros((1, 5), dtype=np.float32))
+        self.ins = (input_generator.increasing(1, 5),
+                    input_generator.increasing(1, 5),
+                    input_generator.increasing(1, 5))
         self.fn = 'MultiInputs.onnx'
 
     def test_arrays(self):
