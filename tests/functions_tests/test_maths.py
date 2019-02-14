@@ -2,10 +2,10 @@ import unittest
 
 import chainer
 from chainer import testing
-import numpy as np
 import onnx
 
 import onnx_chainer
+from onnx_chainer.testing import input_generator
 from onnx_chainer.testing import test_onnxruntime
 
 
@@ -54,7 +54,7 @@ class TestUnaryMathOperators(unittest.TestCase):
                 return eval(self.ops)
 
         self.model = Model(self.ops)
-        self.a = chainer.Variable(np.ones((2, 3), dtype=np.float32))
+        self.a = chainer.Variable(input_generator.positive_increasing(2, 3))
         self.fn = self.info + '.onnx'
 
     def test_output(self):
@@ -94,8 +94,8 @@ class TestBinaryMathOperators(unittest.TestCase):
                 return eval(self.ops)
 
         self.model = Model(self.ops)
-        a = chainer.Variable(np.ones((2, 3), dtype=np.float32))
-        b = chainer.Variable(np.ones((2, 3), dtype=np.float32) * 2)
+        a = chainer.Variable(input_generator.increasing(2, 3))
+        b = chainer.Variable(input_generator.nonzero_increasing(2, 3) * 0.3)
         self.x = (a, b)
         self.fn = self.info + '.onnx'
 
@@ -130,9 +130,9 @@ class TestTernaryMathOperators(unittest.TestCase):
                 return eval(self.ops)
 
         self.model = Model(self.ops)
-        a = chainer.Variable(np.ones((2, 3), dtype=np.float32))
-        b = chainer.Variable(np.ones((2, 3), dtype=np.float32) * 2)
-        c = chainer.Variable(np.ones((2, 3), dtype=np.float32) * 3)
+        a = chainer.Variable(input_generator.increasing(2, 3))
+        b = chainer.Variable(input_generator.increasing(2, 3) * 0.3)
+        c = chainer.Variable(input_generator.increasing(2, 3) * 0.7)
         self.x = (a, b, c)
         self.fn = self.info + '.onnx'
 

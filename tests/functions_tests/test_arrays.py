@@ -7,6 +7,7 @@ import numpy as np
 import onnx
 
 import onnx_chainer
+from onnx_chainer.testing import input_generator
 from onnx_chainer.testing import test_onnxruntime
 
 
@@ -128,7 +129,7 @@ class TestArrayOperators(unittest.TestCase):
                 return self.ops(**self.args)
 
         self.model = Model(self.ops, self.args, self.input_argname)
-        self.x = np.zeros(self.input_shape, dtype=np.float32)
+        self.x = input_generator.increasing(*self.input_shape)
         self.fn = self.ops + '.onnx'
 
     def test_output(self):
@@ -155,8 +156,8 @@ class TestConcat(unittest.TestCase):
                 return F.concat((x1, x2))
 
         self.model = Model()
-        self.x1 = np.zeros((1, 5), dtype=np.float32)
-        self.x2 = np.ones((1, 5), dtype=np.float32)
+        self.x1 = input_generator.increasing(2, 5)
+        self.x2 = input_generator.increasing(2, 4)
         self.fn = 'Concat.onnx'
 
     def test_output(self):
