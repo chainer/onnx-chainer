@@ -1,11 +1,12 @@
 import unittest
 
-import numpy as np
-import onnx
-
 import chainer
 import chainer.functions as F
 from chainer import testing
+import numpy as np
+import onnx
+
+import onnx_chainer
 from onnx_chainer.testing import test_onnxruntime
 
 
@@ -82,6 +83,33 @@ from onnx_chainer.testing import test_onnxruntime
     {'ops': 'copy', 'input_shape': (1, 5),
      'input_argname': 'x',
      'args': {'dst': -1}},
+
+    # get_item
+    {'ops': 'get_item', 'input_shape': (2, 2, 3),
+     'input_argname': 'x',
+     'args': {'slices': slice(0, 2)}},
+    {'ops': 'get_item', 'input_shape': (2, 2, 3),
+     'input_argname': 'x',
+     'args': {'slices': (slice(1))}},
+    {'ops': 'get_item', 'input_shape': (2, 2, 3),
+     'input_argname': 'x',
+     'args': {'slices': (slice(1, None))}},
+    {'ops': 'get_item', 'input_shape': (2, 2, 3),
+     'input_argname': 'x',
+     'args': {'slices': 0}},
+    {'ops': 'get_item', 'input_shape': (2, 2, 3),
+     'input_argname': 'x',
+     'args': {'slices': np.array(0)}},
+    {'ops': 'get_item', 'input_shape': (2, 2, 3),
+     'input_argname': 'x',
+     'args': {'slices': (None, slice(0, 2))}},
+    {'ops': 'get_item', 'input_shape': (2, 2, 3),
+     'input_argname': 'x',
+     'args': {'slices': (Ellipsis, slice(0, 2))}},
+    # get_item, combine newaxis, slice, single index, ellipsis
+    {'ops': 'get_item', 'input_shape': (2, 2, 3, 3, 3, 4),
+     'input_argname': 'x',
+     'args': {'slices': (0, None, Ellipsis, 0, None, slice(0, 2), None, 0)}},
 )
 class TestArrayOperators(unittest.TestCase):
 
@@ -105,7 +133,7 @@ class TestArrayOperators(unittest.TestCase):
 
     def test_output(self):
         for opset_version in range(
-                test_onnxruntime.MINIMUM_OPSET_VERSION,
+                onnx_chainer.MINIMUM_OPSET_VERSION,
                 onnx.defs.onnx_opset_version() + 1):
             test_onnxruntime.check_output(
                 self.model, self.x, self.fn, opset_version=opset_version)
@@ -133,7 +161,7 @@ class TestConcat(unittest.TestCase):
 
     def test_output(self):
         for opset_version in range(
-                test_onnxruntime.MINIMUM_OPSET_VERSION,
+                onnx_chainer.MINIMUM_OPSET_VERSION,
                 onnx.defs.onnx_opset_version() + 1):
             test_onnxruntime.check_output(
                 self.model, (self.x1, self.x2), self.fn,

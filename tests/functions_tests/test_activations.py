@@ -1,12 +1,13 @@
 import unittest
 
-import numpy as np
-import onnx
-
 import chainer
 import chainer.functions as F
 import chainer.links as L
 from chainer import testing
+import numpy as np
+import onnx
+
+import onnx_chainer
 from onnx_chainer.testing import test_onnxruntime
 
 
@@ -42,7 +43,7 @@ class TestActivations(unittest.TestCase):
 
     def test_output(self):
         for opset_version in range(
-                test_onnxruntime.MINIMUM_OPSET_VERSION,
+                onnx_chainer.MINIMUM_OPSET_VERSION,
                 onnx.defs.onnx_opset_version() + 1):
             test_onnxruntime.check_output(
                 self.model, self.x, self.fn, opset_version=opset_version)
@@ -68,7 +69,7 @@ class TestPReLU(unittest.TestCase):
 
     def test_output(self):
         for opset_version in range(
-                test_onnxruntime.MINIMUM_OPSET_VERSION,
+                onnx_chainer.MINIMUM_OPSET_VERSION,
                 onnx.defs.onnx_opset_version() + 1):
             test_onnxruntime.check_output(
                 self.model, self.x, self.fn, opset_version=opset_version)

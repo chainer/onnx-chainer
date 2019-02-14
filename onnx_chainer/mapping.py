@@ -37,6 +37,7 @@ operators = {
     'Concat': ('Concat', (1, 4)),
     'Copy': ('Identity', (1,)),
     'Depth2Space': ('DepthToSpace', (1,)),
+    'GetItem': ('Slice', (1,)),
     'Pad': ('Pad', (1, 2)),
     'Reshape': ('Reshape', (1, 5)),
     'Space2Depth': ('SpaceToDepth', (1,)),
@@ -57,6 +58,7 @@ operators = {
     'Add': ('Add', (1, 6, 7)),
     'AddConstant': ('Add', (1, 6, 7)),
     'Absolute': ('Abs', (1, 6)),
+    'BroadcastTo': ('Expand', (8,)),
     'Div': ('Div', (1, 6, 7)),
     'Mul': ('Mul', (1, 6, 7)),
     'MulConstant': ('Mul', (1, 6, 7)),
@@ -77,6 +79,7 @@ operators = {
     'Min': ('ReduceMin', (1,)),
     'Prod': ('ReduceProd', (1,)),
     'Sum': ('ReduceSum', (1,)),
+    'Square': ('Mul', (1, 6, 7)),
 
     # Noise
     'Dropout': ('Dropout', (1, 6, 7)),

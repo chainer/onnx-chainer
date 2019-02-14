@@ -5,6 +5,7 @@ chainer_version=$2
 onnx_runtime_version=0.1.3
 tag_name=python${python_version}-chainer${chainer_version}
 docker run --rm \
+-e CHAINER_TEST_GPU_LIMIT=0 \
 -v $PWD:/root/onnx-chainer \
 -v $PWD/.chainer:/root/.chainer \
 -ti mitmul/onnx-chainer:${tag_name} \

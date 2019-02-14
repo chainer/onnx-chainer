@@ -13,14 +13,26 @@ env:
   - PYTHON_VERSION=3.5 CHAINER_VERSION=5.0.0
   - PYTHON_VERSION=3.6 CHAINER_VERSION=5.0.0
   - PYTHON_VERSION=3.5 CHAINER_VERSION=6.0.0a1
-  - PYTHON_VERSION=3.6 CHAINER_VERSION=6.0.0a1
+  - PYTHON_VERSION=3.6 CHAINER_VERSION=6.0.0a1 ONNX_CHAINER_DEPLOY_JOB=1
 
 notifications:
   email: false
 
 before_install:
+  - pip install autopep8 flake8
   - docker pull mitmul/onnx-chainer:python${PYTHON_VERSION}-chainer${CHAINER_VERSION}
 
 script:
+  - flake8
+  - autopep8 -r . --dif --exit-code
+  - pip install -e .  # test plain install before test on docker
   - bash docker/run_tests.sh ${PYTHON_VERSION} ${CHAINER_VERSION}
 
+deploy:
+  - provider: pypi
+    user: $PYPI_MAINTAINER_NAME
+    password: $PYPI_MAINTAINER_PASS
+    skip_cleanup: true
+    on:
+      tags: true
+      condition: $ONNX_CHAINER_DEPLOY_JOB == 1

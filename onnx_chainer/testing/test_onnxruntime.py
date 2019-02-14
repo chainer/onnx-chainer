@@ -1,9 +1,10 @@
+import os
 import warnings
 
+import chainer
 import numpy as np
 import onnx
 
-import chainer
 import onnx_chainer
 
 try:
@@ -19,8 +20,13 @@ except ImportError:
 
 MINIMUM_OPSET_VERSION = 7
 
+TEST_OUT_DIR = 'out'
 
-def check_output(model, x, fn, out_key='prob', opset_version=None):
+
+def check_output(model, x, filename, out_key='prob', opset_version=None):
+    os.makedirs(TEST_OUT_DIR, exist_ok=True)
+    filename = os.path.join(TEST_OUT_DIR, filename)
+
     if opset_version is None:
         opset_version = onnx.defs.onnx_opset_version()
     if not ONNXRUNTIME_AVAILABLE:
@@ -31,21 +37,27 @@ def check_output(model, x, fn, out_key='prob', opset_version=None):
     # Forward computation
     if isinstance(x, (list, tuple)):
         for i in x:
-            assert isinstance(i, (np.ndarray, chainer.Variable))
+            assert isinstance(i,
+                              chainer.get_array_types() + (chainer.Variable,))
         chainer_out = model(*x)
-        x = tuple(
+        x_rt = tuple(
             _x.array if isinstance(_x, chainer.Variable) else _x for _x in x)
-    elif isinstance(x, np.ndarray):
+    elif isinstance(x, dict):
+        chainer_out = model(**x)
+        x_rt = tuple(_x.array if isinstance(_x, chainer.Variable) else _x
+                     for _, _x in x.items())
+    elif isinstance(x, chainer.get_array_types()):
         chainer_out = model(chainer.Variable(x))
-        x = (x,)
+        x_rt = x,
     elif isinstance(x, chainer.Variable):
         chainer_out = model(x)
-        x = (x.array,)
+        x_rt = x.array,
     else:
         raise ValueError(
-            'The \'x\' argument should be a list or tuple of numpy.ndarray or '
-            'chainer.Variable, or simply a numpy.ndarray or a chainer.Variable'
-            ' itself. But a {} object was given.'.format(type(x)))
+            'The \'x\' argument should be a list, tuple or dict of '
+            'numpy.ndarray or chainer.Variable, or simply a numpy.ndarray or a'
+            ' chainer.Variable itself. But a {} object was given.'.format(
+                type(x)))
 
     if isinstance(chainer_out, (list, tuple)):
         chainer_out = (y.array for y in chainer_out)
@@ -58,11 +70,28 @@ def check_output(model, x, fn, out_key='prob', opset_version=None):
     else:
         raise ValueError('Unknown output type: {}'.format(type(chainer_out)))
 
-    onnx_model = onnx_chainer.export(model, x, fn, opset_version=opset_version)
+    x_rt = tuple(chainer.cuda.to_cpu(x) for x in x_rt)
+    chainer_out = tuple(chainer.cuda.to_cpu(x) for x in chainer_out)
+
+    onnx_model = onnx_chainer.export(model, x, filename,
+                                     opset_version=opset_version)
+
     sess = rt.InferenceSession(onnx_model.SerializeToString())
     input_names = [i.name for i in sess.get_inputs()]
+
+    # To detect unexpected inputs created by exporter, check input names
+    # TODO(disktnk): `input_names` got from onnxruntime session includes only
+    #                network inputs, does not include internal inputs such as
+    #                weight attribute etc. so that need to collect network
+    #                inputs from `onnx_model`.
+    initialized_graph_input_names = {
+        i.name for i in onnx_model.graph.initializer}
+    graph_input_names = [i.name for i in onnx_model.graph.input
+                         if i.name not in initialized_graph_input_names]
+    assert input_names == list(sorted(graph_input_names))
+
     rt_out = sess.run(
-        None, {name: array for name, array in zip(input_names, x)})
+        None, {name: array for name, array in zip(input_names, x_rt)})
 
     for cy, my in zip(chainer_out, rt_out):
         np.testing.assert_almost_equal(cy, my, decimal=5)

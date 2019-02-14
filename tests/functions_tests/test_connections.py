@@ -1,11 +1,12 @@
 import unittest
 
-import numpy as np
-import onnx
-
 import chainer
 import chainer.links as L
 from chainer import testing
+import numpy as np
+import onnx
+
+import onnx_chainer
 from onnx_chainer.testing import test_onnxruntime
 
 
@@ -15,7 +16,7 @@ from onnx_chainer.testing import test_onnxruntime
      'args': [None, 3, 3, 1, 1],
      'kwargs': {}},
     {'link': L.Convolution2D, 'in_shape': (1, 3, 5, 5), 'in_type': np.float32,
-     'args': [None, 3, 3, 1, 1, True],
+     'args': [None, 3, 3, 1, 1, 2, False],
      'kwargs': {}},
     {'link': L.Convolution2D, 'in_shape': (1, 3, 5, 5), 'in_type': np.float32,
      'args': [None, 3, 3, 1, 1],
@@ -86,7 +87,7 @@ class TestConnections(unittest.TestCase):
 
     def test_output(self):
         for opset_version in range(
-                test_onnxruntime.MINIMUM_OPSET_VERSION,
+                onnx_chainer.MINIMUM_OPSET_VERSION,
                 onnx.defs.onnx_opset_version() + 1):
             test_onnxruntime.check_output(
                 self.model, self.x, self.fn, opset_version=opset_version)

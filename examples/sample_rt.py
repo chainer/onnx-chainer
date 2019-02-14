@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import numpy as np
-import onnxruntime as rt
-
 import chainer
 import chainer.links as L
-import onnx_chainer
+import numpy as np
+
 from chainercv import transforms
+import onnx_chainer
+import onnxruntime as rt
 from PIL import Image
 
 model = L.VGG16Layers()
