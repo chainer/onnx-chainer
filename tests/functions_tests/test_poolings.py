@@ -20,11 +20,11 @@ from onnx_chainer.testing import test_onnxruntime
     {'name': 'max_pooling_2d', 'ops': F.max_pooling_2d,
      'in_shape': (1, 3, 6, 6), 'args': [2, 1, 1], 'cover_all': False},
     {'name': 'max_pooling_2d', 'ops': F.max_pooling_2d,
-     'in_shape': (1, 3, 6, 5), 'args': [3, 1, 1], 'cover_all': True},
+     'in_shape': (1, 3, 6, 5), 'args': [3, (2, 1), 1], 'cover_all': True},
     {'name': 'max_pooling_nd', 'ops': F.max_pooling_nd,
      'in_shape': (1, 3, 6, 6, 6), 'args': [2, 1, 1], 'cover_all': False},
     {'name': 'max_pooling_nd', 'ops': F.max_pooling_nd,
-     'in_shape': (1, 3, 6, 5, 4), 'args': [3, 1, 1], 'cover_all': True},
+     'in_shape': (1, 3, 6, 5, 4), 'args': [3, 2, 1], 'cover_all': True},
 )
 class TestPoolings(unittest.TestCase):
 
