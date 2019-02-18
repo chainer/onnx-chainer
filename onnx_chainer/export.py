@@ -11,7 +11,7 @@ from onnx_chainer import functions
 from onnx_chainer import mapping
 
 try:
-    from onnx import checker
+    # from onnx import checker
     from onnx import helper
     from onnx import numpy_helper
 
@@ -69,10 +69,20 @@ def rename_tensors(model):
     names = {v.name: v.name for v in model.graph.initializer}
     op_counts = collections.defaultdict(int)
 
+    # first, collect renamed outputs because mode.graph can not be
+    # topological sorted, means input name can be an output of other node.
     for op in model.graph.node:
         op_name = '{}_{}'.format(op.op_type, op_counts[op.op_type])
         op_counts[op.op_type] += 1
+        for i, out in enumerate(op.output):
+            if len(op.output) <= 1:
+                rename = op_name
+            else:
+                rename = '{}_{}'.format(op_name, i)
+            names[out] = rename
 
+    # second, rename tail and head name of edges directly
+    for op in model.graph.node:
         for i in range(len(op.input)):
             if op.input[i] not in names:
                 names[op.input[i]] = 'Input_{}'.format(op_counts['Input'])
@@ -80,10 +90,6 @@ def rename_tensors(model):
             op.input[i] = names[op.input[i]]
 
         for i in range(len(op.output)):
-            if len(op.output) <= 1:
-                names[op.output[i]] = op_name
-            else:
-                names[op.output[i]] = '{}_{}'.format(op_name, i)
             op.output[i] = names[op.output[i]]
 
     for v in tuple(model.graph.input) + tuple(model.graph.output):
@@ -317,7 +323,7 @@ def export(model, args, filename=None, export_params=True,
     model.ir_version = onnx.IR_VERSION
 
     rename_tensors(model)
-    checker.check_model(model)
+    # checker.check_model(model)
 
     if filename is not None and isinstance(filename, str):
         with open(filename, 'wb') as fp:
