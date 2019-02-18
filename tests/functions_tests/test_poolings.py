@@ -3,6 +3,7 @@ import unittest
 import chainer
 import chainer.functions as F
 from chainer import testing
+import numpy as np
 import onnx
 
 import onnx_chainer
@@ -83,18 +84,21 @@ class Model(chainer.Chain):
 class TestROIPooling2D(unittest.TestCase):
 
     def setUp(self):
-        # these parameters are referenced from onnxruntime test
-        in_shape = (1, 3, 6, 6)
-        self.x = np.arange(np.prod(in_shape), dtype=np.float32).reshape(
-            in_shape) * 0.1
+        # these parameters are referenced from chainer test
+        in_shape = (3, 3, 12, 8)
+        self.x = input_generator.positive_increasing(*in_shape)
+        # in chainer test, x is shuffled and normalize-like conversion,
+        # in this test, those operations is skipped.
+        # if x includes negative value, not match with onnxruntime output.
         self.rois = np.array([
-            [0, 1, 1, 2, 3],
-            [0, 1, 1, 2, 3],
-            [0, 1, 1, 2, 3]], dtype=np.float32)
+            [0, 1, 1, 6, 6],
+            [2, 6, 2, 7, 11],
+            [1, 3, 1, 5, 10],
+            [0, 3, 3, 3, 3]], dtype=np.float32)
         kwargs = {
             'outh': 3,
-            'outw': 5,
-            'spatial_scale': 1.0
+            'outw': 7,
+            'spatial_scale': 0.6
         }
 
         class Model(chainer.Chain):
