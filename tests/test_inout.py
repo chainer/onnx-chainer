@@ -3,6 +3,7 @@ import unittest
 import chainer
 import chainer.functions as F
 import chainer.links as L
+from chainer import testing
 import numpy as np
 
 from onnx_chainer.testing import input_generator
@@ -68,3 +69,34 @@ class TestImplicitInput(unittest.TestCase):
     def test_implicit_input(self):
         x = chainer.Variable(np.array(1, dtype=np.float32))
         test_onnxruntime.check_output(self.model, x, self.fn)
+
+
+class TestMultipleOutput(unittest.TestCase):
+
+    def get_model(self, use_bn=False):
+        class Model(chainer.Chain):
+
+            def __init__(self, use_bn=False):
+                super(Model, self).__init__()
+
+                self._use_bn = use_bn
+                with self.init_scope():
+                    self.conv = L.Convolution2D(None, 32, ksize=3, stride=1)
+                    if self._use_bn:
+                        self.bn = L.BatchNormalization(32, use_beta=False)
+
+            def __call__(self, x):
+                h = self.conv(x)
+                if self._use_bn:
+                    h = self.bn(h)
+                return {
+                    'out1': F.sigmoid(h),
+                    'out2': F.sigmoid(h)
+                }
+
+        return Model(use_bn=use_bn)
+
+    def test_multiple_outputs(self):
+        model = self.get_model(use_bn=True)
+        x = np.zeros((1, 3, 32, 32), dtype=np.float32)
+        test_onnxruntime.check_output(model, x, 'multiple_outputs.onnx', 'out1')
