@@ -24,6 +24,8 @@ TEST_OUT_DIR = 'out'
 
 
 def check_output(model, x, filename, out_key='prob', opset_version=None):
+    model.xp.random.seed(42)
+
     os.makedirs(TEST_OUT_DIR, exist_ok=True)
     filename = os.path.join(TEST_OUT_DIR, filename)
 
