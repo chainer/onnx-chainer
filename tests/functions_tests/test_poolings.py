@@ -88,9 +88,11 @@ class TestROIPooling2D(unittest.TestCase):
         # these parameters are referenced from chainer test
         in_shape = (3, 3, 12, 8)
         self.x = input_generator.positive_increasing(*in_shape)
-        # in chainer test, x is shuffled and normalize-like conversion,
-        # in this test, those operations is skipped.
-        # if x includes negative value, not match with onnxruntime output.
+        # In chainer test, x is shuffled and normalize-like conversion,
+        # In this test, those operations are skipped.
+        # If x includes negative value, not match with onnxruntime output.
+        # You can reproduce this issue by changing `positive_increasing` to
+        # `increase`
         self.rois = np.array([
             [0, 1, 1, 6, 6],
             [2, 6, 2, 7, 11],
