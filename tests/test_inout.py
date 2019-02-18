@@ -3,7 +3,6 @@ import unittest
 import chainer
 import chainer.functions as F
 import chainer.links as L
-from chainer import testing
 import numpy as np
 
 from onnx_chainer.testing import input_generator
@@ -83,7 +82,7 @@ class TestMultipleOutput(unittest.TestCase):
                 with self.init_scope():
                     self.conv = L.Convolution2D(None, 32, ksize=3, stride=1)
                     if self._use_bn:
-                        self.bn = L.BatchNormalization(32, use_beta=False)
+                        self.bn = L.BatchNormalization(32)
 
             def __call__(self, x):
                 h = self.conv(x)
@@ -99,4 +98,6 @@ class TestMultipleOutput(unittest.TestCase):
     def test_multiple_outputs(self):
         model = self.get_model(use_bn=True)
         x = np.zeros((1, 3, 32, 32), dtype=np.float32)
-        test_onnxruntime.check_output(model, x, 'multiple_outputs.onnx', 'out1')
+        # TODO(disktnk) fix check_output to accept several output keys.
+        test_onnxruntime.check_output(
+            model, x, 'multiple_outputs.onnx', 'out1')
