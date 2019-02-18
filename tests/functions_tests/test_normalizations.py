@@ -55,9 +55,9 @@ class TestNormalizations(unittest.TestCase):
 
 
 @testing.parameterize(
-    {'opset_version': 1},
-    {'opset_version': 6},
-    {'opset_version': 7},
+    {'kwargs': {}},
+    {'kwargs': {'use_beta': False}},
+    {'kwargs': {'use_gamma': False}},
 )
 class TestBatchNormalization(unittest.TestCase):
 
@@ -65,15 +65,15 @@ class TestBatchNormalization(unittest.TestCase):
 
         class Model(chainer.Chain):
 
-            def __init__(self):
+            def __init__(self, **kwargs):
                 super(Model, self).__init__()
                 with self.init_scope():
-                    self.bn = L.BatchNormalization(5)
+                    self.bn = L.BatchNormalization(5, **kwargs)
 
             def __call__(self, x):
                 return self.bn(x)
 
-        self.model = Model()
+        self.model = Model(**self.kwargs)
         self.x = input_generator.increasing(2, 5)
         self.fn = 'BatchNormalization.onnx'
 
