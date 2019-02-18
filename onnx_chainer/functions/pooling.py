@@ -1,3 +1,5 @@
+import warnings
+
 from onnx import helper
 
 
@@ -129,3 +131,17 @@ def convert_MaxPoolingND(func, onnx_op_name, opset_version, input_names,
             strides=func.stride,
             storage_order=0,  # row major
         ),
+
+
+def convert_ROIPooling2D(func, onnx_op_name, opset_version, input_names,
+                         output_names, parameters):
+    warnings.warn(
+        'It\'s possible that output does not match with Chainer, please check '
+        'each runtime\'s implementation. For example, when input x has '
+        'negative values, some runtimes set max(output, 0) unlike Chainer.',
+        UserWarning)
+    return helper.make_node(
+        onnx_op_name, input_names, output_names,
+        pooled_shape=[func.outh, func.outw],
+        spatial_scale=func.spatial_scale,
+    ),

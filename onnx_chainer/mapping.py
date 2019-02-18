@@ -90,6 +90,7 @@ operators = {
     'AveragePoolingND': ('AveragePool', (1, 7)),
     'MaxPooling2D': ('MaxPool', (1, 8)),
     'MaxPoolingND': ('MaxPool', (1, 8)),
+    'ROIPooling2D': ('MaxRoiPool', (1,)),
 
     # Normalization
     'BatchNormalization': ('BatchNormalization', (1, 6, 7)),

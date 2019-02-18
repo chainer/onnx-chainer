@@ -1,8 +1,10 @@
 import unittest
+import warnings
 
 import chainer
 import chainer.functions as F
 from chainer import testing
+import numpy as np
 import onnx
 
 import onnx_chainer
@@ -78,3 +80,47 @@ class Model(chainer.Chain):
             return self.ops(*([x] + self.args), cover_all=self.cover_all)
         else:
             return self.ops(*([x] + self.args))
+
+
+class TestROIPooling2D(unittest.TestCase):
+
+    def setUp(self):
+        # these parameters are referenced from chainer test
+        in_shape = (3, 3, 12, 8)
+        self.x = input_generator.positive_increasing(*in_shape)
+        # In chainer test, x is shuffled and normalize-like conversion,
+        # In this test, those operations are skipped.
+        # If x includes negative value, not match with onnxruntime output.
+        # You can reproduce this issue by changing `positive_increasing` to
+        # `increase`
+        self.rois = np.array([
+            [0, 1, 1, 6, 6],
+            [2, 6, 2, 7, 11],
+            [1, 3, 1, 5, 10],
+            [0, 3, 3, 3, 3]], dtype=np.float32)
+        kwargs = {
+            'outh': 3,
+            'outw': 7,
+            'spatial_scale': 0.6
+        }
+
+        class Model(chainer.Chain):
+            def __init__(self, kwargs):
+                super(Model, self).__init__()
+                self.kwargs = kwargs
+
+            def __call__(self, x, rois):
+                return F.roi_pooling_2d(x, rois, **self.kwargs)
+
+        self.model = Model(kwargs)
+        self.fn = 'roi_pooling_2d.onnx'
+
+    def test_output(self):
+        for opset_version in range(
+                test_onnxruntime.MINIMUM_OPSET_VERSION,
+                onnx.defs.onnx_opset_version() + 1):
+            with warnings.catch_warnings(record=True) as w:
+                test_onnxruntime.check_output(
+                    self.model, [self.x, self.rois], self.fn,
+                    opset_version=opset_version)
+                assert len(w) == 1
