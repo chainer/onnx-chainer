@@ -1,4 +1,5 @@
 import unittest
+import warnings
 
 import chainer
 import chainer.functions as F
@@ -116,6 +117,8 @@ class TestROIPooling2D(unittest.TestCase):
         for opset_version in range(
                 test_onnxruntime.MINIMUM_OPSET_VERSION,
                 onnx.defs.onnx_opset_version() + 1):
-            test_onnxruntime.check_output(
-                self.model, [self.x, self.rois], self.fn,
-                opset_version=opset_version)
+            with warnings.catch_warnings(record=True) as w:
+                test_onnxruntime.check_output(
+                    self.model, [self.x, self.rois], self.fn,
+                    opset_version=opset_version)
+                assert len(w) == 1
