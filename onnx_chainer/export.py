@@ -99,10 +99,13 @@ class ONNXExport(chainer.FunctionHook):
         self.additional_parameters = []
         self.middle_output_var_to_varnode = {}
         self.specified_opset_version = opset_version
+        self.called_funcs = set()
 
     def backward_postprocess(self, function, in_data, out_grad):
         if isinstance(function, chainer.function.FunctionAdapter):
             function = function.function
+        if str(id(function)) in self.called_funcs:
+            return
         func_name = function.__class__.__name__
         input_names = []
         for i in function.inputs:
@@ -143,6 +146,7 @@ class ONNXExport(chainer.FunctionHook):
         for node in nodes:
             if node not in self.graph:
                 self.graph.append(node)
+        self.called_funcs.add(str(id(function)))
 
 
 def export(model, args, filename=None, export_params=True,
