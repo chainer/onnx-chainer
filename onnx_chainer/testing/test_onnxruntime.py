@@ -23,7 +23,7 @@ MINIMUM_OPSET_VERSION = 7
 TEST_OUT_DIR = 'out'
 
 
-def check_output(model, x, filename, out_key='prob', opset_version=None):
+def check_output(model, x, filename, out_keys=['prob'], opset_version=None):
     model.xp.random.seed(42)
 
     os.makedirs(TEST_OUT_DIR, exist_ok=True)
@@ -61,15 +61,13 @@ def check_output(model, x, filename, out_key='prob', opset_version=None):
             ' chainer.Variable itself. But a {} object was given.'.format(
                 type(x)))
 
-    rt_out_key = None
+    rt_out_keys = None
     if isinstance(chainer_out, (list, tuple)):
         chainer_out = (y.array for y in chainer_out)
     elif isinstance(chainer_out, dict):
-        if isinstance(out_key, str):
-            out_key = [out_key]
-        if len(out_key) > 1:
-            rt_out_key = out_key
-        chainer_outs = [chainer_out[k] for k in out_key]
+        if len(out_keys) > 1:
+            rt_out_keys = out_keys
+        chainer_outs = [chainer_out[k] for k in out_keys]
         chainer_out = (out.array if isinstance(out, chainer.Variable) else out
                        for out in chainer_outs)
     elif isinstance(chainer_out, chainer.Variable):
@@ -98,7 +96,7 @@ def check_output(model, x, filename, out_key='prob', opset_version=None):
     assert list(sorted(input_names)) == list(sorted(graph_input_names))
 
     rt_out = sess.run(
-        rt_out_key, {name: array for name, array in zip(input_names, x_rt)})
+        rt_out_keys, {name: array for name, array in zip(input_names, x_rt)})
 
     for cy, my in zip(chainer_out, rt_out):
         np.testing.assert_allclose(cy, my, rtol=1e-5, atol=1e-5)

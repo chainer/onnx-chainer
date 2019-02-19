@@ -104,4 +104,4 @@ class TestMultipleOutput(unittest.TestCase):
         model = self.get_model(use_bn=self.use_bn)
         x = np.zeros((1, 3, 32, 32), dtype=np.float32)
         test_onnxruntime.check_output(
-            model, x, 'MultipleOutputs.onnx', out_key=['Tanh_0', 'Sigmoid_0'])
+            model, x, 'MultipleOutputs.onnx', out_keys=['Tanh_0', 'Sigmoid_0'])
