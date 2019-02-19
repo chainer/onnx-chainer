@@ -89,8 +89,8 @@ class TestMultipleOutput(unittest.TestCase):
                 if self._use_bn:
                     h = self.bn(h)
                 return {
-                    'out1': F.sigmoid(h),
-                    'out2': F.sigmoid(h)
+                    'Tanh_0': F.tanh(h),
+                    'Sigmoid_0': F.sigmoid(h)
                 }
 
         return Model(use_bn=use_bn)
@@ -98,6 +98,5 @@ class TestMultipleOutput(unittest.TestCase):
     def test_multiple_outputs(self):
         model = self.get_model(use_bn=True)
         x = np.zeros((1, 3, 32, 32), dtype=np.float32)
-        # TODO(disktnk) fix check_output to accept several output keys.
         test_onnxruntime.check_output(
-            model, x, 'multiple_outputs.onnx', 'out1')
+            model, x, 'multiple_outputs.onnx', out_key=['Tanh_0', 'Sigmoid_0'])

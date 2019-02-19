@@ -61,12 +61,17 @@ def check_output(model, x, filename, out_key='prob', opset_version=None):
             ' chainer.Variable itself. But a {} object was given.'.format(
                 type(x)))
 
+    rt_out_key = None
     if isinstance(chainer_out, (list, tuple)):
         chainer_out = (y.array for y in chainer_out)
     elif isinstance(chainer_out, dict):
-        chainer_out = chainer_out[out_key]
-        if isinstance(chainer_out, chainer.Variable):
-            chainer_out = (chainer_out.array,)
+        if isinstance(out_key, str):
+            out_key = [out_key]
+        if len(out_key) > 1:
+            rt_out_key = out_key
+        chainer_outs = [chainer_out[k] for k in out_key]
+        chainer_out = (out.array if isinstance(out, chainer.Variable) else out
+                       for out in chainer_outs)
     elif isinstance(chainer_out, chainer.Variable):
         chainer_out = (chainer_out.array,)
     else:
@@ -93,7 +98,7 @@ def check_output(model, x, filename, out_key='prob', opset_version=None):
     assert list(sorted(input_names)) == list(sorted(graph_input_names))
 
     rt_out = sess.run(
-        None, {name: array for name, array in zip(input_names, x_rt)})
+        rt_out_key, {name: array for name, array in zip(input_names, x_rt)})
 
     for cy, my in zip(chainer_out, rt_out):
         np.testing.assert_allclose(cy, my, rtol=1e-5, atol=1e-5)
