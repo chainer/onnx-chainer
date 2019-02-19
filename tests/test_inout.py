@@ -3,6 +3,7 @@ import unittest
 import chainer
 import chainer.functions as F
 import chainer.links as L
+from chainer import testing
 import numpy as np
 
 from onnx_chainer.testing import input_generator
@@ -70,6 +71,10 @@ class TestImplicitInput(unittest.TestCase):
         test_onnxruntime.check_output(self.model, x, self.fn)
 
 
+@testing.parameterize(
+    {'use_bn': True},
+    {'use_bn': False},
+)
 class TestMultipleOutput(unittest.TestCase):
 
     def get_model(self, use_bn=False):
@@ -96,7 +101,7 @@ class TestMultipleOutput(unittest.TestCase):
         return Model(use_bn=use_bn)
 
     def test_multiple_outputs(self):
-        model = self.get_model(use_bn=True)
+        model = self.get_model(use_bn=self.use_bn)
         x = np.zeros((1, 3, 32, 32), dtype=np.float32)
         test_onnxruntime.check_output(
-            model, x, 'multiple_outputs.onnx', out_key=['Tanh_0', 'Sigmoid_0'])
+            model, x, 'MultipleOutputs.onnx', out_key=['Tanh_0', 'Sigmoid_0'])
