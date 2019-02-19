@@ -11,7 +11,7 @@ from onnx_chainer import functions
 from onnx_chainer import mapping
 
 try:
-    # from onnx import checker
+    from onnx import checker
     from onnx import helper
     from onnx import numpy_helper
 
@@ -105,15 +105,17 @@ class ONNXExport(chainer.FunctionHook):
         self.additional_parameters = []
         self.middle_output_var_to_varnode = {}
         self.specified_opset_version = opset_version
-        self.called_funcs = set()
+        self._called_funcs = set()
+        self._output_node_idx = {}
 
     def backward_postprocess(self, function, in_data, out_grad):
         if isinstance(function, chainer.function.FunctionAdapter):
             function = function.function
-        if str(id(function)) in self.called_funcs:
+        if id(function) in self._called_funcs:
             return
         func_name = function.__class__.__name__
         input_names = []
+        insert_idx_list = []
         for i in function.inputs:
             # 'i' is a VariableNode, so check if it has a Variable/Parameter
             var = i.get_variable_or_none()
@@ -123,6 +125,11 @@ class ONNXExport(chainer.FunctionHook):
                 input_name = str(id(var))
                 self.inputs[input_name] = var
             input_names.append(input_name)
+            if input_name in self._output_node_idx:
+                # input name is same with other output node name, need to
+                # insert generated graph to the index
+                insert_idx_list.append(self._output_node_idx[input_name])
+        insert_idx = min(insert_idx_list) if insert_idx_list else None
 
         # This is to get corresponding VariableNode id from the output
         # Variable of the network
@@ -132,6 +139,10 @@ class ONNXExport(chainer.FunctionHook):
                 self.middle_output_var_to_varnode[id(var)] = id(o())
 
         output_names = [str(id(o())) for o in function.outputs]
+        for name in output_names:
+            # record top index of node which outputs the name
+            if name not in self._output_node_idx:
+                self._output_node_idx[name] = len(self.graph)
 
         onnx_op_name, opset_versions = mapping.operators[func_name]
         if isinstance(opset_versions, int):
@@ -149,10 +160,19 @@ class ONNXExport(chainer.FunctionHook):
         nodes = create_node(
             func_name, onnx_op_name, opset_version, function, input_names,
             output_names, self.additional_parameters)
-        for node in nodes:
-            if node not in self.graph:
-                self.graph.append(node)
-        self.called_funcs.add(str(id(function)))
+        if insert_idx:
+            self.graph[insert_idx:insert_idx] = nodes
+            self._update_output_node_idx(insert_idx, output_names, len(nodes))
+        else:
+            self.graph.extend(nodes)
+        self._called_funcs.add(id(function))
+
+    def _update_output_node_idx(self, inserted_idx, inserted_names, length):
+        for name, idx in self._output_node_idx.items():
+            if name in inserted_names:
+                self._output_node_idx[name] = inserted_idx
+            elif idx >= inserted_idx:
+                self._output_node_idx[name] += length
 
 
 def export(model, args, filename=None, export_params=True,
@@ -323,7 +343,7 @@ def export(model, args, filename=None, export_params=True,
     model.ir_version = onnx.IR_VERSION
 
     rename_tensors(model)
-    # checker.check_model(model)
+    checker.check_model(model)
 
     if filename is not None and isinstance(filename, str):
         with open(filename, 'wb') as fp:
