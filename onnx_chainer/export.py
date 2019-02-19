@@ -100,7 +100,6 @@ class ONNXExport(chainer.FunctionHook):
         self.middle_output_var_to_varnode = {}
         self.specified_opset_version = opset_version
         self._called_funcs = set()
-        self._output_node_idx = {}
 
     def backward_postprocess(self, function, in_data, out_grad):
         if isinstance(function, chainer.function.FunctionAdapter):
@@ -109,7 +108,6 @@ class ONNXExport(chainer.FunctionHook):
             return
         func_name = function.__class__.__name__
         input_names = []
-        insert_idx_list = []
         for i in function.inputs:
             # 'i' is a VariableNode, so check if it has a Variable/Parameter
             var = i.get_variable_or_none()
@@ -119,11 +117,6 @@ class ONNXExport(chainer.FunctionHook):
                 input_name = str(id(var))
                 self.inputs[input_name] = var
             input_names.append(input_name)
-            if input_name in self._output_node_idx:
-                # input name is same with other output node name, need to
-                # insert generated graph to the index
-                insert_idx_list.append(self._output_node_idx[input_name])
-        insert_idx = min(insert_idx_list) if insert_idx_list else None
 
         # This is to get corresponding VariableNode id from the output
         # Variable of the network
@@ -133,10 +126,6 @@ class ONNXExport(chainer.FunctionHook):
                 self.middle_output_var_to_varnode[id(var)] = id(o())
 
         output_names = [str(id(o())) for o in function.outputs]
-        for name in output_names:
-            # record top index of node which outputs the name
-            if name not in self._output_node_idx:
-                self._output_node_idx[name] = len(self.graph)
 
         onnx_op_name, opset_versions = mapping.operators[func_name]
         if isinstance(opset_versions, int):
@@ -154,19 +143,8 @@ class ONNXExport(chainer.FunctionHook):
         nodes = create_node(
             func_name, onnx_op_name, opset_version, function, input_names,
             output_names, self.additional_parameters)
-        if insert_idx:
-            self.graph[insert_idx:insert_idx] = nodes
-            self._update_output_node_idx(insert_idx, output_names, len(nodes))
-        else:
-            self.graph.extend(nodes)
+        self.graph.extend(nodes)
         self._called_funcs.add(id(function))
-
-    def _update_output_node_idx(self, inserted_idx, inserted_names, length):
-        for name, idx in self._output_node_idx.items():
-            if name in inserted_names:
-                self._output_node_idx[name] = inserted_idx
-            elif idx >= inserted_idx:
-                self._output_node_idx[name] += length
 
 
 def export(model, args, filename=None, export_params=True,
@@ -233,19 +211,23 @@ def export(model, args, filename=None, export_params=True,
             if isinstance(arg, chainer.get_array_types()):
                 args[i] = chainer.Variable(arg)
             network_inputs.append(args[i])
+        flat_args = args
         outputs = model(*args)
     elif isinstance(args, dict):
         for key, arg in args.items():
             if isinstance(arg, chainer.get_array_types()):
                 args[key] = chainer.Variable(arg)
             network_inputs.append(args[key])
+        flat_args = list(args.values())
         outputs = model(**args)
     elif isinstance(args, chainer.get_array_types()):
         args = chainer.Variable(args)
         network_inputs.append(args)
+        flat_args = [args]
         outputs = model(args)
     elif isinstance(args, chainer.Variable):
         network_inputs.append(args)
+        flat_args = [args]
         outputs = model(args)
     else:
         raise ValueError(
@@ -271,19 +253,15 @@ def export(model, args, filename=None, export_params=True,
 
     with ONNXExport(opset_version) as o:
         if isinstance(outputs, (list, tuple)):
-            for output in outputs:
-                output.grad = model.xp.ones_like(
-                    output.array, dtype=output.array.dtype)
-                output.backward()
+            flat_outputs = outputs
         elif isinstance(outputs, dict):
-            outputs = list(outputs.values())
-            for output in outputs:
-                output.grad = model.xp.ones_like(
-                    output.array, dtype=output.array.dtype)
-                output.backward()
+            flat_outputs = list(outputs.values())
         elif isinstance(outputs, chainer.Variable):
-            outputs.grad = model.xp.ones_like(outputs.array)
-            outputs.backward()
+            flat_outputs = [outputs]
+        else:
+            raise RuntimeError('Unexpected output type from the model: %s' %
+                               type(outputs))
+        chainer.grad(flat_outputs, list(model.params()) + flat_args)
 
     implicit_input_names = set(o.inputs.keys()) - param_names -\
         network_input_names
