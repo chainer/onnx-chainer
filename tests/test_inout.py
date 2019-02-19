@@ -72,18 +72,21 @@ class TestImplicitInput(unittest.TestCase):
 
 
 @testing.parameterize(
-    {'use_bn': True},
-    {'use_bn': False},
+    {'use_bn': True, 'out_type': 'dict'},
+    {'use_bn': False, 'out_type': 'dict'},
+    {'use_bn': True, 'out_type': 'tuple'},
+    {'use_bn': True, 'out_type': 'list'},
 )
 class TestMultipleOutput(unittest.TestCase):
 
-    def get_model(self, use_bn=False):
+    def get_model(self, use_bn=False, out_type=None):
         class Model(chainer.Chain):
 
-            def __init__(self, use_bn=False):
+            def __init__(self, use_bn=False, out_type=None):
                 super(Model, self).__init__()
 
                 self._use_bn = use_bn
+                self._out_type = out_type
                 with self.init_scope():
                     self.conv = L.Convolution2D(None, 32, ksize=3, stride=1)
                     if self._use_bn:
@@ -93,15 +96,25 @@ class TestMultipleOutput(unittest.TestCase):
                 h = self.conv(x)
                 if self._use_bn:
                     h = self.bn(h)
-                return {
-                    'Tanh_0': F.tanh(h),
-                    'Sigmoid_0': F.sigmoid(h)
-                }
+                o1 = F.tanh(h)
+                o2 = F.sigmoid(h)
+                if self._out_type == 'dict':
+                    return {
+                        'Tanh_0': o1,
+                        'Sigmoid_0': o2
+                    }
+                elif self._out_type == 'tuple':
+                    return o1, o2
+                elif self._out_type == 'list':
+                    return [o1, o2]
 
-        return Model(use_bn=use_bn)
+        return Model(use_bn=use_bn, out_type=out_type)
 
     def test_multiple_outputs(self):
-        model = self.get_model(use_bn=self.use_bn)
+        model = self.get_model(use_bn=self.use_bn, out_type=self.out_type)
         x = np.zeros((1, 3, 32, 32), dtype=np.float32)
+        # 'out_keys' is necessary even if self.out_type is tuple or list
+        # because onnxruntime does not guarantee the order of outputs when
+        # output keys are None.
         test_onnxruntime.check_output(
             model, x, 'MultipleOutputs.onnx', out_keys=['Tanh_0', 'Sigmoid_0'])

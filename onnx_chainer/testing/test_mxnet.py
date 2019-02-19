@@ -45,9 +45,9 @@ def check_compatibility(model, x, fn, out_keys=['prob'], opset_version=None):
     if isinstance(chainer_out, (list, tuple)):
         chainer_out = [y.array for y in chainer_out]
     elif isinstance(chainer_out, dict):
-        chainer_out = chainer_out[out_key]
-        if isinstance(chainer_out, chainer.Variable):
-            chainer_out = (chainer_out.array,)
+        chainer_outs = [chainer_out[k] for k in out_keys]
+        chainer_out = tuple(out.array if isinstance(out, chainer.Variable) else
+                            out for out in chainer_outs)
     elif isinstance(chainer_out, chainer.Variable):
         chainer_out = (chainer_out.array,)
     else:

@@ -63,13 +63,16 @@ def check_output(model, x, filename, out_keys=['prob'], opset_version=None):
 
     rt_out_keys = None
     if isinstance(chainer_out, (list, tuple)):
-        chainer_out = (y.array for y in chainer_out)
+        chainer_out = tuple(y.array for y in chainer_out)
+        if out_keys is not None:
+            assert len(out_keys) == len(chainer_out)
+            rt_out_keys = out_keys
     elif isinstance(chainer_out, dict):
         if len(out_keys) > 1:
             rt_out_keys = out_keys
         chainer_outs = [chainer_out[k] for k in out_keys]
-        chainer_out = (out.array if isinstance(out, chainer.Variable) else out
-                       for out in chainer_outs)
+        chainer_out = tuple(out.array if isinstance(out, chainer.Variable) else
+                            out for out in chainer_outs)
     elif isinstance(chainer_out, chainer.Variable):
         chainer_out = (chainer_out.array,)
     else:
