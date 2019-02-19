@@ -255,8 +255,9 @@ def export(model, args, filename=None, export_params=True,
         elif isinstance(outputs, chainer.Variable):
             flat_outputs = [outputs]
         else:
-            raise RuntimeError('Unexpected output type from the model: %s' %
-                               type(outputs))
+            raise RuntimeError(
+                'Unexpected output type from the model: {}'.format(
+                    type(outputs)))
         chainer.grad(flat_outputs, list(model.params()) + flat_args)
 
     implicit_input_names = set(o.inputs.keys()) - param_names -\
