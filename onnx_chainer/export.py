@@ -140,9 +140,7 @@ class ONNXExport(chainer.FunctionHook):
         nodes = create_node(
             func_name, onnx_op_name, opset_version, function, input_names,
             output_names, self.additional_parameters)
-        for node in nodes:
-            if node not in self.graph:
-                self.graph.append(node)
+        self.graph.extend(nodes)
 
 
 def export(model, args, filename=None, export_params=True,
@@ -209,19 +207,23 @@ def export(model, args, filename=None, export_params=True,
             if isinstance(arg, chainer.get_array_types()):
                 args[i] = chainer.Variable(arg)
             network_inputs.append(args[i])
+        flat_args = args
         outputs = model(*args)
     elif isinstance(args, dict):
         for key, arg in args.items():
             if isinstance(arg, chainer.get_array_types()):
                 args[key] = chainer.Variable(arg)
             network_inputs.append(args[key])
+        flat_args = list(args.values())
         outputs = model(**args)
     elif isinstance(args, chainer.get_array_types()):
         args = chainer.Variable(args)
         network_inputs.append(args)
+        flat_args = [args]
         outputs = model(args)
     elif isinstance(args, chainer.Variable):
         network_inputs.append(args)
+        flat_args = [args]
         outputs = model(args)
     else:
         raise ValueError(
@@ -247,19 +249,16 @@ def export(model, args, filename=None, export_params=True,
 
     with ONNXExport(opset_version) as o:
         if isinstance(outputs, (list, tuple)):
-            for output in outputs:
-                output.grad = model.xp.ones_like(
-                    output.array, dtype=output.array.dtype)
-                output.backward()
+            flat_outputs = outputs
         elif isinstance(outputs, dict):
-            outputs = list(outputs.values())
-            for output in outputs:
-                output.grad = model.xp.ones_like(
-                    output.array, dtype=output.array.dtype)
-                output.backward()
+            flat_outputs = list(outputs.values())
         elif isinstance(outputs, chainer.Variable):
-            outputs.grad = model.xp.ones_like(outputs.array)
-            outputs.backward()
+            flat_outputs = [outputs]
+        else:
+            raise RuntimeError(
+                'Unexpected output type from the model: {}'.format(
+                    type(outputs)))
+        chainer.grad(flat_outputs, list(model.params()) + flat_args)
 
     implicit_input_names = set(o.inputs.keys()) - param_names -\
         network_input_names
