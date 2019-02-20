@@ -252,6 +252,7 @@ Currently 59 Chainer Functions are supported to export in ONNX format.
 - Concat
 - Copy
 - Depth2Space
+- ExpandDims
 - GetItem
 - Pad <sup>[1](#pad1)</sup><sup>[2](#pad2)</sup>
 - Reshape
@@ -275,6 +276,7 @@ Currently 59 Chainer Functions are supported to export in ONNX format.
 - Add
 - AddConstant
 - Absolute
+- BroadcastTo
 - Div
 - Mul
 - MulConstant
@@ -307,6 +309,7 @@ Currently 59 Chainer Functions are supported to export in ONNX format.
 - AveragePoolingND
 - MaxPooling2D
 - MaxPoolingND
+- ROIPooling2D
 
 ### Normalization
 
