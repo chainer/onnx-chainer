@@ -19,7 +19,7 @@ except ImportError:
     MXNET_AVAILABLE = False
 
 
-def check_compatibility(model, x, fn, out_keys=['prob'], opset_version=None):
+def check_compatibility(model, x, fn, out_keys=None, opset_version=None):
     if opset_version is None:
         opset_version = onnx.defs.onnx_opset_version()
     if not MXNET_AVAILABLE:

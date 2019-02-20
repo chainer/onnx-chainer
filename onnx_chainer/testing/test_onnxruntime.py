@@ -23,7 +23,7 @@ MINIMUM_OPSET_VERSION = 7
 TEST_OUT_DIR = 'out'
 
 
-def check_output(model, x, filename, out_keys=['prob'], opset_version=None):
+def check_output(model, x, filename, out_keys=None, opset_version=None):
     model.xp.random.seed(42)
 
     os.makedirs(TEST_OUT_DIR, exist_ok=True)
