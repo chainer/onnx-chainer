@@ -60,6 +60,8 @@ def create_node(
         nodes = converter(
             func, opset_version, input_names, output_names,
             parameters)
+        assert len(nodes[0].output) == len(output_names)
+        nodes[0].output[:] = output_names
     else:
         raise ValueError('{} is not supported.'.format(func_name))
     return nodes
