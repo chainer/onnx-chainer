@@ -9,6 +9,7 @@ from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 
 from onnx_chainer import functions
 from onnx_chainer import mapping
+from onnx_chainer import onnx_helper
 
 try:
     from onnx import checker
@@ -56,6 +57,7 @@ def create_node(
 
     converter_name = 'convert_{}'.format(func_name)
     if hasattr(functions, converter_name):
+        onnx_helper.set_func_name(func_name)
         converter = getattr(functions, converter_name)
         nodes = converter(
             func, opset_version, input_names, output_names,
