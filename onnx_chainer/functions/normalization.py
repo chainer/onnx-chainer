@@ -2,7 +2,7 @@ import sys
 
 import chainer
 import numpy as np
-from onnx import helper
+from onnx_chainer import onnx_helper
 
 
 def convert_BatchNormalization(func, opset_version, input_names,
@@ -25,7 +25,7 @@ def convert_BatchNormalization(func, opset_version, input_names,
     ]
 
     if opset_version == 1:
-        return helper.make_node(
+        return onnx_helper.make_node(
             'BatchNormalization', input_names, output_names,
             epsilon=func.eps,
             momentum=func.decay,
@@ -33,14 +33,14 @@ def convert_BatchNormalization(func, opset_version, input_names,
             consumed_inputs=[False, False, False, True, True],
         ),
     elif opset_version == 6:
-        return helper.make_node(
+        return onnx_helper.make_node(
             'BatchNormalization', input_names, output_names,
             epsilon=func.eps,
             momentum=func.decay,
             is_test=not chainer.config.train,
         ),
     elif opset_version == 7:
-        return helper.make_node(
+        return onnx_helper.make_node(
             'BatchNormalization', input_names, output_names,
             epsilon=func.eps,
             momentum=func.decay,
@@ -72,7 +72,7 @@ def convert_FixedBatchNormalization(func, opset_version,
         input_names[1] = str(id(gamma))
 
     if opset_version == 1:
-        return helper.make_node(
+        return onnx_helper.make_node(
             'BatchNormalization', input_names, output_names,
             epsilon=func.eps,
             momentum=0.,
@@ -80,14 +80,14 @@ def convert_FixedBatchNormalization(func, opset_version,
             consumed_inputs=[False, False, False, True, True],
         ),
     elif opset_version == 6:
-        return helper.make_node(
+        return onnx_helper.make_node(
             'BatchNormalization', input_names, output_names,
             epsilon=func.eps,
             momentum=0.,
             is_test=not chainer.config.train,
         ),
     elif opset_version == 7:
-        return helper.make_node(
+        return onnx_helper.make_node(
             'BatchNormalization', input_names, output_names,
             epsilon=func.eps,
             momentum=0.,
@@ -98,7 +98,7 @@ def convert_LocalResponseNormalization(func, opset_version,
                                        input_names, output_names, parameters):
     if opset_version == 1:
         size = int(func.n)
-        return helper.make_node(
+        return onnx_helper.make_node(
             'LRN', input_names, output_names,
             alpha=float(func.alpha) * size,
             beta=float(func.beta),
@@ -120,7 +120,7 @@ def convert_NormalizeL2(func, opset_version, input_names,
             ' so that ONNX-Chainer does not accepct custom values for \'eps\' '
             '({})'.format(func.eps))
     if opset_version == 1:
-        return helper.make_node(
+        return onnx_helper.make_node(
             'LpNormalization', input_names, output_names,
             axis=int(func.axis[0]),
             p=2,

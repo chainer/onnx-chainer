@@ -1,6 +1,6 @@
 import chainer
 import numpy as np
-from onnx import helper
+from onnx_chainer import onnx_helper
 from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 
 from onnx_chainer import mapping
@@ -10,12 +10,12 @@ def convert_Cast(func, opset_version, input_names, output_names,
                  parameters):
     typ = func.type if isinstance(func.type, np.dtype) else np.dtype(func.type)
     if opset_version == 1:
-        return helper.make_node(
+        return onnx_helper.make_node(
             'Cast', input_names, output_names,
             to=mapping.TENSOR_TYPE_TO_NAME[NP_TYPE_TO_TENSOR_TYPE[typ]]
         ),
     elif opset_version == 6:
-        return helper.make_node(
+        return onnx_helper.make_node(
             'Cast', input_names, output_names,
             to=NP_TYPE_TO_TENSOR_TYPE[typ]
         ),
@@ -24,12 +24,12 @@ def convert_Cast(func, opset_version, input_names, output_names,
 def convert_Concat(func, opset_version, input_names,
                    output_names, parameters):
     if opset_version == 1:
-        return helper.make_node(
+        return onnx_helper.make_node(
             'Concat', input_names, output_names,
             axis=func.axis
         ),
     elif opset_version == 4:
-        return helper.make_node(
+        return onnx_helper.make_node(
             'Concat', input_names, output_names,
             axis=func.axis
         ),
@@ -37,14 +37,14 @@ def convert_Concat(func, opset_version, input_names,
 
 def convert_Copy(func, opset_version, input_names, output_names,
                  parameters):
-    return helper.make_node(
+    return onnx_helper.make_node(
         'Identity', input_names, output_names
     ),
 
 
 def convert_Depth2Space(func, opset_version, input_names,
                         output_names, parameters):
-    return helper.make_node(
+    return onnx_helper.make_node(
         'DepthToSpace', input_names, output_names,
         blocksize=func.r
     ),
@@ -101,7 +101,7 @@ def convert_GetItem(func, opset_version, input_names,
         dummy_objects.append(unsqueeze_object)
         unsqueeze_object_name = str(id(unsqueeze_object))
         slice_out_names = [unsqueeze_object_name]
-        nodes.append(helper.make_node(
+        nodes.append(onnx_helper.make_node(
             'Unsqueeze', [unsqueeze_object_name], output_names,
             axes=unsqueeze_idxs))
 
@@ -114,11 +114,11 @@ def convert_GetItem(func, opset_version, input_names,
             squeeze_out_names = [unsqueeze_object_name]
         else:
             squeeze_out_names = output_names
-        nodes.append(helper.make_node(
+        nodes.append(onnx_helper.make_node(
             'Squeeze', [squeeze_object_name], squeeze_out_names,
             axes=squeeze_idxs))
 
-    nodes.append(helper.make_node(
+    nodes.append(onnx_helper.make_node(
         'Slice', input_names, slice_out_names,
         axes=axes, starts=starts, ends=ends))
 
@@ -152,14 +152,14 @@ def convert_Pad(func, opset_version, input_names, output_names,
             values = values[0]
 
         if opset_version == 1:
-            node = helper.make_node(
+            node = onnx_helper.make_node(
                 'Pad', input_names, output_names,
                 mode=func.mode,
                 paddings=pad,
                 value=values
             )
         elif opset_version == 2:
-            node = helper.make_node(
+            node = onnx_helper.make_node(
                 'Pad', input_names, output_names,
                 mode=func.mode,
                 pads=pad,
@@ -167,14 +167,14 @@ def convert_Pad(func, opset_version, input_names, output_names,
             )
     else:
         if opset_version == 1:
-            node = helper.make_node(
+            node = onnx_helper.make_node(
                 'Pad', input_names, output_names,
                 mode=func.mode,
                 paddings=pad,
                 value=0.,
             )
         elif opset_version == 2:
-            node = helper.make_node(
+            node = onnx_helper.make_node(
                 'Pad', input_names, output_names,
                 mode=func.mode,
                 pads=pad,
@@ -187,7 +187,7 @@ def convert_Pad(func, opset_version, input_names, output_names,
 def convert_Reshape(func, opset_version, input_names,
                     output_names, parameters):
     if opset_version == 1:
-        return helper.make_node(
+        return onnx_helper.make_node(
             'Reshape', input_names, output_names,
             shape=func.shape
         ),
@@ -197,14 +197,14 @@ def convert_Reshape(func, opset_version, input_names,
         parameters.append(shape_param)
         input_names.append(str(id(shape_param)))
 
-        return helper.make_node(
+        return onnx_helper.make_node(
             'Reshape', input_names, output_names,
         ),
 
 
 def convert_Space2Depth(func, opset_version, input_names,
                         output_names, parameters):
-    return helper.make_node(
+    return onnx_helper.make_node(
         'SpaceToDepth', input_names, output_names,
         blocksize=func.r
     ),
@@ -228,13 +228,13 @@ def convert_SplitAxis(func, opset_version, input_names,
         split = [length for _ in range(indices_or_sections)]
 
     if opset_version == 1:
-        return helper.make_node(
+        return onnx_helper.make_node(
             'Split', input_names, output_names,
             axis=func.axis,
             split=split
         ),
     elif opset_version == 2:
-        return helper.make_node(
+        return onnx_helper.make_node(
             'Split', input_names, output_names,
             axis=func.axis,
             split=split
@@ -251,7 +251,7 @@ def convert_Squeeze(func, opset_version, input_names,
     else:
         axis = func.axis
 
-    return helper.make_node(
+    return onnx_helper.make_node(
         'Squeeze', input_names, output_names,
         axes=axis
     ),
@@ -275,16 +275,16 @@ def convert_Tile(func, opset_version, input_names, output_names,
         parameters.append(axis_param)
         input_names.append(str(id(axis_param)))
 
-    return helper.make_node('Tile', input_names, output_names),
+    return onnx_helper.make_node('Tile', input_names, output_names),
 
 
 def convert_Transpose(func, opset_version, input_names,
                       output_names, parameters):
 
     if func.axes is None:
-        node = helper.make_node('Transpose', input_names, output_names)
+        node = onnx_helper.make_node('Transpose', input_names, output_names)
     else:
-        node = helper.make_node(
+        node = onnx_helper.make_node(
             'Transpose', input_names, output_names,
             perm=func.axes
         )
@@ -298,5 +298,5 @@ def convert_ExpandDims(func, opset_version, input_names,
     if axis < 0:
         axis = len(func.inputs[0].shape) + 1 + axis
 
-    return helper.make_node(
+    return onnx_helper.make_node(
         'Unsqueeze', input_names, output_names, axes=[axis]),
