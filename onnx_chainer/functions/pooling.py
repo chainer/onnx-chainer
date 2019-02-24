@@ -3,7 +3,7 @@ import warnings
 from onnx import helper
 
 
-def convert_AveragePooling2D(func, onnx_op_name, opset_version, input_names,
+def convert_AveragePooling2D(func, opset_version, input_names,
                              output_names, parameters):
     pad = [func.ph, func.pw]
     stride = [func.sy, func.sx]
@@ -34,7 +34,7 @@ def convert_AveragePooling2D(func, onnx_op_name, opset_version, input_names,
         ),
 
 
-def convert_AveragePoolingND(func, onnx_op_name, opset_version, input_names,
+def convert_AveragePoolingND(func, opset_version, input_names,
                              output_names, parameters):
     pad = list(func.pad[:])
     if func.cover_all:
@@ -65,7 +65,7 @@ def convert_AveragePoolingND(func, onnx_op_name, opset_version, input_names,
         ),
 
 
-def convert_MaxPooling2D(func, onnx_op_name, opset_version, input_names,
+def convert_MaxPooling2D(func, opset_version, input_names,
                          output_names, parameters):
     pad = [func.ph, func.pw]
     stride = [func.sy, func.sx]
@@ -99,7 +99,7 @@ def convert_MaxPooling2D(func, onnx_op_name, opset_version, input_names,
         ),
 
 
-def convert_MaxPoolingND(func, onnx_op_name, opset_version, input_names,
+def convert_MaxPoolingND(func, opset_version, input_names,
                          output_names, parameters):
     pad = list(func.pad[:])
     if func.cover_all:
@@ -133,7 +133,7 @@ def convert_MaxPoolingND(func, onnx_op_name, opset_version, input_names,
         ),
 
 
-def convert_ROIPooling2D(func, onnx_op_name, opset_version, input_names,
+def convert_ROIPooling2D(func, opset_version, input_names,
                          output_names, parameters):
     warnings.warn(
         'It\'s possible that output does not match with Chainer, please check '

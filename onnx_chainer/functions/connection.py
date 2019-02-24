@@ -3,7 +3,7 @@ import numpy as np
 from onnx import helper
 
 
-def convert_Convolution2DFunction(func, onnx_op_name, opset_version,
+def convert_Convolution2DFunction(func, opset_version,
                                   input_names, output_names, parameters):
     if opset_version == 1:
         if hasattr(func, 'dy') and hasattr(func, 'dx'):
@@ -28,7 +28,7 @@ def convert_Convolution2DFunction(func, onnx_op_name, opset_version,
         return node,
 
 
-def convert_ConvolutionND(func, onnx_op_name, opset_version, input_names,
+def convert_ConvolutionND(func, opset_version, input_names,
                           output_names, parameters):
     pad = []
     x_ndim = len(func.inputs[0].shape)
@@ -48,7 +48,7 @@ def convert_ConvolutionND(func, onnx_op_name, opset_version, input_names,
         ),
 
 
-def convert_Deconvolution2DFunction(func, onnx_op_name, opset_version,
+def convert_Deconvolution2DFunction(func, opset_version,
                                     input_names, output_names, parameters):
     if opset_version == 1:
         return helper.make_node(
@@ -61,7 +61,7 @@ def convert_Deconvolution2DFunction(func, onnx_op_name, opset_version,
         ),
 
 
-def convert_DeconvolutionND(func, onnx_op_name, opset_version, input_names,
+def convert_DeconvolutionND(func, opset_version, input_names,
                             output_names, parameters):
     pad = []
     x_ndim = len(func.inputs[0].shape)
@@ -82,7 +82,7 @@ def convert_DeconvolutionND(func, onnx_op_name, opset_version, input_names,
         ),
 
 
-def convert_EmbedIDFunction(func, onnx_op_name, opset_version, input_names,
+def convert_EmbedIDFunction(func, opset_version, input_names,
                             output_names, parameters):
     x_index_name, W_name = input_names
     input_names = [W_name, x_index_name]
@@ -96,7 +96,7 @@ def convert_EmbedIDFunction(func, onnx_op_name, opset_version, input_names,
             'Gather', input_names, output_names, axis=0),
 
 
-def convert_LinearFunction(func, onnx_op_name, opset_version, input_names,
+def convert_LinearFunction(func, opset_version, input_names,
                            output_names, parameters):
     # When the func has bias
     if len(func.inputs) == 2:

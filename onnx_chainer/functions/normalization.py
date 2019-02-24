@@ -5,7 +5,7 @@ import numpy as np
 from onnx import helper
 
 
-def convert_BatchNormalization(func, onnx_op_name, opset_version, input_names,
+def convert_BatchNormalization(func, opset_version, input_names,
                                output_names, parameters):
     # Add running_mean and running_var to graph
     running_mean = chainer.Parameter(func.running_mean)
@@ -47,7 +47,7 @@ def convert_BatchNormalization(func, onnx_op_name, opset_version, input_names,
         ),
 
 
-def convert_FixedBatchNormalization(func, onnx_op_name, opset_version,
+def convert_FixedBatchNormalization(func, opset_version,
                                     input_names, output_names, parameters):
     # Add avg_mean and avg_var to graph
     mean_arr, var_arr = [i.get_variable().array for i in func.inputs[3:]]
@@ -94,7 +94,7 @@ def convert_FixedBatchNormalization(func, onnx_op_name, opset_version,
         ),
 
 
-def convert_LocalResponseNormalization(func, onnx_op_name, opset_version,
+def convert_LocalResponseNormalization(func, opset_version,
                                        input_names, output_names, parameters):
     if opset_version == 1:
         size = int(func.n)
@@ -107,7 +107,7 @@ def convert_LocalResponseNormalization(func, onnx_op_name, opset_version,
         ),
 
 
-def convert_NormalizeL2(func, onnx_op_name, opset_version, input_names,
+def convert_NormalizeL2(func, opset_version, input_names,
                         output_names, parameters):
     if isinstance(func.axis, tuple) and len(func.axis) != 1:
         raise ValueError(

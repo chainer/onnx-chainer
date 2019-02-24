@@ -47,9 +47,9 @@ def convert_parameter(parameter):
 
 
 def create_node(
-        func_name, onnx_op_name, opset_version, func, input_names,
+        func_name, opset_version, func, input_names,
         output_names, parameters):
-    for opver in sorted(mapping.operators[func_name][-1], reverse=True):
+    for opver in sorted(mapping.operators[func_name], reverse=True):
         if opver <= opset_version:
             break
     opset_version = opver
@@ -58,7 +58,7 @@ def create_node(
     if hasattr(functions, converter_name):
         converter = getattr(functions, converter_name)
         nodes = converter(
-            func, onnx_op_name, opset_version, input_names, output_names,
+            func, opset_version, input_names, output_names,
             parameters)
     else:
         raise ValueError('{} is not supported.'.format(func_name))
@@ -124,7 +124,7 @@ class ONNXExport(chainer.FunctionHook):
 
         output_names = [str(id(o())) for o in function.outputs]
 
-        onnx_op_name, opset_versions = mapping.operators[func_name]
+        opset_versions = mapping.operators[func_name]
         if isinstance(opset_versions, int):
             opset_version = opset_versions
         elif self.specified_opset_version is None:
@@ -138,7 +138,7 @@ class ONNXExport(chainer.FunctionHook):
                     break
 
         nodes = create_node(
-            func_name, onnx_op_name, opset_version, function, input_names,
+            func_name, opset_version, function, input_names,
             output_names, self.additional_parameters)
         self.graph.extend(nodes)
 
