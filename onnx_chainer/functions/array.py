@@ -1,9 +1,9 @@
 import chainer
 import numpy as np
-from onnx_chainer import onnx_helper
 from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 
 from onnx_chainer import mapping
+from onnx_chainer import onnx_helper
 
 
 def convert_Cast(func, opset_version, input_names, output_names,
@@ -94,38 +94,21 @@ def convert_GetItem(func, opset_version, input_names,
                 'GetItem with type {} cannot handle in ONNX Slice, so that '
                 'ONNX-Chainer does not accept the type'.format(type(idx)))
     nodes = []
-    slice_out_names = output_names
-
-    if unsqueeze_idxs:
-        unsqueeze_object = object()
-        dummy_objects.append(unsqueeze_object)
-        unsqueeze_object_name = str(id(unsqueeze_object))
-        slice_out_names = [unsqueeze_object_name]
-        nodes.append(onnx_helper.make_node(
-            'Unsqueeze', [unsqueeze_object_name], output_names,
-            axes=unsqueeze_idxs))
-
-    if squeeze_idxs:
-        squeeze_object = object()
-        dummy_objects.append(squeeze_object)
-        squeeze_object_name = str(id(squeeze_object))
-        slice_out_names = [squeeze_object_name]
-        if unsqueeze_idxs:
-            squeeze_out_names = [unsqueeze_object_name]
-        else:
-            squeeze_out_names = output_names
-        nodes.append(onnx_helper.make_node(
-            'Squeeze', [squeeze_object_name], squeeze_out_names,
-            axes=squeeze_idxs))
-
     nodes.append(onnx_helper.make_node(
-        'Slice', input_names, slice_out_names,
+        'Slice', input_names, 1,
         axes=axes, starts=starts, ends=ends))
 
-    return tuple(reversed(nodes))
+    if squeeze_idxs:
+        nodes.append(onnx_helper.make_node(
+            'Squeeze', nodes[-1].output, 1,
+            axes=squeeze_idxs))
 
+    if unsqueeze_idxs:
+        nodes.append(onnx_helper.make_node(
+            'Unsqueeze', nodes[-1].output, 1,
+            axes=unsqueeze_idxs))
 
-dummy_objects = []
+    return tuple(nodes)
 
 
 def convert_Pad(func, opset_version, input_names, output_names,
