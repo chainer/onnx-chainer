@@ -255,9 +255,9 @@ def convert_LinearInterpolate(func, opset_version, input_names,
     n3 = onnx_helper.make_node(
         "Mul", [n1_out_name, input_names[2]], [n3_out_name], **kwargs)
     n4 = onnx_helper.make_node(
-        "Add", [n2_out_name, n3_out_name], [output_names[0]], **kwargs)
+        "Add", [n2_out_name, n3_out_name], output_names, **kwargs)
 
-    return n4, n3, n2, n1
+    return n1, n2, n3, n4
 
 
 dummy_objects = []

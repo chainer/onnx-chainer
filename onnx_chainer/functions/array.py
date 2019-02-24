@@ -122,7 +122,7 @@ def convert_GetItem(func, opset_version, input_names,
         'Slice', input_names, slice_out_names,
         axes=axes, starts=starts, ends=ends))
 
-    return tuple(nodes)
+    return tuple(reversed(nodes))
 
 
 dummy_objects = []
