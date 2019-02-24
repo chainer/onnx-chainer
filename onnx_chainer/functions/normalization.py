@@ -26,7 +26,7 @@ def convert_BatchNormalization(func, onnx_op_name, opset_version, input_names,
 
     if opset_version == 1:
         return helper.make_node(
-            onnx_op_name, input_names, output_names,
+            'BatchNormalization', input_names, output_names,
             epsilon=func.eps,
             momentum=func.decay,
             is_test=not chainer.config.train,
@@ -34,14 +34,14 @@ def convert_BatchNormalization(func, onnx_op_name, opset_version, input_names,
         ),
     elif opset_version == 6:
         return helper.make_node(
-            onnx_op_name, input_names, output_names,
+            'BatchNormalization', input_names, output_names,
             epsilon=func.eps,
             momentum=func.decay,
             is_test=not chainer.config.train,
         ),
     elif opset_version == 7:
         return helper.make_node(
-            onnx_op_name, input_names, output_names,
+            'BatchNormalization', input_names, output_names,
             epsilon=func.eps,
             momentum=func.decay,
         ),
@@ -73,7 +73,7 @@ def convert_FixedBatchNormalization(func, onnx_op_name, opset_version,
 
     if opset_version == 1:
         return helper.make_node(
-            onnx_op_name, input_names, output_names,
+            'BatchNormalization', input_names, output_names,
             epsilon=func.eps,
             momentum=0.,
             is_test=not chainer.config.train,
@@ -81,14 +81,14 @@ def convert_FixedBatchNormalization(func, onnx_op_name, opset_version,
         ),
     elif opset_version == 6:
         return helper.make_node(
-            onnx_op_name, input_names, output_names,
+            'BatchNormalization', input_names, output_names,
             epsilon=func.eps,
             momentum=0.,
             is_test=not chainer.config.train,
         ),
     elif opset_version == 7:
         return helper.make_node(
-            onnx_op_name, input_names, output_names,
+            'BatchNormalization', input_names, output_names,
             epsilon=func.eps,
             momentum=0.,
         ),
@@ -99,7 +99,7 @@ def convert_LocalResponseNormalization(func, onnx_op_name, opset_version,
     if opset_version == 1:
         size = int(func.n)
         return helper.make_node(
-            onnx_op_name, input_names, output_names,
+            'LRN', input_names, output_names,
             alpha=float(func.alpha) * size,
             beta=float(func.beta),
             bias=float(func.k),
@@ -121,7 +121,7 @@ def convert_NormalizeL2(func, onnx_op_name, opset_version, input_names,
             '({})'.format(func.eps))
     if opset_version == 1:
         return helper.make_node(
-            onnx_op_name, input_names, output_names,
+            'LpNormalization', input_names, output_names,
             axis=int(func.axis[0]),
             p=2,
         ),

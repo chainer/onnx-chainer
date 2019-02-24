@@ -26,7 +26,7 @@ def convert_AveragePooling2D(func, onnx_op_name, opset_version, input_names,
             'Use operation set version >= 7.')
     elif opset_version == 7:
         return helper.make_node(
-            onnx_op_name, input_names, output_names,
+            'AveragePool', input_names, output_names,
             kernel_shape=ksize,
             pads=pad,
             strides=stride,
@@ -57,7 +57,7 @@ def convert_AveragePoolingND(func, onnx_op_name, opset_version, input_names,
             'Use operation set version >= 7.')
     elif opset_version == 7:
         return helper.make_node(
-            onnx_op_name, input_names, output_names,
+            'AveragePool', input_names, output_names,
             kernel_shape=func.ksize,
             pads=pad,
             strides=func.stride,
@@ -84,14 +84,14 @@ def convert_MaxPooling2D(func, onnx_op_name, opset_version, input_names,
 
     if opset_version == 1:
         return helper.make_node(
-            onnx_op_name, input_names, output_names,
+            'MaxPool', input_names, output_names,
             kernel_shape=ksize,
             pads=pad,
             strides=stride
         ),
     elif opset_version == 8:
         return helper.make_node(
-            onnx_op_name, input_names, output_names,
+            'MaxPool', input_names, output_names,
             kernel_shape=ksize,
             pads=pad,
             strides=stride,
@@ -118,14 +118,14 @@ def convert_MaxPoolingND(func, onnx_op_name, opset_version, input_names,
 
     if opset_version == 1:
         return helper.make_node(
-            onnx_op_name, input_names, output_names,
+            'MaxPool', input_names, output_names,
             kernel_shape=func.ksize,
             pads=pad,
             strides=func.stride
         ),
     elif opset_version == 8:
         return helper.make_node(
-            onnx_op_name, input_names, output_names,
+            'MaxPool', input_names, output_names,
             kernel_shape=func.ksize,
             pads=pad,
             strides=func.stride,
@@ -141,7 +141,7 @@ def convert_ROIPooling2D(func, onnx_op_name, opset_version, input_names,
         'negative values, some runtimes set max(output, 0) unlike Chainer.',
         UserWarning)
     return helper.make_node(
-        onnx_op_name, input_names, output_names,
+        'MaxRoiPool', input_names, output_names,
         pooled_shape=[func.outh, func.outw],
         spatial_scale=func.spatial_scale,
     ),
