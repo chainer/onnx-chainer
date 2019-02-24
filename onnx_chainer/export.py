@@ -181,7 +181,7 @@ def export(model, args, filename=None, export_params=True,
             operator version in the exported ONNX file is less than this value.
 
     Returns:
-        A ONNX model object.
+        An ONNX model object.
 
     """
 
