@@ -243,30 +243,17 @@ def convert_LinearInterpolate(func, opset_version, input_names,
     kwargs = {"consumed_inputs": [1, 1]} if opset_version == 1 else {}
     kwargs2 = {} if opset_version >= 7 else {"broadcast": 1}
 
-    n1_out_name = gensym()
-    n2_out_name = gensym()
-    n3_out_name = gensym()
-
     n1 = onnx_helper.make_node(
-        "Sub", [str(id(one)), input_names[0]], [n1_out_name],
+        "Sub", [str(id(one)), input_names[0]], 1,
         **kwargs, **kwargs2)
     n2 = onnx_helper.make_node(
-        "Mul", [input_names[0], input_names[1]], [n2_out_name], **kwargs)
+        "Mul", [input_names[0], input_names[1]], 1, **kwargs)
     n3 = onnx_helper.make_node(
-        "Mul", [n1_out_name, input_names[2]], [n3_out_name], **kwargs)
+        "Mul", [n1.output[0], input_names[2]], 1, **kwargs)
     n4 = onnx_helper.make_node(
-        "Add", [n2_out_name, n3_out_name], output_names, **kwargs)
+        "Add", [n2.output[0], n3.output[0]], output_names, **kwargs)
 
     return n1, n2, n3, n4
-
-
-dummy_objects = []
-
-
-def gensym():
-    o = object()
-    dummy_objects.append(o)
-    return str(id(o))
 
 
 def convert_Square(func, opset_version, input_names,
