@@ -4,11 +4,11 @@ from onnx_chainer import onnx_helper
 
 
 def convert_Convolution2DFunction(func, opset_version,
-                                  input_names, output_names, parameters):
+                                  input_names, num_outputs, parameters):
     if opset_version == 1:
         if hasattr(func, 'dy') and hasattr(func, 'dx'):
             node = onnx_helper.make_node(
-                'Conv', input_names, output_names,
+                'Conv', input_names, num_outputs,
                 dilations=(func.dy, func.dx),
                 kernel_shape=func.inputs[1].shape[2:],
                 # pads: [x1_begin, x2_begin...x1_end, x2_end,...]
@@ -18,7 +18,7 @@ def convert_Convolution2DFunction(func, opset_version,
             )
         else:
             node = onnx_helper.make_node(
-                'Conv', input_names, output_names,
+                'Conv', input_names, num_outputs,
                 dilations=(1, 1),
                 kernel_shape=func.inputs[1].shape[2:],
                 pads=(func.ph, func.pw, func.ph, func.pw),
@@ -29,7 +29,7 @@ def convert_Convolution2DFunction(func, opset_version,
 
 
 def convert_ConvolutionND(func, opset_version, input_names,
-                          output_names, parameters):
+                          num_outputs, parameters):
     pad = []
     x_ndim = len(func.inputs[0].shape)
     w_ndim = len(func.inputs[1].shape)
@@ -41,7 +41,7 @@ def convert_ConvolutionND(func, opset_version, input_names,
 
     if opset_version == 1:
         return onnx_helper.make_node(
-            'Conv', input_names, output_names,
+            'Conv', input_names, num_outputs,
             kernel_shape=func.inputs[1].shape[2:],
             pads=pad,
             strides=func.stride,
@@ -49,10 +49,10 @@ def convert_ConvolutionND(func, opset_version, input_names,
 
 
 def convert_Deconvolution2DFunction(func, opset_version,
-                                    input_names, output_names, parameters):
+                                    input_names, num_outputs, parameters):
     if opset_version == 1:
         return onnx_helper.make_node(
-            'ConvTranspose', input_names, output_names,
+            'ConvTranspose', input_names, num_outputs,
             kernel_shape=func.inputs[1].shape[2:],
             output_shape=(func.outh, func.outw),
             # pads: [x1_begin, x2_begin...x1_end, x2_end,...]
@@ -62,7 +62,7 @@ def convert_Deconvolution2DFunction(func, opset_version,
 
 
 def convert_DeconvolutionND(func, opset_version, input_names,
-                            output_names, parameters):
+                            num_outputs, parameters):
     pad = []
     x_ndim = len(func.inputs[0].shape)
     w_ndim = len(func.inputs[1].shape)
@@ -74,7 +74,7 @@ def convert_DeconvolutionND(func, opset_version, input_names,
 
     if opset_version == 1:
         return onnx_helper.make_node(
-            'ConvTranspose', input_names, output_names,
+            'ConvTranspose', input_names, num_outputs,
             kernel_shape=func.inputs[1].shape[2:],
             output_shape=func.outs,
             pads=pad,
@@ -83,7 +83,7 @@ def convert_DeconvolutionND(func, opset_version, input_names,
 
 
 def convert_EmbedIDFunction(func, opset_version, input_names,
-                            output_names, parameters):
+                            num_outputs, parameters):
     x_index_name, W_name = input_names
     input_names = [W_name, x_index_name]
 
@@ -93,11 +93,11 @@ def convert_EmbedIDFunction(func, opset_version, input_names,
 
     if opset_version == 1:
         return onnx_helper.make_node(
-            'Gather', input_names, output_names, axis=0),
+            'Gather', input_names, num_outputs, axis=0),
 
 
 def convert_LinearFunction(func, opset_version, input_names,
-                           output_names, parameters):
+                           num_outputs, parameters):
     # When the func has bias
     if len(func.inputs) == 2:
         batchsize = func.inputs[0].shape[0]
@@ -109,9 +109,9 @@ def convert_LinearFunction(func, opset_version, input_names,
 
     if opset_version == 1 or opset_version == 6:
         return onnx_helper.make_node(
-            'Gemm', input_names, output_names,
+            'Gemm', input_names, num_outputs,
             alpha=1.0, beta=1.0, broadcast=1, transA=0, transB=1),
     elif opset_version == 7:
         return onnx_helper.make_node(
-            'Gemm', input_names, output_names,
+            'Gemm', input_names, num_outputs,
             alpha=1.0, beta=1.0, transA=0, transB=1),

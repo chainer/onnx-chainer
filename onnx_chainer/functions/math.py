@@ -3,17 +3,17 @@ import numpy as np
 from onnx_chainer import onnx_helper
 
 
-def convert_Add(func, opset_version, input_names, output_names,
+def convert_Add(func, opset_version, input_names, num_outputs,
                 parameters):
     if opset_version == 1:
         return onnx_helper.make_node(
-            'Add', input_names, output_names, consumed_inputs=[1, 1]),
+            'Add', input_names, num_outputs, consumed_inputs=[1, 1]),
     elif opset_version == 6 or opset_version == 7:
-        return onnx_helper.make_node('Add', input_names, output_names),
+        return onnx_helper.make_node('Add', input_names, num_outputs),
 
 
 def convert_AddConstant(func, opset_version, input_names,
-                        output_names, parameters):
+                        num_outputs, parameters):
     value = np.asarray([func.value], dtype=func.inputs[0].dtype)
     value = np.broadcast_to(value, func.inputs[0].shape)
     value_param = chainer.Parameter(value)
@@ -22,31 +22,31 @@ def convert_AddConstant(func, opset_version, input_names,
 
     if opset_version == 1:
         return onnx_helper.make_node(
-            'Add', input_names, output_names, consumed_inputs=[1, 1]),
+            'Add', input_names, num_outputs, consumed_inputs=[1, 1]),
     elif opset_version == 6 or opset_version == 7:
-        return onnx_helper.make_node('Add', input_names, output_names),
+        return onnx_helper.make_node('Add', input_names, num_outputs),
 
 
-def convert_Sub(func, opset_version, input_names, output_names,
+def convert_Sub(func, opset_version, input_names, num_outputs,
                 parameters):
     if opset_version == 1:
         return onnx_helper.make_node(
-            'Sub', input_names, output_names, consumed_inputs=[1, 1]),
+            'Sub', input_names, num_outputs, consumed_inputs=[1, 1]),
     elif opset_version == 6 or opset_version == 7:
-        return onnx_helper.make_node('Sub', input_names, output_names),
+        return onnx_helper.make_node('Sub', input_names, num_outputs),
 
 
-def convert_Mul(func, opset_version, input_names, output_names,
+def convert_Mul(func, opset_version, input_names, num_outputs,
                 parameters):
     if opset_version == 1:
         return onnx_helper.make_node(
-            'Mul', input_names, output_names, consumed_inputs=[1, 1]),
+            'Mul', input_names, num_outputs, consumed_inputs=[1, 1]),
     elif opset_version == 6 or opset_version == 7:
-        return onnx_helper.make_node('Mul', input_names, output_names),
+        return onnx_helper.make_node('Mul', input_names, num_outputs),
 
 
 def convert_MulConstant(func, opset_version, input_names,
-                        output_names, parameters):
+                        num_outputs, parameters):
     value = np.asarray([func.value], dtype=func.inputs[0].dtype)
     value_param = chainer.Parameter(value)
     parameters.append(value_param)
@@ -54,40 +54,40 @@ def convert_MulConstant(func, opset_version, input_names,
 
     if opset_version == 1:
         return onnx_helper.make_node(
-            'Mul', input_names, output_names, consumed_inputs=[1, 1]),
+            'Mul', input_names, num_outputs, consumed_inputs=[1, 1]),
     elif opset_version == 6 or opset_version == 7:
-        return onnx_helper.make_node('Mul', input_names, output_names),
+        return onnx_helper.make_node('Mul', input_names, num_outputs),
 
 
-def convert_Neg(func, opset_version, input_names, output_names,
+def convert_Neg(func, opset_version, input_names, num_outputs,
                 parameters):
     if opset_version == 1:
         return onnx_helper.make_node(
-            'Neg', input_names, output_names, consumed_inputs=[1, 1]),
+            'Neg', input_names, num_outputs, consumed_inputs=[1, 1]),
     elif opset_version == 6:
-        return onnx_helper.make_node('Neg', input_names, output_names),
+        return onnx_helper.make_node('Neg', input_names, num_outputs),
 
 
-def convert_Div(func, opset_version, input_names, output_names,
+def convert_Div(func, opset_version, input_names, num_outputs,
                 parameters):
     if opset_version == 1:
         return onnx_helper.make_node(
-            'Div', input_names, output_names, consumed_inputs=[1, 1]),
+            'Div', input_names, num_outputs, consumed_inputs=[1, 1]),
     elif opset_version == 6 or opset_version == 7:
-        return onnx_helper.make_node('Div', input_names, output_names),
+        return onnx_helper.make_node('Div', input_names, num_outputs),
 
 
 def convert_Absolute(func, opset_version, input_names,
-                     output_names, parameters):
+                     num_outputs, parameters):
     if opset_version == 1:
         return onnx_helper.make_node(
-            'Abs', input_names, output_names, consumed_inputs=[1]),
+            'Abs', input_names, num_outputs, consumed_inputs=[1]),
     elif opset_version == 6:
-        return onnx_helper.make_node('Abs', input_names, output_names),
+        return onnx_helper.make_node('Abs', input_names, num_outputs),
 
 
 def convert_PowVarConst(func, opset_version, input_names,
-                        output_names, parameters):
+                        num_outputs, parameters):
     value = np.asarray([func.value], dtype=func.inputs[0].dtype)
     value = np.broadcast_to(value, func.inputs[0].shape)
     value_param = chainer.Parameter(value)
@@ -95,42 +95,42 @@ def convert_PowVarConst(func, opset_version, input_names,
     input_names.append(str(id(value_param)))
 
     if opset_version == 1 or opset_version == 7:
-        return onnx_helper.make_node('Pow', input_names, output_names),
+        return onnx_helper.make_node('Pow', input_names, num_outputs),
 
 
-def convert_Clip(func, opset_version, input_names, output_names,
+def convert_Clip(func, opset_version, input_names, num_outputs,
                  parameters):
     if opset_version == 1:
         return onnx_helper.make_node(
-            'Clip', input_names, output_names,
+            'Clip', input_names, num_outputs,
             max=func.x_max,
             min=func.x_min,
             consumed_inputs=[1]
         ),
     elif opset_version == 6:
         return onnx_helper.make_node(
-            'Clip', input_names, output_names,
+            'Clip', input_names, num_outputs,
             max=func.x_max,
             min=func.x_min,
         ),
 
 
-def convert_Exp(func, opset_version, input_names, output_names,
+def convert_Exp(func, opset_version, input_names, num_outputs,
                 parameters):
     if opset_version == 1:
         return onnx_helper.make_node(
-            'Exp', input_names, output_names, consumed_inputs=[1, 1]),
+            'Exp', input_names, num_outputs, consumed_inputs=[1, 1]),
     elif opset_version == 6:
-        return onnx_helper.make_node('Exp', input_names, output_names),
+        return onnx_helper.make_node('Exp', input_names, num_outputs),
 
 
 def convert_Identity(func, opset_version, input_names,
-                     output_names, parameters):
-    return onnx_helper.make_node('Identity', input_names, output_names),
+                     num_outputs, parameters):
+    return onnx_helper.make_node('Identity', input_names, num_outputs),
 
 
 def convert_MatMul(func, opset_version, input_names,
-                   output_names, parameters):
+                   num_outputs, parameters):
     bias_shape = (
         func.inputs[0].shape[-1] if func.transa else func.inputs[0].shape[-2],
         func.inputs[1].shape[-2] if func.transb else func.inputs[1].shape[-1]
@@ -141,41 +141,41 @@ def convert_MatMul(func, opset_version, input_names,
     input_names.append(str(id(bias_param)))
 
     return onnx_helper.make_node(
-        'Gemm', input_names, output_names,
+        'Gemm', input_names, num_outputs,
         transA=func.transa,
         transB=func.transb
     ),
 
 
 def convert_Maximum(func, opset_version, input_names,
-                    output_names, parameters):
+                    num_outputs, parameters):
     if opset_version == 1:
         return onnx_helper.make_node(
-            'Max', input_names, output_names, consumed_inputs=[1, 1]),
+            'Max', input_names, num_outputs, consumed_inputs=[1, 1]),
     elif opset_version == 6 or opset_version == 8:
-        return onnx_helper.make_node('Max', input_names, output_names),
+        return onnx_helper.make_node('Max', input_names, num_outputs),
 
 
 def convert_Minimum(func, opset_version, input_names,
-                    output_names, parameters):
+                    num_outputs, parameters):
     if opset_version == 1:
         return onnx_helper.make_node(
-            'Min', input_names, output_names, consumed_inputs=[1, 1]),
+            'Min', input_names, num_outputs, consumed_inputs=[1, 1]),
     elif opset_version == 6 or opset_version == 8:
-        return onnx_helper.make_node('Min', input_names, output_names),
+        return onnx_helper.make_node('Min', input_names, num_outputs),
 
 
-def convert_Sqrt(func, opset_version, input_names, output_names,
+def convert_Sqrt(func, opset_version, input_names, num_outputs,
                  parameters):
     if opset_version == 1:
         return onnx_helper.make_node(
-            'Sqrt', input_names, output_names, consumed_inputs=[1, 1]),
+            'Sqrt', input_names, num_outputs, consumed_inputs=[1, 1]),
     elif opset_version == 6:
-        return onnx_helper.make_node('Sqrt', input_names, output_names),
+        return onnx_helper.make_node('Sqrt', input_names, num_outputs),
 
 
 def convert_LogSumExp(func, opset_version, input_names,
-                      output_names, parameters):
+                      num_outputs, parameters):
     # Use keepdims=False by default
     # since the chainer does not support keepdims option
     kwargs = {'keepdims': False}
@@ -184,56 +184,56 @@ def convert_LogSumExp(func, opset_version, input_names,
     if func.axis is not None:
         kwargs['axes'] = func.axis
     return onnx_helper.make_node(
-        'ReduceLogSumExp', input_names, output_names, **kwargs),
+        'ReduceLogSumExp', input_names, num_outputs, **kwargs),
 
 
-def convert_Max(func, opset_version, input_names, output_names,
+def convert_Max(func, opset_version, input_names, num_outputs,
                 parameters):
     kwargs = {'keepdims': func.keepdims}
     if func.axis is not None:
         kwargs['axes'] = func.axis
     return onnx_helper.make_node(
-        'ReduceMax', input_names, output_names, **kwargs),
+        'ReduceMax', input_names, num_outputs, **kwargs),
 
 
-def convert_Mean(func, opset_version, input_names, output_names,
+def convert_Mean(func, opset_version, input_names, num_outputs,
                  parameters):
     kwargs = {'keepdims': func.keepdims}
     if func.axis is not None:
         kwargs['axes'] = func.axis
     return onnx_helper.make_node(
-        'ReduceMean', input_names, output_names, **kwargs),
+        'ReduceMean', input_names, num_outputs, **kwargs),
 
 
-def convert_Min(func, opset_version, input_names, output_names,
+def convert_Min(func, opset_version, input_names, num_outputs,
                 parameters):
     kwargs = {'keepdims': func.keepdims}
     if func.axis is not None:
         kwargs['axes'] = func.axis
     return onnx_helper.make_node(
-        'ReduceMin', input_names, output_names, **kwargs),
+        'ReduceMin', input_names, num_outputs, **kwargs),
 
 
-def convert_Prod(func, opset_version, input_names, output_names,
+def convert_Prod(func, opset_version, input_names, num_outputs,
                  parameters):
     kwargs = {'keepdims': func.keepdims}
     if func.axis is not None:
         kwargs['axes'] = func.axis
     return onnx_helper.make_node(
-        'ReduceProd', input_names, output_names, **kwargs),
+        'ReduceProd', input_names, num_outputs, **kwargs),
 
 
-def convert_Sum(func, opset_version, input_names, output_names,
+def convert_Sum(func, opset_version, input_names, num_outputs,
                 parameters):
     kwargs = {'keepdims': func.keepdims}
     if func.axis is not None:
         kwargs['axes'] = func.axis
     return onnx_helper.make_node(
-        'ReduceSum', input_names, output_names, **kwargs),
+        'ReduceSum', input_names, num_outputs, **kwargs),
 
 
 def convert_LinearInterpolate(func, opset_version, input_names,
-                              output_names, parameters):
+                              num_outputs, parameters):
     typ = func.inputs[0].dtype if isinstance(
         func.inputs[0].dtype, np.dtype) else np.dtype(func.inputs[0].dtype)
 
@@ -251,25 +251,25 @@ def convert_LinearInterpolate(func, opset_version, input_names,
     n3 = onnx_helper.make_node(
         "Mul", [n1.output[0], input_names[2]], 1, **kwargs)
     n4 = onnx_helper.make_node(
-        "Add", [n2.output[0], n3.output[0]], output_names, **kwargs)
+        "Add", [n2.output[0], n3.output[0]], num_outputs, **kwargs)
 
     return n1, n2, n3, n4
 
 
 def convert_Square(func, opset_version, input_names,
-                   output_names, parameters):
+                   num_outputs, parameters):
     if opset_version == 1:
         return onnx_helper.make_node(
-            'Mul', [input_names[0], input_names[0]], output_names,
+            'Mul', [input_names[0], input_names[0]], num_outputs,
             consumed_inputs=[1, 1]),
     elif opset_version == 6 or opset_version == 7:
         return onnx_helper.make_node(
-            'Mul', [input_names[0], input_names[0]], output_names),
+            'Mul', [input_names[0], input_names[0]], num_outputs),
 
 
 def convert_BroadcastTo(func, opset_version, input_names,
-                        output_names, parameters):
+                        num_outputs, parameters):
     shape = np.array(func._shape)
     parameters.append(shape)
     input_names.append(str(id(shape)))
-    return onnx_helper.make_node('Expand', input_names, output_names),
+    return onnx_helper.make_node('Expand', input_names, num_outputs),

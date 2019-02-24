@@ -4,7 +4,7 @@ from onnx_chainer import onnx_helper
 
 
 def convert_AveragePooling2D(func, opset_version, input_names,
-                             output_names, parameters):
+                             num_outputs, parameters):
     pad = [func.ph, func.pw]
     stride = [func.sy, func.sx]
     ksize = [func.kh, func.kw]
@@ -26,7 +26,7 @@ def convert_AveragePooling2D(func, opset_version, input_names,
             'Use operation set version >= 7.')
     elif opset_version == 7:
         return onnx_helper.make_node(
-            'AveragePool', input_names, output_names,
+            'AveragePool', input_names, num_outputs,
             kernel_shape=ksize,
             pads=pad,
             strides=stride,
@@ -35,7 +35,7 @@ def convert_AveragePooling2D(func, opset_version, input_names,
 
 
 def convert_AveragePoolingND(func, opset_version, input_names,
-                             output_names, parameters):
+                             num_outputs, parameters):
     pad = list(func.pad[:])
     if func.cover_all:
         # Supports cover_all by setting extra padding
@@ -57,7 +57,7 @@ def convert_AveragePoolingND(func, opset_version, input_names,
             'Use operation set version >= 7.')
     elif opset_version == 7:
         return onnx_helper.make_node(
-            'AveragePool', input_names, output_names,
+            'AveragePool', input_names, num_outputs,
             kernel_shape=func.ksize,
             pads=pad,
             strides=func.stride,
@@ -66,7 +66,7 @@ def convert_AveragePoolingND(func, opset_version, input_names,
 
 
 def convert_MaxPooling2D(func, opset_version, input_names,
-                         output_names, parameters):
+                         num_outputs, parameters):
     pad = [func.ph, func.pw]
     stride = [func.sy, func.sx]
     ksize = [func.kh, func.kw]
@@ -84,14 +84,14 @@ def convert_MaxPooling2D(func, opset_version, input_names,
 
     if opset_version == 1:
         return onnx_helper.make_node(
-            'MaxPool', input_names, output_names,
+            'MaxPool', input_names, num_outputs,
             kernel_shape=ksize,
             pads=pad,
             strides=stride
         ),
     elif opset_version == 8:
         return onnx_helper.make_node(
-            'MaxPool', input_names, output_names,
+            'MaxPool', input_names, num_outputs,
             kernel_shape=ksize,
             pads=pad,
             strides=stride,
@@ -100,7 +100,7 @@ def convert_MaxPooling2D(func, opset_version, input_names,
 
 
 def convert_MaxPoolingND(func, opset_version, input_names,
-                         output_names, parameters):
+                         num_outputs, parameters):
     pad = list(func.pad[:])
     if func.cover_all:
         # Supports cover_all by setting extra padding
@@ -118,14 +118,14 @@ def convert_MaxPoolingND(func, opset_version, input_names,
 
     if opset_version == 1:
         return onnx_helper.make_node(
-            'MaxPool', input_names, output_names,
+            'MaxPool', input_names, num_outputs,
             kernel_shape=func.ksize,
             pads=pad,
             strides=func.stride
         ),
     elif opset_version == 8:
         return onnx_helper.make_node(
-            'MaxPool', input_names, output_names,
+            'MaxPool', input_names, num_outputs,
             kernel_shape=func.ksize,
             pads=pad,
             strides=func.stride,
@@ -134,14 +134,14 @@ def convert_MaxPoolingND(func, opset_version, input_names,
 
 
 def convert_ROIPooling2D(func, opset_version, input_names,
-                         output_names, parameters):
+                         num_outputs, parameters):
     warnings.warn(
         'It\'s possible that output does not match with Chainer, please check '
         'each runtime\'s implementation. For example, when input x has '
         'negative values, some runtimes set max(output, 0) unlike Chainer.',
         UserWarning)
     return onnx_helper.make_node(
-        'MaxRoiPool', input_names, output_names,
+        'MaxRoiPool', input_names, num_outputs,
         pooled_shape=[func.outh, func.outw],
         spatial_scale=func.spatial_scale,
     ),

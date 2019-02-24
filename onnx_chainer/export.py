@@ -60,7 +60,7 @@ def create_node(
         onnx_helper.set_func_name(func_name)
         converter = getattr(functions, converter_name)
         nodes = converter(
-            func, opset_version, input_names, output_names,
+            func, opset_version, input_names, len(output_names),
             parameters)
         nodes = list(reversed(nodes))
         assert len(nodes[0].output) == len(output_names)

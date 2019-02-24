@@ -17,9 +17,6 @@ def gensym():
     return 'tmp{}_{}'.format(__func_name, __func_to_id[__func_name])
 
 
-def make_node(op_name, input_names, output_spec=1, **kwargs):
-    if isinstance(output_spec, int):
-        output_names = [gensym() for i in range(output_spec)]
-    else:
-        output_names = output_spec
+def make_node(op_name, input_names, num_outputs, **kwargs):
+    output_names = [gensym() for i in range(num_outputs)]
     return onnx.helper.make_node(op_name, input_names, output_names, **kwargs)
