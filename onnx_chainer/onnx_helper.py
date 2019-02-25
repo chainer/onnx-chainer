@@ -30,7 +30,7 @@ def gensym():
 def make_node(op_name, input_names, num_outputs, **kwargs):
     """A thin wrapper of `onnx.helper.make_node`.
 
-    Unlike `onnx.helper.make_node`, this funciton takes the number of
+    Unlike `onnx.helper.make_node`, this function takes the number of
     output values instead of the names of them. Unique names will be
     assigned automatically.
 
