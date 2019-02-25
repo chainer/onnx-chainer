@@ -1,7 +1,6 @@
 import chainer
 import os
 
-import numpy as np
 from onnx import numpy_helper
 
 
@@ -39,11 +38,7 @@ def export_testcase(model, args, out_dir):
     chainer.config.train = True
     model.cleargrads()
     result = model(*args)
-    result.grad = np.ones(result.shape, result.dtype)
-    result.backward()
 
-    outputs = [('', result.array)]
-    for i, (name, value) in enumerate(outputs):
-        with open(os.path.join(test_data_dir, 'output_%d.pb' % i), 'wb') as f:
-            t = numpy_helper.from_array(value, name)
-            f.write(t.SerializeToString())
+    with open(os.path.join(test_data_dir, 'output_0.pb'), 'wb') as f:
+        t = numpy_helper.from_array(result.array, '')
+        f.write(t.SerializeToString())
