@@ -83,19 +83,16 @@ def check_output(model, x, filename, out_keys=None, opset_version=None):
 
     onnx_model = onnx_chainer.export(model, x, filename,
                                      opset_version=opset_version)
+    check_all_connected(onnx_model)
 
     sess = rt.InferenceSession(onnx_model.SerializeToString())
     input_names = [i.name for i in sess.get_inputs()]
 
     # To detect unexpected inputs created by exporter, check input names
     # TODO(disktnk): `input_names` got from onnxruntime session includes only
-    #                network inputs, does not include internal inputs such as
-    #                weight attribute etc. so that need to collect network
-    #                inputs from `onnx_model`.
-    initialized_graph_input_names = {
-        i.name for i in onnx_model.graph.initializer}
-    graph_input_names = [i.name for i in onnx_model.graph.input
-                         if i.name not in initialized_graph_input_names]
+    # network inputs, does not include internal inputs such as weight attribute
+    # etc. so that need to collect network inputs from `onnx_model`.
+    graph_input_names = _get_graph_input_names(onnx_model)
     assert list(sorted(input_names)) == list(sorted(graph_input_names))
 
     rt_out = sess.run(
@@ -103,3 +100,24 @@ def check_output(model, x, filename, out_keys=None, opset_version=None):
 
     for cy, my in zip(chainer_out, rt_out):
         np.testing.assert_allclose(cy, my, rtol=1e-5, atol=1e-5)
+
+
+def check_all_connected(onnx_model):
+    input_names = set(_get_graph_input_names(onnx_model))
+    seen_nodes = set()
+    # ONNX model is directed graph
+    for node in onnx_model.graph.node:
+        for input_name in node.input:
+            if input_name in input_names:
+                seen_nodes.add(id(node))
+                break
+        for output_name in node.output:
+            input_names.add(output_name)
+    assert len(onnx_model.graph.node) == len(seen_nodes)
+
+
+def _get_graph_input_names(onnx_model):
+    initialized_graph_input_names = {
+        i.name for i in onnx_model.graph.initializer}
+    return [i.name for i in onnx_model.graph.input if i.name not in
+            initialized_graph_input_names]
