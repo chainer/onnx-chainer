@@ -140,5 +140,7 @@ class TestIntermidiateOutput(unittest.TestCase):
     def test_outputs(self):
         model = self.get_model()
         x = np.ones((1, 3), dtype=np.float32)
+        # TODO(disktnk) output keys are not intuitive
         test_onnxruntime.check_output(
-            model, x, 'IntermidiateOutput.onnx', out_keys=['Gemm_0', 'Gemm_1'])
+            model, x, 'IntermidiateOutput.onnx',
+            out_keys=['Identity_0', 'Gemm_1'])

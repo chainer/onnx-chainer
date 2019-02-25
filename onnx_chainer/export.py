@@ -102,7 +102,7 @@ class ONNXExport(chainer.FunctionHook):
         self.graph = []
         self.inputs = {}
         self.additional_parameters = []
-        self.middle_output_var_to_varnode = {}
+        self.intermidiate_output = {}
         self.specified_opset_version = opset_version
 
     def backward_postprocess(self, function, in_data, out_grad):
@@ -122,12 +122,21 @@ class ONNXExport(chainer.FunctionHook):
 
         # This is to get corresponding VariableNode id from the output
         # Variable of the network
+        output_names = []
         for o in function.outputs:
             var = o().get_variable_or_none()
             if var is not None:  # If the output is kept
-                self.middle_output_var_to_varnode[id(var)] = id(o())
-
-        output_names = [str(id(o())) for o in function.outputs]
+                output_name = str(id(var))
+                if output_name in self.inputs:
+                    # ONNX graph does not allow one node is both input and
+                    # output. add ID operator to separate output node.
+                    id_node = onnx_helper.make_node(
+                        'Identity', [output_name], 1)
+                    self.intermidiate_output[output_name] = id_node.output[0]
+                    self.graph.append(id_node)
+            else:
+                output_name = str(id(o()))
+            output_names.append(output_name)
 
         opset_versions = mapping.operators[func_name]
         if isinstance(opset_versions, int):
@@ -292,13 +301,25 @@ def export(model, args, filename=None, export_params=True,
         outputs = (outputs,)
 
     for output in outputs:
-        if id(output) in o.middle_output_var_to_varnode:
-            output_id = str(o.middle_output_var_to_varnode[id(output)])
-        else:
-            output_id = str(id(output))
+        output_id = str(id(output))
+        if output_id in o.intermidiate_output:
+            output_id = o.intermidiate_output[output_id]
+            idx = []
+            for l, i in enumerate(input_tensors):
+                if i.name in o.intermidiate_output:
+                    idx.append(l)
+            if idx:
+                for i in idx:
+                    del input_tensors[i]
+            idx = []
+            for l, i in enumerate(initializers):
+                if i.name in o.intermidiate_output:
+                    idx.append(l)
+            if idx:
+                for i in idx:
+                    del initializers[i]
         output_tensors.append(helper.make_tensor_value_info(
-            output_id, NP_TYPE_TO_TENSOR_TYPE[output.dtype],
-            output.shape))
+            output_id, NP_TYPE_TO_TENSOR_TYPE[output.dtype], output.shape))
 
     if not export_params:
         initializers = []
