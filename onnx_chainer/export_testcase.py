@@ -25,10 +25,10 @@ def export_testcase(model, args, out_dir, graph_name='Graph'):
     """
     os.makedirs(out_dir, exist_ok=True)
     export(model, args,
-           filename='%s/model.onnx' % out_dir,
+           filename=os.path.join(out_dir, 'model.onnx'),
            graph_name=graph_name)
 
-    test_data_dir = '%s/test_data_set_0' % out_dir
+    test_data_dir = os.path.join(out_dir, 'test_data_set_0')
     os.makedirs(test_data_dir, exist_ok=True)
     for i, var in enumerate(list(args)):
         with open(os.path.join(test_data_dir, 'input_%d.pb' % i), 'wb') as f:
