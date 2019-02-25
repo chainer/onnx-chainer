@@ -9,6 +9,7 @@ from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 
 from onnx_chainer import functions
 from onnx_chainer import mapping
+from onnx_chainer import onnx_helper
 
 try:
     from onnx import checker
@@ -47,19 +48,23 @@ def convert_parameter(parameter):
 
 
 def create_node(
-        func_name, onnx_op_name, opset_version, func, input_names,
+        func_name, opset_version, func, input_names,
         output_names, parameters):
-    for opver in sorted(mapping.operators[func_name][-1], reverse=True):
+    for opver in sorted(mapping.operators[func_name], reverse=True):
         if opver <= opset_version:
             break
     opset_version = opver
 
     converter_name = 'convert_{}'.format(func_name)
     if hasattr(functions, converter_name):
+        onnx_helper.set_func_name(func_name)
         converter = getattr(functions, converter_name)
         nodes = converter(
-            func, onnx_op_name, opset_version, input_names, output_names,
+            func, opset_version, input_names, len(output_names),
             parameters)
+        nodes = list(reversed(nodes))
+        assert len(nodes[0].output) == len(output_names)
+        nodes[0].output[:] = output_names
     else:
         raise ValueError('{} is not supported.'.format(func_name))
     return nodes
@@ -124,7 +129,7 @@ class ONNXExport(chainer.FunctionHook):
 
         output_names = [str(id(o())) for o in function.outputs]
 
-        onnx_op_name, opset_versions = mapping.operators[func_name]
+        opset_versions = mapping.operators[func_name]
         if isinstance(opset_versions, int):
             opset_version = opset_versions
         elif self.specified_opset_version is None:
@@ -138,7 +143,7 @@ class ONNXExport(chainer.FunctionHook):
                     break
 
         nodes = create_node(
-            func_name, onnx_op_name, opset_version, function, input_names,
+            func_name, opset_version, function, input_names,
             output_names, self.additional_parameters)
         self.graph.extend(nodes)
 
@@ -176,7 +181,7 @@ def export(model, args, filename=None, export_params=True,
             operator version in the exported ONNX file is less than this value.
 
     Returns:
-        A ONNX model object.
+        An ONNX model object.
 
     """
 
