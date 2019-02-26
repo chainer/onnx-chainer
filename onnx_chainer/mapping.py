@@ -99,5 +99,5 @@ operators = {
     'NormalizeL2': (1,),
 
     # Loss
-    'SoftmaxCrossEntropy': ('LogSoftmax', (9,)),
+    'SoftmaxCrossEntropy': (9,),
 }
