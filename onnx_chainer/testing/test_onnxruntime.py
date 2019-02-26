@@ -103,16 +103,16 @@ def check_output(model, x, filename, out_keys=None, opset_version=None):
 
 
 def check_all_connected(onnx_model):
-    input_names = set(_get_graph_input_names(onnx_model))
+    edge_names = set(_get_graph_input_names(onnx_model))
     seen_nodes = set()
     # ONNX model is directed graph
     for node in onnx_model.graph.node:
         for input_name in node.input:
-            if input_name in input_names:
+            if input_name in edge_names:
                 seen_nodes.add(id(node))
                 break
         for output_name in node.output:
-            input_names.add(output_name)
+            edge_names.add(output_name)
     assert len(onnx_model.graph.node) == len(seen_nodes)
 
 
