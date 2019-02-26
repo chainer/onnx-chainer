@@ -1,25 +1,25 @@
 import chainer
-from onnx import helper
+from onnx_chainer import onnx_helper
 
 
 def convert_Dropout(
-        func, onnx_op_name, opset_version, input_names,
-        output_names, parameters):
+        func, opset_version, input_names,
+        num_outputs, parameters):
     if opset_version == 1:
-        return helper.make_node(
-            onnx_op_name, input_names, output_names,
+        return onnx_helper.make_node(
+            'Dropout', input_names, num_outputs,
             is_test=0 if chainer.config.train else 1,
             ratio=func.dropout_ratio,
             consumed_inputs=[1]
         ),
     elif opset_version == 6:
-        return helper.make_node(
-            onnx_op_name, input_names, output_names,
+        return onnx_helper.make_node(
+            'Dropout', input_names, num_outputs,
             is_test=0 if chainer.config.train else 1,
             ratio=func.dropout_ratio,
         ),
     elif opset_version == 7:
-        return helper.make_node(
-            onnx_op_name, input_names, output_names,
+        return onnx_helper.make_node(
+            'Dropout', input_names, num_outputs,
             ratio=func.dropout_ratio,
         ),

@@ -1,124 +1,124 @@
-from onnx import helper
+from onnx_chainer import onnx_helper
 
 
-def convert_ClippedReLU(func, onnx_op_name, opset_version, input_names,
-                        output_names, parameters):
+def convert_ClippedReLU(func, opset_version, input_names,
+                        num_outputs, parameters):
     if opset_version == 1:
-        return helper.make_node(
-            onnx_op_name, input_names, output_names,
+        return onnx_helper.make_node(
+            'Clip', input_names, num_outputs,
             min=0.0, max=func.cap,
             consumed_inputs=[1]
         ),
     elif opset_version == 6:
-        return helper.make_node(
-            onnx_op_name, input_names, output_names,
+        return onnx_helper.make_node(
+            'Clip', input_names, num_outputs,
             min=0.0, max=func.cap,
         ),
 
 
-def convert_ELU(func, onnx_op_name, opset_version, input_names, output_names,
+def convert_ELU(func, opset_version, input_names, num_outputs,
                 parameters):
     if opset_version == 1:
-        return helper.make_node(
-            onnx_op_name, input_names, output_names,
+        return onnx_helper.make_node(
+            'Elu', input_names, num_outputs,
             alpha=func.alpha,
         ),
     elif opset_version == 6:
-        return helper.make_node(
-            onnx_op_name, input_names, output_names,
+        return onnx_helper.make_node(
+            'Elu', input_names, num_outputs,
             alpha=func.alpha
         ),
 
 
-def convert_HardSigmoid(func, onnx_op_name, opset_version, input_names,
-                        output_names, parameters):
+def convert_HardSigmoid(func, opset_version, input_names,
+                        num_outputs, parameters):
     if opset_version == 1:
-        return helper.make_node(
-            onnx_op_name, input_names, output_names,
+        return onnx_helper.make_node(
+            'HardSigmoid', input_names, num_outputs,
             alpha=0.2,
             beta=0.5,
             consumed_inputs=[1],
         ),
     elif opset_version == 6:
-        return helper.make_node(
-            onnx_op_name, input_names, output_names,
+        return onnx_helper.make_node(
+            'HardSigmoid', input_names, num_outputs,
             alpha=0.2,
             beta=0.5
         ),
 
 
-def convert_LeakyReLU(func, onnx_op_name, opset_version, input_names,
-                      output_names, parameters):
+def convert_LeakyReLU(func, opset_version, input_names,
+                      num_outputs, parameters):
     if opset_version == 1:
-        return helper.make_node(
-            onnx_op_name, input_names, output_names,
+        return onnx_helper.make_node(
+            'LeakyRelu', input_names, num_outputs,
             alpha=func.slope,
             consumed_inputs=[1],
         ),
     elif opset_version == 6:
-        return helper.make_node(
-            onnx_op_name, input_names, output_names,
+        return onnx_helper.make_node(
+            'LeakyRelu', input_names, num_outputs,
             alpha=func.slope
         ),
 
 
-def convert_LogSoftmax(func, onnx_op_name, opset_version, input_names,
-                       output_names, parameters):
-    return helper.make_node(
-        onnx_op_name, input_names, output_names,
+def convert_LogSoftmax(func, opset_version, input_names,
+                       num_outputs, parameters):
+    return onnx_helper.make_node(
+        'LogSoftmax', input_names, num_outputs,
         axis=1
     ),
 
 
-def convert_PReLUFunction(func, onnx_op_name, opset_version, input_names,
-                          output_names, parameters):
+def convert_PReLUFunction(func, opset_version, input_names,
+                          num_outputs, parameters):
     if opset_version == 1:
-        return helper.make_node(
-            onnx_op_name, input_names, output_names, consumed_inputs=[1]),
+        return onnx_helper.make_node(
+            'PRelu', input_names, num_outputs, consumed_inputs=[1]),
     elif opset_version == 6:
-        return helper.make_node(onnx_op_name, input_names, output_names),
+        return onnx_helper.make_node('PRelu', input_names, num_outputs),
     elif opset_version == 7:
-        return helper.make_node(onnx_op_name, input_names, output_names),
+        return onnx_helper.make_node('PRelu', input_names, num_outputs),
 
 
-def convert_ReLU(func, onnx_op_name, opset_version, input_names, output_names,
+def convert_ReLU(func, opset_version, input_names, num_outputs,
                  parameters):
     if opset_version == 1:
-        return helper.make_node(
-            onnx_op_name, input_names, output_names,
+        return onnx_helper.make_node(
+            'Relu', input_names, num_outputs,
             consumed_inputs=[1]),
     elif opset_version == 6:
-        return helper.make_node(onnx_op_name, input_names, output_names),
+        return onnx_helper.make_node('Relu', input_names, num_outputs),
 
 
-def convert_Sigmoid(func, onnx_op_name, opset_version, input_names,
-                    output_names, parameters):
+def convert_Sigmoid(func, opset_version, input_names,
+                    num_outputs, parameters):
     if opset_version == 1:
-        return helper.make_node(
-            onnx_op_name, input_names, output_names,
+        return onnx_helper.make_node(
+            'Sigmoid', input_names, num_outputs,
             consumed_inputs=[1]),
     elif opset_version == 6:
-        return helper.make_node(onnx_op_name, input_names, output_names),
+        return onnx_helper.make_node('Sigmoid', input_names, num_outputs),
 
 
-def convert_Softmax(func, onnx_op_name, opset_version, input_names,
-                    output_names, parameters):
-    return helper.make_node(
-        onnx_op_name, input_names, output_names,
+def convert_Softmax(func, opset_version, input_names,
+                    num_outputs, parameters):
+    return onnx_helper.make_node(
+        'Softmax', input_names, num_outputs,
         axis=func.axis
     ),
 
 
-def convert_Softplus(func, onnx_op_name, opset_version, input_names,
-                     output_names, parameters):
-    return helper.make_node(onnx_op_name, input_names, output_names),
+def convert_Softplus(func, opset_version, input_names,
+                     num_outputs, parameters):
+    return onnx_helper.make_node('Softplus', input_names, num_outputs),
 
 
-def convert_Tanh(func, onnx_op_name, opset_version, input_names, output_names,
+def convert_Tanh(func, opset_version, input_names, num_outputs,
                  parameters):
     if opset_version == 1:
-        return helper.make_node(
-            onnx_op_name, input_names, output_names,
+        return onnx_helper.make_node(
+            'Tanh', input_names, num_outputs,
             consumed_inputs=[1]),
     elif opset_version == 6:
-        return helper.make_node(onnx_op_name, input_names, output_names),
+        return onnx_helper.make_node('Tanh', input_names, num_outputs),
