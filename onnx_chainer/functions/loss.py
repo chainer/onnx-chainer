@@ -43,7 +43,7 @@ def convert_SoftmaxCrossEntropy(
             np.array([x_var.shape[1]], dtype=np.int32))))
     nodes.append(helper.make_node(
         'Constant', [], [zeroone], value=from_array(
-            np.array([0, 1], dtype='f'))))
+            np.array([0, 1], dtype=x_var.dtype))))
     nodes.append(helper.make_node(
         'OneHot', [t, depth, zeroone], [th]))
     nodes.append(helper.make_node(
