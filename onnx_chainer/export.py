@@ -101,8 +101,8 @@ class ONNXExport(chainer.FunctionHook):
     def __init__(self, opset_version=None):
         self.graph = []
         self.inputs = {}
+        self.outputs = {}
         self.additional_parameters = []
-        self.intermidiate_output = {}
         self.specified_opset_version = opset_version
 
     def backward_postprocess(self, function, in_data, out_grad):
@@ -132,8 +132,9 @@ class ONNXExport(chainer.FunctionHook):
                     # output. add ID operator to separate output node.
                     id_node = onnx_helper.make_node(
                         'Identity', [output_name], 1)
-                    self.intermidiate_output[output_name] = id_node.output[0]
+                    self.outputs[output_name] = id_node.output[0]
                     self.graph.append(id_node)
+                    del self.inputs[output_name]
             else:
                 output_name = str(id(o()))
             output_names.append(output_name)
@@ -302,22 +303,8 @@ def export(model, args, filename=None, export_params=True,
 
     for output in outputs:
         output_id = str(id(output))
-        if output_id in o.intermidiate_output:
-            output_id = o.intermidiate_output[output_id]
-            idx = []
-            for l, i in enumerate(input_tensors):
-                if i.name in o.intermidiate_output:
-                    idx.append(l)
-            if idx:
-                for i in idx:
-                    del input_tensors[i]
-            idx = []
-            for l, i in enumerate(initializers):
-                if i.name in o.intermidiate_output:
-                    idx.append(l)
-            if idx:
-                for i in idx:
-                    del initializers[i]
+        if output_id in o.outputs:
+            output_id = o.outputs[output_id]
         output_tensors.append(helper.make_tensor_value_info(
             output_id, NP_TYPE_TO_TENSOR_TYPE[output.dtype], output.shape))
 
