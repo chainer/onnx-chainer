@@ -100,9 +100,8 @@ def convert_LinearFunction(func, opset_version, input_names,
                            num_outputs, parameters):
     # When the func has bias
     if len(func.inputs) == 2:
-        batchsize = func.inputs[0].shape[0]
         bias_dim = func.inputs[1].shape[0]
-        bias = np.zeros((batchsize, bias_dim), dtype=np.float32)
+        bias = np.zeros((bias_dim,), dtype=np.float32)
         bias_param = chainer.Parameter(bias)
         parameters.append(bias_param)
         input_names.append(str(id(bias_param)))
