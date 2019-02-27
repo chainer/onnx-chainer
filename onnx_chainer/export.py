@@ -130,7 +130,7 @@ class ONNXExport(chainer.FunctionHook):
                 output_name = str(id(var))
                 if output_name in self.inputs:
                     # ONNX checker does not accept one value is both input and
-                    # output by output SSA checking. To void it, ddd Identity
+                    # output by output SSA checking. To avoid it, add Identity
                     # operator to separate output value.
                     id_node = onnx_helper.make_node(
                         'Identity', [output_name], 1)
