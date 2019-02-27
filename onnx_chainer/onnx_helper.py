@@ -48,12 +48,24 @@ def make_node(op_name, input_names, num_outputs, **kwargs):
 
 
 class GraphBuilder(object):
-    """A helper class to build consecutive nodes."""
+    """A helper class to build consecutive ONNX nodes."""
 
     def __init__(self):
         self._nodes = []
 
     def op(self, op_name, input_names, num_outputs=1, **kwargs):
+        """Creates a new ONNX node and returns its outputs.
+
+        Args:
+          op_name (str): The name of an ONNX op.
+          input_names (list of str): The names of input values.
+          num_outputs (int): The number of output values.
+          **kwargs (dict): ONNX attributes of the node.
+
+        Returns:
+          A str of the output name when `num_outputs` is 1.
+          A tuple of str of the output names otherwise.
+        """
         # Prevent a common mistake. `input_names="input"` creates a
         # node with 5 inputs.
         assert not isinstance(input_names, str)
@@ -65,8 +77,22 @@ class GraphBuilder(object):
             return tuple(node.output)
 
     def const(self, array):
+        """Creates a Constant node of ONNX.
+
+        Args:
+          array (numpy.ndarray): A numpy array.
+
+        Returns:
+          A str of the name of the constant value.
+        """
         tensor = onnx.numpy_helper.from_array(array)
         return self.op('Constant', [], 1, value=tensor)
 
     def nodes(self):
+        """Returns all nodes created so far.
+
+        Returns:
+          A list of `onnx.NodeProto` objects, suitable as the return
+          value of converter functions.
+        """
         return tuple(self._nodes)
