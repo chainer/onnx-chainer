@@ -83,7 +83,7 @@ def check_output(model, x, filename, out_keys=None, opset_version=None):
 
     onnx_model = onnx_chainer.export(model, x, filename,
                                      opset_version=opset_version)
-    check_all_connected(onnx_model)
+    check_all_connected_from_inputs(onnx_model)
 
     sess = rt.InferenceSession(onnx_model.SerializeToString())
     input_names = [i.name for i in sess.get_inputs()]
@@ -102,18 +102,16 @@ def check_output(model, x, filename, out_keys=None, opset_version=None):
         np.testing.assert_allclose(cy, my, rtol=1e-5, atol=1e-5)
 
 
-def check_all_connected(onnx_model):
+def check_all_connected_from_inputs(onnx_model):
     edge_names = set(_get_graph_input_names(onnx_model))
-    seen_nodes = set()
-    # ONNX model is directed graph
+    # Nodes which are not connected from the network inputs.
+    orphan_nodes = []
     for node in onnx_model.graph.node:
-        for input_name in node.input:
-            if input_name in edge_names:
-                seen_nodes.add(id(node))
-                break
+        if not edge_names.intersection(node.input):
+            orphan_nodes.append(node)
         for output_name in node.output:
             edge_names.add(output_name)
-    assert len(onnx_model.graph.node) == len(seen_nodes)
+    assert not(orphan_nodes), '{}'.format(orphan_nodes)
 
 
 def _get_graph_input_names(onnx_model):
