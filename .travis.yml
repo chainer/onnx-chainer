@@ -1,32 +1,46 @@
-dist: trusty
-sudo: required
-
+dist: xenial
 language: python
 
-services:
-  - docker
+matrix:
+  include:
+    - name: "Py35, Chainer stable"
+      python: "3.5"
+    - name: "Py36, Chainer stable"
+      python: "3.6"
+      env:
+        - ONNX_CHAINER_DEPLOY_JOB=1
+    - name: "Py35, Chainer pre-release"
+      python: "3.5"
+      env:
+        - CHAINER_INSTALL="--pre"
+    - name: "Py36, Chainer pre-rlease"
+      python: "3.6"
+      env:
+        - CHAINER_INSTALL="--pre"
 
-python:
-  - "3.5"
-
-env:
-  - PYTHON_VERSION=3.5 CHAINER_VERSION=5.0.0
-  - PYTHON_VERSION=3.6 CHAINER_VERSION=5.0.0
-  - PYTHON_VERSION=3.5 CHAINER_VERSION=6.0.0a1
-  - PYTHON_VERSION=3.6 CHAINER_VERSION=6.0.0a1 ONNX_CHAINER_DEPLOY_JOB=1
+addons:
+  apt:
+      sources:
+        - ubuntu-toolchain-r-test
+      packages:
+          - gcc-7
+          - g++-7
 
 notifications:
   email: false
 
 before_install:
-  - pip install autopep8 flake8
-  - docker pull mitmul/onnx-chainer:python${PYTHON_VERSION}-chainer${CHAINER_VERSION}
+  - pip install autopep8 hacking
+  - pip install -U pytest
+  - pip install onnx==1.3.0 onnxruntime==0.2.1
+  - pip install $CHAINER_INSTALL chainer
+  - pip install chainercv
 
 script:
   - flake8
   - autopep8 -r . --dif --exit-code
-  - pip install -e .  # test plain install before test on docker
-  - bash docker/run_tests.sh ${PYTHON_VERSION} ${CHAINER_VERSION}
+  - pip install -e .
+  - CHAINER_TEST_GPU_LIMIT=0 pytest -x -s -vvvs tests/
 
 deploy:
   - provider: pypi
