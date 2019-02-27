@@ -43,6 +43,7 @@ class TestPoolings(unittest.TestCase):
                 onnx_chainer.MINIMUM_OPSET_VERSION,
                 onnx.defs.onnx_opset_version() + 1):
             # TODO(hamaji): onnxruntime does not support Upsample-9 yet.
+            # https://github.com/chainer/onnx-chainer/issues/111
             if self.name == 'unpooling_2d' and opset_version == 9:
                 continue
             test_onnxruntime.check_output(
