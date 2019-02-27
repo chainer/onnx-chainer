@@ -69,3 +69,4 @@ from onnx_chainer.functions.pooling import convert_AveragePoolingND  # NOQA
 from onnx_chainer.functions.pooling import convert_MaxPooling2D  # NOQA
 from onnx_chainer.functions.pooling import convert_MaxPoolingND  # NOQA
 from onnx_chainer.functions.pooling import convert_ROIPooling2D  # NOQA
+from onnx_chainer.functions.pooling import convert_Unpooling2D  # NOQA
