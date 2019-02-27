@@ -2,8 +2,8 @@ import numpy as np
 from onnx import helper
 from onnx.numpy_helper import from_array
 
-from onnx_chainer.onnx_helper import gensym
 from onnx_chainer import onnx_helper
+from onnx_chainer.onnx_helper import gensym
 
 
 def convert_SoftmaxCrossEntropy(
