@@ -45,3 +45,28 @@ def make_node(op_name, input_names, num_outputs, **kwargs):
     """
     output_names = [gensym() for i in range(num_outputs)]
     return onnx.helper.make_node(op_name, input_names, output_names, **kwargs)
+
+
+class GraphBuilder(object):
+    """A helper class to build consecutive nodes."""
+
+    def __init__(self):
+        self._nodes = []
+
+    def op(self, op_name, input_names, num_outputs=1, **kwargs):
+        # Prevent a common mistake. `input_names="input"` creates a
+        # node with 5 inputs.
+        assert not isinstance(input_names, str)
+        node = make_node(op_name, input_names, num_outputs, **kwargs)
+        self._nodes.append(node)
+        if num_outputs == 1:
+            return node.output[0]
+        else:
+            return tuple(node.output)
+
+    def const(self, array):
+        tensor = onnx.numpy_helper.from_array(array)
+        return self.op('Constant', [], 1, value=tensor)
+
+    def nodes(self):
+        return tuple(self._nodes)
