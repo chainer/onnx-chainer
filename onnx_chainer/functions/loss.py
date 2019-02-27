@@ -1,10 +1,7 @@
 import chainer
 import numpy as np
-from onnx import helper
-from onnx.numpy_helper import from_array
 
 from onnx_chainer import onnx_helper
-from onnx_chainer.onnx_helper import gensym
 
 
 def convert_SoftmaxCrossEntropy(
@@ -31,33 +28,15 @@ def convert_SoftmaxCrossEntropy(
             'argument parameters are default setting.')
 
     # create intermediate values
-    nodes = []
+    gb = onnx_helper.GraphBuilder()
     x, t = input_names
-    y_log = gensym()
-    th = gensym()
-    s0 = gensym()
-    sn = gensym()
-    sr = gensym()
-    depth = gensym()
-    zeroone = gensym()
+    y_log = gb.op('LogSoftmax', [x])
+    depth = gb.const(np.array([x_var.shape[1]], dtype=np.int32))
+    zeroone = gb.const(np.array([0, 1], dtype=x_var.dtype))
+    th = gb.op('OneHot', [t, depth, zeroone])
+    s0 = gb.op('Mul', [y_log, th])
+    sn = gb.op('Neg', [s0])
+    sr = gb.op('ReduceSum', [sn], axes=[1], keepdims=0)
+    gb.op('ReduceMean', [sr], axes=[0], keepdims=0)
 
-    nodes.append(helper.make_node(
-        'LogSoftmax', [x], [y_log]))
-    nodes.append(helper.make_node(
-        'Constant', [], [depth], value=from_array(
-            np.array([x_var.shape[1]], dtype=np.int32))))
-    nodes.append(helper.make_node(
-        'Constant', [], [zeroone], value=from_array(
-            np.array([0, 1], dtype=x_var.dtype))))
-    nodes.append(helper.make_node(
-        'OneHot', [t, depth, zeroone], [th]))
-    nodes.append(helper.make_node(
-        'Mul', [y_log, th], [s0]))
-    nodes.append(helper.make_node(
-        'Neg', [s0], [sn]))
-    nodes.append(helper.make_node(
-        'ReduceSum', [sn], [sr], axes=[1], keepdims=0))
-    nodes.append(onnx_helper.make_node(
-        'ReduceMean', [sr], num_outputs, axes=[0], keepdims=0))
-
-    return tuple(nodes)
+    return gb.nodes()
