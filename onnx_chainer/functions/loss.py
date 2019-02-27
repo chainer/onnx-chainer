@@ -13,16 +13,16 @@ def convert_SoftmaxCrossEntropy(
     x_var, t_var = func.get_retained_inputs()
     if len(x_var.shape) != 2:
         raise NotImplementedError(
-            'onnx-chainer currently handles SoftmaxCrossEntropy only when '
+            'ONNX-Chainer currently handles SoftmaxCrossEntropy only when '
             'the dimension of input variable x is exactly two.')
     if np.any(t_var.array == func.ignore_label):
         raise NotImplementedError(
-            'onnx-chainer currently handles SoftmaxCrossEntropy only when '
+            'ONNX-Chainer currently handles SoftmaxCrossEntropy only when '
             'ignore_label is not used in input variable t.')
     if (not func.normalize) or (func.class_weight is not None) or\
        (func.ignore_label != -1) or (func.reduce != 'mean'):
         raise NotImplementedError(
-            'onnx-chainer currently handles SoftmaxCrossEntropy only when '
+            'ONNX-Chainer currently handles SoftmaxCrossEntropy only when '
             'argument parameters are default setting.')
 
     # create intermediate values
