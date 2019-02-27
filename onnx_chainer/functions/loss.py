@@ -1,3 +1,4 @@
+import chainer
 import numpy as np
 from onnx import helper
 from onnx.numpy_helper import from_array
@@ -10,6 +11,10 @@ def convert_SoftmaxCrossEntropy(
         func, opset_version, input_names,
         num_outputs, parameters):
     # obtain input variable
+    if not isinstance(func, chainer.FunctionNode):
+        raise NotImplementedError(
+            'SoftmaxCrossEntropy is currently supported for Chainer>=6.0.0a1.')
+
     x_var, t_var = func.get_retained_inputs()
     if len(x_var.shape) != 2:
         raise NotImplementedError(
