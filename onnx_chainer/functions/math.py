@@ -47,7 +47,7 @@ def convert_Mul(func, opset_version, input_names, num_outputs,
 
 def convert_MulConstant(func, opset_version, input_names,
                         num_outputs, parameters):
-    value = np.asarray([func.value], dtype=func.inputs[0].dtype)
+    value = np.array(func.value, dtype=func.inputs[0].dtype)
     value_param = chainer.Parameter(value)
     parameters.append(value_param)
     input_names.append(str(id(value_param)))
@@ -240,20 +240,17 @@ def convert_LinearInterpolate(func, opset_version, input_names,
     one = chainer.Parameter(np.array(1, dtype=typ))
     parameters.append(one)
 
-    kwargs = {"consumed_inputs": [1, 1]} if opset_version == 1 else {}
-    kwargs2 = {} if opset_version >= 7 else {"broadcast": 1}
+    kwargs = {'consumed_inputs': [1, 1]} if opset_version == 1 else {}
+    kwargs2 = {} if opset_version >= 7 else {'broadcast': 1}
 
-    n1 = onnx_helper.make_node(
-        "Sub", [str(id(one)), input_names[0]], 1,
-        **kwargs, **kwargs2)
-    n2 = onnx_helper.make_node(
-        "Mul", [input_names[0], input_names[1]], 1, **kwargs)
-    n3 = onnx_helper.make_node(
-        "Mul", [n1.output[0], input_names[2]], 1, **kwargs)
-    n4 = onnx_helper.make_node(
-        "Add", [n2.output[0], n3.output[0]], num_outputs, **kwargs)
+    gb = onnx_helper.GraphBuilder()
+    p, x, y = input_names
+    n1 = gb.op('Sub', [str(id(one)), p], **kwargs, **kwargs2)
+    n2 = gb.op('Mul', [p, x], **kwargs)
+    n3 = gb.op('Mul', [n1, y], **kwargs)
+    gb.op('Add', [n2, n3], num_outputs, **kwargs)
 
-    return n1, n2, n3, n4
+    return gb.nodes()
 
 
 def convert_Square(func, opset_version, input_names,

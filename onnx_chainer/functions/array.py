@@ -93,22 +93,20 @@ def convert_GetItem(func, opset_version, input_names,
             raise ValueError(
                 'GetItem with type {} cannot handle in ONNX Slice, so that '
                 'ONNX-Chainer does not accept the type'.format(type(idx)))
-    nodes = []
-    nodes.append(onnx_helper.make_node(
-        'Slice', input_names, 1,
-        axes=axes, starts=starts, ends=ends))
+
+    gb = onnx_helper.GraphBuilder()
+    output = gb.op('Slice', input_names,
+                   axes=axes, starts=starts, ends=ends)
 
     if squeeze_idxs:
-        nodes.append(onnx_helper.make_node(
-            'Squeeze', nodes[-1].output, 1,
-            axes=squeeze_idxs))
+        output = gb.op('Squeeze', [output],
+                       axes=squeeze_idxs)
 
     if unsqueeze_idxs:
-        nodes.append(onnx_helper.make_node(
-            'Unsqueeze', nodes[-1].output, 1,
-            axes=unsqueeze_idxs))
+        output = gb.op('Unsqueeze', [output],
+                       axes=unsqueeze_idxs)
 
-    return tuple(nodes)
+    return gb.nodes()
 
 
 def convert_Pad(func, opset_version, input_names, num_outputs,

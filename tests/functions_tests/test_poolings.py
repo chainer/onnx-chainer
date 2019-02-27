@@ -27,6 +27,8 @@ from onnx_chainer.testing import test_onnxruntime
      'in_shape': (1, 3, 6, 6, 6), 'args': [2, 1, 1], 'cover_all': False},
     {'name': 'max_pooling_nd', 'ops': F.max_pooling_nd,
      'in_shape': (1, 3, 6, 5, 4), 'args': [3, 2, 1], 'cover_all': True},
+    {'name': 'unpooling_2d', 'ops': F.unpooling_2d,
+     'in_shape': (1, 3, 6, 6), 'args': [3, None, 0], 'cover_all': False},
 )
 class TestPoolings(unittest.TestCase):
 
@@ -40,6 +42,10 @@ class TestPoolings(unittest.TestCase):
         for opset_version in range(
                 onnx_chainer.MINIMUM_OPSET_VERSION,
                 onnx.defs.onnx_opset_version() + 1):
+            # TODO(hamaji): onnxruntime does not support Upsample-9 yet.
+            # https://github.com/chainer/onnx-chainer/issues/111
+            if self.name == 'unpooling_2d' and opset_version == 9:
+                continue
             test_onnxruntime.check_output(
                 self.model, self.x, self.fn, opset_version=opset_version)
 
