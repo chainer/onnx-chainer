@@ -154,6 +154,11 @@ class ONNXExport(chainer.FunctionHook):
                 if opset_version <= self.specified_opset_version:
                     break
 
+        if opset_version > self.specified_opset_version:
+            raise RuntimeError('ONNX-chainer cannot convert `{}` of Chainer '
+                               'with ONNX opset_version {}'.format(
+                                   func_name, self.specified_opset_version))
+
         nodes = create_node(
             func_name, opset_version, function, input_names,
             output_names, self.additional_parameters)
