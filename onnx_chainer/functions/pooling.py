@@ -159,7 +159,7 @@ def convert_Unpooling2D(func, opset_version, input_names, num_outputs,
     outsize = [func.outh, func.outw]
     # TODO(hamaji): These could be implemented by `Slice` and `Pad`.
     if func.cover_all:
-        raise RuntimeError('ONNX chainer does not support `cover_all=True` '
+        raise RuntimeError('ONNX-chainer does not support `cover_all=True` '
                            'for Unpooling2D')
     h, w = func.inputs[0].shape[2:]
     expected_outsize = [
@@ -169,18 +169,18 @@ def convert_Unpooling2D(func, opset_version, input_names, num_outputs,
             w, func.kh, func.sy, func.ph, cover_all=func.cover_all)
     ]
     if outsize != expected_outsize:
-        raise RuntimeError('ONNX chainer does not support `outsize!=None` '
+        raise RuntimeError('ONNX-chainer does not support `outsize!=None` '
                            'for Unpooling2D: expected={} actual={}'.format(
                                expected_outsize, outsize))
     if pad != [0, 0]:
-        raise RuntimeError('ONNX chainer does not support `pad!=0` '
+        raise RuntimeError('ONNX-chainer does not support `pad!=0` '
                            'for Unpooling2D')
     # This one would require an extra 1x1 MaxPool.
     if stride != ksize:
-        raise RuntimeError('ONNX chainer does not support `stride!=1` '
+        raise RuntimeError('ONNX-chainer does not support `stride!=1` '
                            'for Unpooling2D')
     scales = [1.0, 1.0, float(func.kh), float(func.kw)]
-    if opset_version == 1:
+    if opset_version == 7:
         return onnx_helper.make_node('Upsample', input_names, num_outputs,
                                      scales=scales),
     if opset_version == 9:
