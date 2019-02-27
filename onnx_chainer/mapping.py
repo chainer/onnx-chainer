@@ -98,4 +98,6 @@ operators = {
     'LocalResponseNormalization': (1,),
     'NormalizeL2': (1,),
 
+    # Loss
+    'SoftmaxCrossEntropy': (9,),
 }
