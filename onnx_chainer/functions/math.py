@@ -47,7 +47,7 @@ def convert_Mul(func, opset_version, input_names, num_outputs,
 
 def convert_MulConstant(func, opset_version, input_names,
                         num_outputs, parameters):
-    value = np.asarray([func.value], dtype=func.inputs[0].dtype)
+    value = np.array(func.value, dtype=func.inputs[0].dtype)
     value_param = chainer.Parameter(value)
     parameters.append(value_param)
     input_names.append(str(id(value_param)))
