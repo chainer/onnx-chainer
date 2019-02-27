@@ -172,7 +172,7 @@ def convert_Unpooling2D(func, opset_version, input_names, num_outputs,
         raise RuntimeError('ONNX chainer does not support `outsize!=None` '
                            'for Unpooling2D: expected={} actual={}'.format(
                                expected_outsize, outsize))
-    if func.ph != 0 or func.pw != 0:
+    if pad != [0, 0]:
         raise RuntimeError('ONNX chainer does not support `pad!=0` '
                            'for Unpooling2D')
     # This one would require an extra 1x1 MaxPool.
