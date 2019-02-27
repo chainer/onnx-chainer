@@ -118,3 +118,29 @@ class TestMultipleOutput(unittest.TestCase):
         # output keys are None.
         test_onnxruntime.check_output(
             model, x, 'MultipleOutputs.onnx', out_keys=['Tanh_0', 'Sigmoid_0'])
+
+
+class TestIntermediateOutput(unittest.TestCase):
+
+    def get_model(self):
+        class Model(chainer.Chain):
+
+            def __init__(self):
+                super().__init__()
+                with self.init_scope():
+                    self.l1 = L.Linear(4)
+                    self.l2 = L.Linear(5, initial_bias=0.1)
+
+            def __call__(self, x):
+                y = self.l1(x)
+                z = self.l2(y)
+                return y, z
+        return Model()
+
+    def test_outputs(self):
+        model = self.get_model()
+        x = np.ones((1, 3), dtype=np.float32)
+        # TODO(disktnk) output keys are not intuitive
+        test_onnxruntime.check_output(
+            model, x, 'IntermediateOutput.onnx',
+            out_keys=['Identity_0', 'Gemm_1'])
