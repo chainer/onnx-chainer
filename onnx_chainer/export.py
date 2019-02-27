@@ -100,8 +100,9 @@ class ONNXExport(chainer.FunctionHook):
 
     def __init__(self, opset_version=None):
         self.graph = []
-        self.inputs = {}
-        self.outputs = {}
+        self.inputs = {}  # Input `Variable` objects keyed by string IDs
+        # Renamed string IDs keyed by their original string IDs
+        self.renamed_outputs = {}
         self.additional_parameters = []
         self.specified_opset_version = opset_version
 
@@ -128,11 +129,12 @@ class ONNXExport(chainer.FunctionHook):
             if var is not None:  # If the output is kept
                 output_name = str(id(var))
                 if output_name in self.inputs:
-                    # ONNX graph does not allow one node is both input and
-                    # output. add ID operator to separate output node.
+                    # ONNX checker does not accept one value is both input and
+                    # output by output SSA checking. To void it, ddd Identity
+                    # operator to separate output value.
                     id_node = onnx_helper.make_node(
                         'Identity', [output_name], 1)
-                    self.outputs[output_name] = id_node.output[0]
+                    self.renamed_outputs[output_name] = id_node.output[0]
                     self.graph.append(id_node)
                     del self.inputs[output_name]
             else:
@@ -303,8 +305,8 @@ def export(model, args, filename=None, export_params=True,
 
     for output in outputs:
         output_id = str(id(output))
-        if output_id in o.outputs:
-            output_id = o.outputs[output_id]
+        if output_id in o.renamed_outputs:
+            output_id = o.renamed_outputs[output_id]
         output_tensors.append(helper.make_tensor_value_info(
             output_id, NP_TYPE_TO_TENSOR_TYPE[output.dtype], output.shape))
 
