@@ -166,7 +166,8 @@ class ONNXExport(chainer.FunctionHook):
 
 
 def export(model, args, filename=None, export_params=True,
-           graph_name='Graph', save_text=False, opset_version=None):
+           graph_name='Graph', save_text=False, opset_version=None,
+           return_flat_inout=False):
     """Export function for chainer.Chain in ONNX format.
 
     This function performs a forward computation of the given
@@ -343,4 +344,6 @@ def export(model, args, filename=None, export_params=True,
     elif hasattr(filename, 'write'):
         filename.write(model.SerializeToString())
 
+    if return_flat_inout:
+        return model, flat_args, flat_outputs
     return model

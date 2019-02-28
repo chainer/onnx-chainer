@@ -23,6 +23,50 @@ MINIMUM_OPSET_VERSION = 7
 TEST_OUT_DIR = 'out'
 
 
+def check(model, args, name):
+    test_path = gen_test_data_set(model, args, name)
+    check_model_expect(test_path)
+
+
+def gen_test_data_set(model, args, name):
+    test_path = os.path.join(TEST_OUT_DIR, name)
+    onnx_chainer.export_testcase(model, args, test_path)
+    return test_path
+
+
+def check_model_expect(test_path):
+    model_path = os.path.join(test_path, 'model.onnx')
+    with open(model_path, 'rb') as f:
+        onnx_model = onnx.load_model(f)
+
+    test_data_sets = sorted([
+        p for p in os.listdir(test_path) if p.startswith('test_data_set_')])
+    for test_data in test_data_sets:
+        test_data_path = os.path.join(test_path, test_data)
+        assert os.path.isdir(test_data_path)
+
+        file_list = sorted(os.listdir(test_data_path))
+        inputs, outputs = [], []
+
+        for file_name in file_list:
+            if not file_name.endswith('.pb'):
+                continue
+            path = os.path.join(test_path, test_data, file_name)
+            with open(path, 'rb') as f:
+                array = onnx.numpy_helper.to_array(onnx.load_tensor(path))
+            if file_name.startswith('input_'):
+                inputs.append(array)
+            else:
+                outputs.append(array)
+
+        sess = rt.InferenceSession(onnx_model.SerializeToString())
+        input_names = [i.name for i in sess.get_inputs()]
+        rt_out = sess.run(
+            None, {name: array for name, array in zip(input_names, inputs)})
+        for cy, my in zip(outputs, rt_out):
+            np.testing.assert_allclose(cy, my, rtol=1e-5, atol=1e-5)
+
+
 def check_output(model, x, filename, out_keys=None, opset_version=None):
     model.xp.random.seed(42)
 

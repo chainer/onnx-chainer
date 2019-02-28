@@ -1,4 +1,3 @@
-import chainer
 import os
 
 from onnx import numpy_helper
@@ -24,20 +23,18 @@ def export_testcase(model, args, out_dir, graph_name='Graph'):
             graph in the exported ONNX model.
     """
     os.makedirs(out_dir, exist_ok=True)
-    export(model, args,
-           filename=os.path.join(out_dir, 'model.onnx'),
-           graph_name=graph_name)
+    _, inputs, outputs = export(
+        model, args, filename=os.path.join(out_dir, 'model.onnx'),
+        graph_name=graph_name, return_flat_inout=True)
 
     test_data_dir = os.path.join(out_dir, 'test_data_set_0')
     os.makedirs(test_data_dir, exist_ok=True)
-    for i, var in enumerate(list(args)):
+    for i, var in enumerate(inputs):
         with open(os.path.join(test_data_dir, 'input_%d.pb' % i), 'wb') as f:
             t = numpy_helper.from_array(var.data, 'Input_%d' % i)
             f.write(t.SerializeToString())
 
-    chainer.config.train = True
-    result = model(*args)
-
-    with open(os.path.join(test_data_dir, 'output_0.pb'), 'wb') as f:
-        t = numpy_helper.from_array(result.array, '')
-        f.write(t.SerializeToString())
+    for i, var in enumerate(outputs):
+        with open(os.path.join(test_data_dir, 'output_%d.pb' % i), 'wb') as f:
+            t = numpy_helper.from_array(var.data, '')
+            f.write(t.SerializeToString())
