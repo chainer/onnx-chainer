@@ -91,6 +91,7 @@ operators = {
     'MaxPooling2D': (1, 8),
     'MaxPoolingND': (1, 8),
     'ROIPooling2D': (1,),
+    'Unpooling2D': (7, 9),
 
     # Normalization
     'BatchNormalization': (1, 6, 7),
@@ -99,5 +100,5 @@ operators = {
     'NormalizeL2': (1,),
 
     # Loss
-    'SoftmaxCrossEntropy': ('LogSoftmax', (9,)),
+    'SoftmaxCrossEntropy': (9,),
 }
