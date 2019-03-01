@@ -23,14 +23,15 @@ MINIMUM_OPSET_VERSION = 7
 TEST_OUT_DIR = 'out'
 
 
-def check(model, args, name):
-    test_path = gen_test_data_set(model, args, name)
+def check(model, args, name, opset_version):
+    test_path = gen_test_data_set(model, args, name, opset_version)
     check_model_expect(test_path)
 
 
-def gen_test_data_set(model, args, name):
+def gen_test_data_set(model, args, name, opset_version):
     test_path = os.path.join(TEST_OUT_DIR, name)
-    onnx_chainer.export_testcase(model, args, test_path)
+    onnx_chainer.export_testcase(
+        model, args, test_path, opset_version=opset_version)
     return test_path
 
 
