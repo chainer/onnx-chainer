@@ -68,4 +68,4 @@ class TestPReLU(ONNXModelTest):
         self.x = input_generator.increasing(2, 5)
 
     def test_output(self):
-        self.expect(self.model, self.x, 'prelu')
+        self.expect(self.model, self.x)
