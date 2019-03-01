@@ -52,8 +52,8 @@ def export_testcase(model, args, out_dir, graph_name='Graph',
         result.grad = np.ones_like(result.data)
         result.backward()
 
-        for i, param in enumerate(model.params()):
+        for i, (name, param) in enumerate(model.namedparams()):
             path = os.path.join(test_data_dir, 'gradient_%d.pb' % i)
             with open(path, 'wb') as f:
-                t = numpy_helper.from_array(param.grad, str(id(param)))
+                t = numpy_helper.from_array(param.grad, name)
                 f.write(t.SerializeToString())
