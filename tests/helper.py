@@ -29,7 +29,7 @@ class ONNXModelTest(unittest.TestCase):
             if skip_opset_version is not None and\
                     opset_version in skip_opset_version:
                 continue
-            dir_name = 'test_{}_opset{}'.format(test_name, opset_version)
+            dir_name = 'test_' + test_name
             if with_warning:
                 with warnings.catch_warnings(record=True) as w:
                     onnx_chainer.testing.test_onnxruntime.check(

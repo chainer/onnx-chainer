@@ -29,7 +29,8 @@ def check(model, args, name, opset_version):
 
 
 def gen_test_data_set(model, args, name, opset_version):
-    test_path = os.path.join(TEST_OUT_DIR, name)
+    test_path = os.path.join(
+        TEST_OUT_DIR, 'opset{}'.format(opset_version), name)
     onnx_chainer.export_testcase(
         model, args, test_path, opset_version=opset_version)
     return test_path
