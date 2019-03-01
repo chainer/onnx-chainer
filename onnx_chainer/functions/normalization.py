@@ -16,7 +16,8 @@ def convert_BatchNormalization(func, opset_version, input_names,
     parameters.append(running_var)
     input_names.append(context.get_name(running_var))
 
-    unique_layer_name = '{}_{}'.format(func.__class__.__name__, context.get_name(func))
+    unique_layer_name = '{}_{}'.format(func.__class__.__name__,
+                                       context.get_name(func))
     num_outputs += [
         unique_layer_name + '_mean',
         unique_layer_name + '_var',
@@ -48,7 +49,8 @@ def convert_BatchNormalization(func, opset_version, input_names,
 
 
 def convert_FixedBatchNormalization(func, opset_version,
-                                    input_names, num_outputs, context, parameters):
+                                    input_names, num_outputs, context,
+                                    parameters):
     # Add avg_mean and avg_var to graph
     mean_arr, var_arr = [i.get_variable().array for i in func.inputs[3:]]
 
@@ -95,7 +97,8 @@ def convert_FixedBatchNormalization(func, opset_version,
 
 
 def convert_LocalResponseNormalization(func, opset_version,
-                                       input_names, num_outputs, context, parameters):
+                                       input_names, num_outputs, context,
+                                       parameters):
     if opset_version == 1:
         size = int(func.n)
         return onnx_helper.make_node(

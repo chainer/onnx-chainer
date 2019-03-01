@@ -4,7 +4,8 @@ from onnx_chainer import onnx_helper
 
 
 def convert_Convolution2DFunction(func, opset_version,
-                                  input_names, num_outputs, context, parameters):
+                                  input_names, num_outputs, context,
+                                  parameters):
     if opset_version == 1:
         if hasattr(func, 'dy') and hasattr(func, 'dx'):
             node = onnx_helper.make_node(
@@ -29,7 +30,8 @@ def convert_Convolution2DFunction(func, opset_version,
 
 
 def convert_ConvolutionND(func, opset_version, input_names,
-                          num_outputs, context, parameters):
+                          num_outputs, context,
+                          parameters):
     pad = []
     x_ndim = len(func.inputs[0].shape)
     w_ndim = len(func.inputs[1].shape)
@@ -49,7 +51,8 @@ def convert_ConvolutionND(func, opset_version, input_names,
 
 
 def convert_Deconvolution2DFunction(func, opset_version,
-                                    input_names, num_outputs, context, parameters):
+                                    input_names, num_outputs, context,
+                                    parameters):
     if opset_version == 1:
         return onnx_helper.make_node(
             'ConvTranspose', input_names, num_outputs,
