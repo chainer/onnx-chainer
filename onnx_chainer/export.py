@@ -197,6 +197,8 @@ def export(model, args, filename=None, export_params=True,
             or ``None`` is given, the latest opset version of the onnx module
             is used. If an integer is given, it will be ensured that all the
             operator version in the exported ONNX file is less than this value.
+        return_flat_inout (bool): If set True, return ONNX model with flat
+            inputs, and flat outputs.
 
     Returns:
         An ONNX model object.

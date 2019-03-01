@@ -24,8 +24,8 @@ class ONNXModelTest(unittest.TestCase):
         directory. Then test runtime load the model, and compare.
 
         Arguments:
-            model: the target model.
-            args: arguments of the target model.
+            model (~chainer.Chain): the target model.
+            args (list or dict): arguments of the target model.
             name (str): name of test. set class name on default.
             op_name (str): name of operator. use for getting opset verseion.
             skip_opset_version (list): versions to skip test.
