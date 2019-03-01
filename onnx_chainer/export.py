@@ -201,7 +201,10 @@ def export(model, args, filename=None, export_params=True,
             inputs, and flat outputs.
 
     Returns:
-        An ONNX model object.
+        ~onnx.ModelProto or tuple:
+            When ``return_flat_input`` is ``False``, return ModelProto as an
+            ONNX model. Otherwise return the tuple of ModelProto, flat inputs
+            and outputs, both inputs and outputs are list of ~chainer.Variable.
 
     """
 

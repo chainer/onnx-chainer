@@ -29,7 +29,7 @@ class ONNXModelTest(unittest.TestCase):
             name (str): name of test. set class name on default.
             op_name (str): name of operator. use for getting opset verseion.
             skip_opset_version (list): versions to skip test.
-            with_warning (bool): if set `True`, check warnings.
+            with_warning (bool): if True, check warnings.
         """
 
         minimum_version = onnx_chainer.MINIMUM_OPSET_VERSION
