@@ -1,13 +1,15 @@
-import chainer
 import os
 
+import chainer
 import numpy as np
 from onnx import numpy_helper
+
 from onnx_chainer.export import export
 
 
-def export_testcase(model, args, out_dir, graph_name='Graph',
-                    output_grad=False):
+def export_testcase(
+        model, args, out_dir, graph_name='Graph', output_grad=False,
+        opset_version=None):
     """Export model and I/O tensors of the model in protobuf format.
 
     Similar to the `export` function, this function first performs a forward
@@ -28,29 +30,31 @@ def export_testcase(model, args, out_dir, graph_name='Graph',
             gradient with names 'gradient_%d.pb'.
     """
     os.makedirs(out_dir, exist_ok=True)
-    export(model, args,
-           filename=os.path.join(out_dir, 'model.onnx'),
-           graph_name=graph_name)
+    model.cleargrads()
+    _, inputs, outputs = export(
+        model, args, filename=os.path.join(out_dir, 'model.onnx'),
+        graph_name=graph_name, opset_version=opset_version,
+        return_flat_inout=True)
 
     test_data_dir = os.path.join(out_dir, 'test_data_set_0')
     os.makedirs(test_data_dir, exist_ok=True)
-    for i, var in enumerate(list(args)):
+    for i, var in enumerate(inputs):
         with open(os.path.join(test_data_dir, 'input_%d.pb' % i), 'wb') as f:
             t = numpy_helper.from_array(var.data, 'Input_%d' % i)
             f.write(t.SerializeToString())
 
-    chainer.config.train = True
-    model.cleargrads()
-    result = model(*args)
-
-    with open(os.path.join(test_data_dir, 'output_0.pb'), 'wb') as f:
-        t = numpy_helper.from_array(result.array, '')
-        f.write(t.SerializeToString())
+    for i, var in enumerate(outputs):
+        with open(os.path.join(test_data_dir, 'output_%d.pb' % i), 'wb') as f:
+            t = numpy_helper.from_array(var.data, '')
+            f.write(t.SerializeToString())
 
     if output_grad:
         # Perform backward computation
-        result.grad = np.ones_like(result.data)
-        result.backward()
+        if len(outputs) > 1:
+            outputs = chainer.functions.identity(*outputs)
+        for out in outputs:
+            out.grad = np.ones_like(out.data)
+        outputs[0].backward()
 
         for i, param in enumerate(model.params()):
             path = os.path.join(test_data_dir, 'gradient_%d.pb' % i)

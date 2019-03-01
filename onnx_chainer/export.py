@@ -166,7 +166,8 @@ class ONNXExport(chainer.FunctionHook):
 
 
 def export(model, args, filename=None, export_params=True,
-           graph_name='Graph', save_text=False, opset_version=None):
+           graph_name='Graph', save_text=False, opset_version=None,
+           return_flat_inout=False):
     """Export function for chainer.Chain in ONNX format.
 
     This function performs a forward computation of the given
@@ -196,9 +197,14 @@ def export(model, args, filename=None, export_params=True,
             or ``None`` is given, the latest opset version of the onnx module
             is used. If an integer is given, it will be ensured that all the
             operator version in the exported ONNX file is less than this value.
+        return_flat_inout (bool): If set True, return ONNX model with flat
+            inputs, and flat outputs.
 
     Returns:
-        An ONNX model object.
+        ~onnx.ModelProto or tuple:
+            When ``return_flat_input`` is ``False``, return ModelProto as an
+            ONNX model. Otherwise return the tuple of ModelProto, flat inputs
+            and outputs, both inputs and outputs are list of ~chainer.Variable.
 
     """
 
@@ -343,4 +349,6 @@ def export(model, args, filename=None, export_params=True,
     elif hasattr(filename, 'write'):
         filename.write(model.SerializeToString())
 
+    if return_flat_inout:
+        return model, flat_args, flat_outputs
     return model

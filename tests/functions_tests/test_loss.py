@@ -4,14 +4,14 @@ import chainer
 from chainer import testing
 import numpy as np
 
-from onnx_chainer.testing import test_onnxruntime
+from tests.helper import ONNXModelTest
 
 
 @testing.parameterize(
     {'in_shape': (3, 5)},
 )
 @unittest.skip("OneHot operator is not supported on test runtime")
-class TestSoftmaxCrossEntropy(unittest.TestCase):
+class TestSoftmaxCrossEntropy(ONNXModelTest):
 
     # Currently, the test for SoftmaxCrossEntropy is disabled since onnxruntime
     # does not support OneHot node. After OneHot node becomes available, we may
@@ -32,8 +32,4 @@ class TestSoftmaxCrossEntropy(unittest.TestCase):
                                    high=self.in_shape[1]).astype(np.int32)
 
     def test_output(self):
-        for opset_version in (9,):
-            test_onnxruntime.check_output(
-                self.model, [self.x, self.t],
-                'softmax_cross_entropy.onnx',
-                opset_version=opset_version)
+        self.expect(self.model, [self.x, self.t])

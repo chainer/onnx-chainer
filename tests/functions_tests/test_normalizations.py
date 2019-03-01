@@ -1,14 +1,10 @@
-import unittest
-
 import chainer
 import chainer.functions as F
 import chainer.links as L
 from chainer import testing
-import onnx
 
-import onnx_chainer
 from onnx_chainer.testing import input_generator
-from onnx_chainer.testing import test_onnxruntime
+from tests.helper import ONNXModelTest
 
 
 @testing.parameterize(
@@ -25,7 +21,7 @@ from onnx_chainer.testing import test_onnxruntime
         'opset_version': 1
     }
 )
-class TestNormalizations(unittest.TestCase):
+class TestNormalizations(ONNXModelTest):
 
     def setUp(self):
 
@@ -44,22 +40,17 @@ class TestNormalizations(unittest.TestCase):
         ops = getattr(F, self.name)
         self.model = Model(ops, self.args, self.input_argname)
         self.x = input_generator.increasing(2, 5, 3, 3)
-        self.fn = self.name + '.onnx'
 
     def test_output(self):
-        for opset_version in range(
-                onnx_chainer.MINIMUM_OPSET_VERSION,
-                onnx.defs.onnx_opset_version() + 1):
-            test_onnxruntime.check_output(
-                self.model, self.x, self.fn, opset_version=opset_version)
+        self.expect(self.model, self.x, name=self.name)
 
 
 @testing.parameterize(
     {'kwargs': {}},
-    {'kwargs': {'use_beta': False}},
-    {'kwargs': {'use_gamma': False}},
+    {'kwargs': {'use_beta': False}, 'name': 'use_beta_false'},
+    {'kwargs': {'use_gamma': False}, 'name': 'use_gamma_false'},
 )
-class TestBatchNormalization(unittest.TestCase):
+class TestBatchNormalization(ONNXModelTest):
 
     def setUp(self):
 
@@ -75,11 +66,9 @@ class TestBatchNormalization(unittest.TestCase):
 
         self.model = Model(**self.kwargs)
         self.x = input_generator.increasing(2, 5)
-        self.fn = 'BatchNormalization.onnx'
 
     def test_output(self):
-        for opset_version in range(
-                onnx_chainer.MINIMUM_OPSET_VERSION,
-                onnx.defs.onnx_opset_version() + 1):
-            test_onnxruntime.check_output(
-                self.model, self.x, self.fn, opset_version=opset_version)
+        name = 'batchnormalization'
+        if hasattr(self, 'name'):
+            name += '_' + self.name
+        self.expect(self.model, self.x, name=name)

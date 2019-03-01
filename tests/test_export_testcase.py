@@ -52,3 +52,4 @@ class TestExportTestCase(unittest.TestCase):
         for i in range(10):
             assert os.path.isfile(os.path.join(path, 'test_data_set_0',
                                                'gradient_{}.pb'.format(i)))
+        assert i == 9
