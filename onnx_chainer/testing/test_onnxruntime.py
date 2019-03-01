@@ -23,21 +23,10 @@ MINIMUM_OPSET_VERSION = 7
 TEST_OUT_DIR = 'out'
 
 
-def check(model, args, name, opset_version):
-    test_path = gen_test_data_set(model, args, name, opset_version)
-    check_model_expect(test_path)
-
-
-def gen_test_data_set(model, args, name, opset_version):
-    model.xp.random.seed(42)
-    test_path = os.path.join(
-        TEST_OUT_DIR, 'opset{}'.format(opset_version), name)
-    onnx_chainer.export_testcase(
-        model, args, test_path, opset_version=opset_version)
-    return test_path
-
-
 def check_model_expect(test_path):
+    if not ONNXRUNTIME_AVAILABLE:
+        raise ImportError('check_output requires onnxruntime.')
+
     model_path = os.path.join(test_path, 'model.onnx')
     with open(model_path, 'rb') as f:
         onnx_model = onnx.load_model(f)

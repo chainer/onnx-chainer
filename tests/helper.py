@@ -4,7 +4,9 @@ import warnings
 import onnx
 import pytest
 
-import onnx_chainer.testing
+import onnx_chainer
+from onnx_chainer.testing.get_test_data_set import gen_test_data_set
+from onnx_chainer.testing.test_onnxruntime import check_model_expect
 
 
 class ONNXModelTest(unittest.TestCase):
@@ -16,6 +18,20 @@ class ONNXModelTest(unittest.TestCase):
 
     def expect(self, model, args, name=None, op_name=None,
                skip_opset_version=None, with_warning=False):
+        """Compare model output and test runtime output.
+
+        Make an ONNX model from target model with args, and put output
+        directory. Then test runtime load the model, and compare.
+
+        Arguments:
+            model: the target model.
+            args: arguments of the target model.
+            name (str): name of test. set class name on default.
+            op_name (str): name of operator. use for getting opset verseion.
+            skip_opset_version (list): versions to skip test.
+            with_warning (bool): if set `True`, check warnings.
+        """
+
         minimum_version = onnx_chainer.MINIMUM_OPSET_VERSION
         if op_name is not None:
             opset_ids = onnx_chainer.mapping.operators[op_name]
@@ -29,12 +45,15 @@ class ONNXModelTest(unittest.TestCase):
             if skip_opset_version is not None and\
                     opset_version in skip_opset_version:
                 continue
+
             dir_name = 'test_' + test_name
             if with_warning:
                 with warnings.catch_warnings(record=True) as w:
-                    onnx_chainer.testing.test_onnxruntime.check(
-                        self.model, args, dir_name, opset_version)
-                    assert len(w) == 1
+                    test_path = gen_test_data_set(
+                        model, args, dir_name, opset_version)
+                assert len(w) == 1
             else:
-                onnx_chainer.testing.test_onnxruntime.check(
-                    self.model, args, dir_name, opset_version)
+                test_path = gen_test_data_set(
+                    model, args, dir_name, opset_version)
+
+            check_model_expect(test_path)
