@@ -7,6 +7,7 @@ import chainer
 import onnx
 from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 
+from onnx_chainer.context import Context
 from onnx_chainer import functions
 from onnx_chainer import mapping
 from onnx_chainer import onnx_helper
@@ -31,7 +32,7 @@ def _check_available():
             '\t$ pip install onnx\n\n')
 
 
-def convert_parameter(parameter):
+def convert_parameter(parameter, context):
     if isinstance(parameter, chainer.Parameter):
         array = parameter.array
     elif isinstance(parameter, chainer.Variable):
@@ -44,12 +45,12 @@ def convert_parameter(parameter):
             'or Variable or ndarray, but the type was {}.'.format(
                 type(parameter)))
     array = chainer.cuda.to_cpu(array)
-    return numpy_helper.from_array(array, str(id(parameter)))
+    return numpy_helper.from_array(array, context.get_name(parameter))
 
 
 def create_node(
         func_name, opset_version, func, input_names,
-        output_names, parameters):
+        output_names, context, parameters):
     for opver in sorted(mapping.operators[func_name], reverse=True):
         if opver <= opset_version:
             break
@@ -61,7 +62,7 @@ def create_node(
         converter = getattr(functions, converter_name)
         nodes = converter(
             func, opset_version, input_names, len(output_names),
-            parameters)
+            context, parameters)
         nodes = list(reversed(nodes))
         assert len(nodes[0].output) == len(output_names)
         nodes[0].output[:] = output_names
@@ -98,7 +99,9 @@ def rename_tensors(model):
 
 class ONNXExport(chainer.FunctionHook):
 
-    def __init__(self, opset_version=None):
+    def __init__(self, context, opset_version=None):
+        self.context = context
+
         self.graph = []
         self.inputs = {}  # Input `Variable` objects keyed by string IDs
         # Renamed string IDs keyed by their original string IDs
@@ -115,9 +118,9 @@ class ONNXExport(chainer.FunctionHook):
             # 'i' is a VariableNode, so check if it has a Variable/Parameter
             var = i.get_variable_or_none()
             if var is None:  # No reference to Variable/Parameter
-                input_name = str(id(i))  # Use VariableNode as is
+                input_name = self.context.get_name(i)  # Use VariableNode as is
             else:  # It is a parameter inside a Link or network input
-                input_name = str(id(var))
+                input_name = self.context.get_name(var)
                 self.inputs[input_name] = var
             input_names.append(input_name)
 
@@ -127,7 +130,7 @@ class ONNXExport(chainer.FunctionHook):
         for o in function.outputs:
             var = o().get_variable_or_none()
             if var is not None:  # If the output is kept
-                output_name = str(id(var))
+                output_name = self.context.get_name(var)
                 if output_name in self.inputs:
                     # ONNX checker does not accept one value is both input and
                     # output by output SSA checking. To avoid it, add Identity
@@ -138,7 +141,7 @@ class ONNXExport(chainer.FunctionHook):
                     self.graph.append(id_node)
                     del self.inputs[output_name]
             else:
-                output_name = str(id(o()))
+                output_name = self.context.get_name(o())
             output_names.append(output_name)
 
         opset_versions = mapping.operators[func_name]
@@ -161,7 +164,7 @@ class ONNXExport(chainer.FunctionHook):
 
         nodes = create_node(
             func_name, opset_version, function, input_names,
-            output_names, self.additional_parameters)
+            output_names, self.context, self.additional_parameters)
         self.graph.extend(nodes)
 
 
@@ -253,23 +256,27 @@ def export(model, args, filename=None, export_params=True,
             'numpy array, or Chainer Variable. But a {} object was '
             'given.'.format(type(args)))
 
+    context = Context(model)
+
     initializers = []
     input_tensors = []
     param_names = set()
     for param in model.params():
-        param_names.add(str(id(param)))
-        tensor = convert_parameter(param)
+        name = context.get_name(param)
+        param_names.add(name)
+        tensor = convert_parameter(param, context)
         initializers.append(tensor)
         input_tensors.append(helper.make_tensor_value_info(
-            str(id(param)), tensor.data_type, tensor.dims))
+            name, tensor.data_type, tensor.dims))
 
     network_input_names = set()
     for i in network_inputs:
-        network_input_names.add(str(id(i)))
+        name = context.get_name(i)
+        network_input_names.add(name)
         input_tensors.append(helper.make_tensor_value_info(
-            str(id(i)), NP_TYPE_TO_TENSOR_TYPE[i.dtype], i.shape))
+            name, NP_TYPE_TO_TENSOR_TYPE[i.dtype], i.shape))
 
-    with ONNXExport(opset_version) as o:
+    with ONNXExport(context, opset_version) as o:
         if isinstance(outputs, (list, tuple)):
             flat_outputs = outputs
         elif isinstance(outputs, dict):
@@ -285,7 +292,7 @@ def export(model, args, filename=None, export_params=True,
     implicit_input_names = set(o.inputs.keys()) - param_names -\
         network_input_names
     for name in implicit_input_names:
-        tensor = convert_parameter(o.inputs[name])
+        tensor = convert_parameter(o.inputs[name], context)
         initializers.append(tensor)
         input_tensors.append(helper.make_tensor_value_info(
             name, tensor.data_type, tensor.dims))
@@ -293,10 +300,10 @@ def export(model, args, filename=None, export_params=True,
     # If additional parameters are created during conversion
     if o.additional_parameters:
         for param in o.additional_parameters:
-            tensor = convert_parameter(param)
+            tensor = convert_parameter(param, context)
             initializers.append(tensor)
             input_tensors.append(helper.make_tensor_value_info(
-                str(id(param)), tensor.data_type, tensor.dims))
+                context.get_name(param), tensor.data_type, tensor.dims))
 
     # The graph must be topologically sorted
     graph = reversed(o.graph)
@@ -309,7 +316,7 @@ def export(model, args, filename=None, export_params=True,
         outputs = (outputs,)
 
     for output in outputs:
-        output_id = str(id(output))
+        output_id = context.get_name(output)
         if output_id in o.renamed_outputs:
             output_id = o.renamed_outputs[output_id]
         output_tensors.append(helper.make_tensor_value_info(
