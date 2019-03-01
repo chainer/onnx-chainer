@@ -1,11 +1,13 @@
 import chainer
 import os
 
+import numpy as np
 from onnx import numpy_helper
 from onnx_chainer.export import export
 
 
-def export_testcase(model, args, out_dir, graph_name='Graph'):
+def export_testcase(model, args, out_dir, graph_name='Graph',
+                    output_grad=False):
     """Export model and I/O tensors of the model in protobuf format.
 
     Similar to the `export` function, this function first performs a forward
@@ -22,6 +24,8 @@ def export_testcase(model, args, out_dir, graph_name='Graph'):
         out_dir (str): The directory name used for saving the input and output.
         graph_name (str): A string to be used for the ``name`` field of the
             graph in the exported ONNX model.
+        output_grad (boolean): If True, this function will output model's
+            gradient with names 'gradient_%d.pb'.
     """
     os.makedirs(out_dir, exist_ok=True)
     export(model, args,
@@ -36,8 +40,20 @@ def export_testcase(model, args, out_dir, graph_name='Graph'):
             f.write(t.SerializeToString())
 
     chainer.config.train = True
+    model.cleargrads()
     result = model(*args)
 
     with open(os.path.join(test_data_dir, 'output_0.pb'), 'wb') as f:
         t = numpy_helper.from_array(result.array, '')
         f.write(t.SerializeToString())
+
+    if output_grad:
+        # Perform backward computation
+        result.grad = np.ones_like(result.data)
+        result.backward()
+
+        for i, param in enumerate(model.params()):
+            path = os.path.join(test_data_dir, 'gradient_%d.pb' % i)
+            with open(path, 'wb') as f:
+                t = numpy_helper.from_array(param.grad, str(id(param)))
+                f.write(t.SerializeToString())
