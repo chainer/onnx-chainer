@@ -1,4 +1,4 @@
-class Context:
+class Context(object):
 
     def __init__(self, model):
         self.namedparams = dict()
