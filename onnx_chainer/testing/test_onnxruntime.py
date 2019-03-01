@@ -29,6 +29,7 @@ def check(model, args, name, opset_version):
 
 
 def gen_test_data_set(model, args, name, opset_version):
+    model.xp.random.seed(42)
     test_path = os.path.join(
         TEST_OUT_DIR, 'opset{}'.format(opset_version), name)
     onnx_chainer.export_testcase(
