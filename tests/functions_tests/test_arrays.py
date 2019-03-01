@@ -1,14 +1,10 @@
-import unittest
-
 import chainer
 import chainer.functions as F
 from chainer import testing
 import numpy as np
-import onnx
 
-import onnx_chainer
 from onnx_chainer.testing import input_generator
-from onnx_chainer.testing import test_onnxruntime
+from tests.helper import ONNXModelTest
 
 
 @testing.parameterize(
@@ -29,20 +25,20 @@ from onnx_chainer.testing import test_onnxruntime
     {'ops': 'pad', 'input_shape': (1, 2, 3, 4),
      'input_argname': 'x',
      'args': {'pad_width': ((0, 0), (0, 0), (2, 2), (2, 2)),
-              'mode': 'constant'}},
+              'mode': 'constant'},
+     'name': 'pad_constant'},
     {'ops': 'pad', 'input_shape': (1, 2, 3, 4),
      'input_argname': 'x',
      'args': {'pad_width': ((0, 0), (0, 0), (2, 2), (2, 2)),
-              'mode': 'reflect'}},
+              'mode': 'reflect'},
+     'name': 'pad_reflect'},
     {'ops': 'pad', 'input_shape': (1, 2, 3, 4),
      'input_argname': 'x',
      'args': {'pad_width': ((0, 0), (0, 0), (2, 2), (2, 2)),
-              'mode': 'edge'}},
+              'mode': 'edge'},
+     'name': 'pad_edge'},
 
     # reshape
-    {'ops': 'reshape', 'input_shape': (1, 6),
-     'input_argname': 'x',
-     'args': {'shape': (1, 2, 1, 3)}},
     {'ops': 'reshape', 'input_shape': (1, 6),
      'input_argname': 'x',
      'args': {'shape': (1, 2, 1, 3)}},
@@ -56,16 +52,19 @@ from onnx_chainer.testing import test_onnxruntime
     {'ops': 'split_axis', 'input_shape': (1, 6),
      'input_argname': 'x',
      'args': {'indices_or_sections': 2,
-              'axis': 1, 'force_tuple': True}},
+              'axis': 1, 'force_tuple': True},
+     'name': 'split_axis_force_tuple_true'},
     {'ops': 'split_axis', 'input_shape': (1, 6),
      'input_argname': 'x',
      'args': {'indices_or_sections': 2,
-              'axis': 1, 'force_tuple': False}},
+              'axis': 1, 'force_tuple': False},
+     'name': 'split_axis_force_tuple_false'},
 
     # squeeze
     {'ops': 'squeeze', 'input_shape': (1, 3, 1, 2),
      'input_argname': 'x',
-     'args': {'axis': None}},
+     'args': {'axis': None},
+     'name': 'squeeze_axis_none'},
     {'ops': 'squeeze', 'input_shape': (1, 3, 1, 2, 1),
      'input_argname': 'x',
      'args': {'axis': (2, 4)}},
@@ -88,39 +87,50 @@ from onnx_chainer.testing import test_onnxruntime
     # get_item
     {'ops': 'get_item', 'input_shape': (2, 2, 3),
      'input_argname': 'x',
-     'args': {'slices': slice(0, 2)}},
+     'args': {'slices': slice(0, 2)},
+     'name': 'get_item_0to2'},
     {'ops': 'get_item', 'input_shape': (2, 2, 3),
      'input_argname': 'x',
-     'args': {'slices': (slice(1))}},
+     'args': {'slices': (slice(1))},
+     'name': 'get_item_to1'},
     {'ops': 'get_item', 'input_shape': (2, 2, 3),
      'input_argname': 'x',
-     'args': {'slices': (slice(1, None))}},
+     'args': {'slices': (slice(1, None))},
+     'name': 'get_item_1tonone'},
     {'ops': 'get_item', 'input_shape': (2, 2, 3),
      'input_argname': 'x',
-     'args': {'slices': 0}},
+     'args': {'slices': 0},
+     'name': 'get_item_0'},
     {'ops': 'get_item', 'input_shape': (2, 2, 3),
      'input_argname': 'x',
-     'args': {'slices': np.array(0)}},
+     'args': {'slices': np.array(0)},
+     'name': 'get_item_npscalar0'},
     {'ops': 'get_item', 'input_shape': (2, 2, 3),
      'input_argname': 'x',
-     'args': {'slices': (None, slice(0, 2))}},
+     'args': {'slices': (None, slice(0, 2))},
+     'name': 'get_item_none_0to2'},
     {'ops': 'get_item', 'input_shape': (2, 2, 3),
      'input_argname': 'x',
-     'args': {'slices': (Ellipsis, slice(0, 2))}},
+     'args': {'slices': (Ellipsis, slice(0, 2))},
+     'name': 'get_item_ellipsis_0to2'},
     # get_item, combine newaxis, slice, single index, ellipsis
     {'ops': 'get_item', 'input_shape': (2, 2, 3, 3, 3, 4),
      'input_argname': 'x',
-     'args': {'slices': (0, None, Ellipsis, 0, None, slice(0, 2), None, 0)}},
+     'args': {'slices': (0, None, Ellipsis, 0, None, slice(0, 2), None, 0)},
+     'name': 'get_item_complicated'},
 
     # expand_dims
     {'ops': 'expand_dims', 'input_shape': (3,),
-     'input_argname': 'x', 'args': {'axis': 0}},
+     'input_argname': 'x', 'args': {'axis': 0},
+     'name': 'expand_dims_0'},
     {'ops': 'expand_dims', 'input_shape': (3,),
-     'input_argname': 'x', 'args': {'axis': 1}},
+     'input_argname': 'x', 'args': {'axis': 1},
+     'name': 'expand_dims_1'},
     {'ops': 'expand_dims', 'input_shape': (3,),
-     'input_argname': 'x', 'args': {'axis': -2}},
+     'input_argname': 'x', 'args': {'axis': -2},
+     'name': 'expand_dims_minus2'},
 )
-class TestArrayOperators(unittest.TestCase):
+class TestArrayOperators(ONNXModelTest):
 
     def setUp(self):
 
@@ -138,21 +148,15 @@ class TestArrayOperators(unittest.TestCase):
 
         self.model = Model(self.ops, self.args, self.input_argname)
         self.x = input_generator.increasing(*self.input_shape)
-        self.fn = self.ops + '.onnx'
 
     def test_output(self):
-        for opset_version in range(
-                onnx_chainer.MINIMUM_OPSET_VERSION,
-                onnx.defs.onnx_opset_version() + 1):
-            test_onnxruntime.check_output(
-                self.model, self.x, self.fn, opset_version=opset_version)
+        name = self.ops
+        if hasattr(self, 'name'):
+            name = self.name
+        self.expect(self.model, self.x, name=name)
 
 
-@testing.parameterize(
-    {'opset_version': 1},
-    {'opset_version': 4}
-)
-class TestConcat(unittest.TestCase):
+class TestConcat(ONNXModelTest):
 
     def setUp(self):
         class Model(chainer.Chain):
@@ -166,12 +170,6 @@ class TestConcat(unittest.TestCase):
         self.model = Model()
         self.x1 = input_generator.increasing(2, 5)
         self.x2 = input_generator.increasing(2, 4)
-        self.fn = 'Concat.onnx'
 
     def test_output(self):
-        for opset_version in range(
-                onnx_chainer.MINIMUM_OPSET_VERSION,
-                onnx.defs.onnx_opset_version() + 1):
-            test_onnxruntime.check_output(
-                self.model, (self.x1, self.x2), self.fn,
-                opset_version=opset_version)
+        self.expect(self.model, (self.x1, self.x2))

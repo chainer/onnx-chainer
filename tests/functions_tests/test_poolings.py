@@ -1,5 +1,4 @@
 import unittest
-import warnings
 
 import chainer
 import chainer.functions as F
@@ -9,51 +8,51 @@ import onnx
 
 import onnx_chainer
 from onnx_chainer.testing import input_generator
-from onnx_chainer.testing import test_onnxruntime
+from tests.helper import ONNXModelTest
 
 
 @testing.parameterize(
-    {'name': 'average_pooling_2d', 'ops': F.average_pooling_2d,
+    {'op_name': 'average_pooling_2d',
      'in_shape': (1, 3, 6, 6), 'args': [2, 1, 0], 'cover_all': None},
-    {'name': 'average_pooling_2d', 'ops': F.average_pooling_2d,
+    {'op_name': 'average_pooling_2d', 'condition': 'pad1',
      'in_shape': (1, 3, 6, 6), 'args': [3, 2, 1], 'cover_all': None},
-    {'name': 'average_pooling_nd', 'ops': F.average_pooling_nd,
+    {'op_name': 'average_pooling_nd',
      'in_shape': (1, 3, 6, 6, 6), 'args': [2, 1, 1], 'cover_all': None},
-    {'name': 'max_pooling_2d', 'ops': F.max_pooling_2d,
+    {'op_name': 'max_pooling_2d',
      'in_shape': (1, 3, 6, 6), 'args': [2, 1, 1], 'cover_all': False},
-    {'name': 'max_pooling_2d', 'ops': F.max_pooling_2d,
+    {'op_name': 'max_pooling_2d', 'condition': 'coverall',
      'in_shape': (1, 3, 6, 5), 'args': [3, (2, 1), 1], 'cover_all': True},
-    {'name': 'max_pooling_nd', 'ops': F.max_pooling_nd,
+    {'op_name': 'max_pooling_nd',
      'in_shape': (1, 3, 6, 6, 6), 'args': [2, 1, 1], 'cover_all': False},
-    {'name': 'max_pooling_nd', 'ops': F.max_pooling_nd,
+    {'op_name': 'max_pooling_nd', 'condition': 'coverall',
      'in_shape': (1, 3, 6, 5, 4), 'args': [3, 2, 1], 'cover_all': True},
-    {'name': 'unpooling_2d', 'ops': F.unpooling_2d,
+    {'op_name': 'unpooling_2d',
      'in_shape': (1, 3, 6, 6), 'args': [3, None, 0], 'cover_all': False},
 )
-class TestPoolings(unittest.TestCase):
+class TestPoolings(ONNXModelTest):
 
     def setUp(self):
-        ops = getattr(F, self.name)
+        ops = getattr(F, self.op_name)
         self.model = Model(ops, self.args, self.cover_all)
         self.x = input_generator.increasing(*self.in_shape)
-        self.fn = self.name + '.onnx'
 
     def test_output(self):
-        for opset_version in range(
-                onnx_chainer.MINIMUM_OPSET_VERSION,
-                onnx.defs.onnx_opset_version() + 1):
-            # TODO(hamaji): onnxruntime does not support Upsample-9 yet.
-            # https://github.com/chainer/onnx-chainer/issues/111
-            if self.name == 'unpooling_2d' and opset_version == 9:
-                continue
-            test_onnxruntime.check_output(
-                self.model, self.x, self.fn, opset_version=opset_version)
+        name = self.op_name
+        if hasattr(self, 'condition'):
+            name += '_' + self.condition
+        # TODO(hamaji): onnxruntime does not support Upsample-9 yet.
+        # https://github.com/chainer/onnx-chainer/issues/111
+        skip_opset_version = []
+        if name == 'unpooling_2d':
+            skip_opset_version.append(9)
+        self.expect(self.model, self.x, name=name,
+                    skip_opset_version=skip_opset_version)
 
 
 @testing.parameterize(
-    {'name': 'max_pooling_2d', 'ops': F.max_pooling_2d,
+    {'name': 'max_pooling_2d',
      'in_shape': (1, 3, 6, 5), 'args': [2, 2, 1], 'cover_all': True},
-    {'name': 'max_pooling_nd', 'ops': F.max_pooling_nd,
+    {'name': 'max_pooling_nd',
      'in_shape': (1, 3, 6, 5, 4), 'args': [2, 2, 1], 'cover_all': True},
 )
 class TestPoolingsWithUnsupportedSettings(unittest.TestCase):
@@ -69,8 +68,8 @@ class TestPoolingsWithUnsupportedSettings(unittest.TestCase):
                 onnx_chainer.MINIMUM_OPSET_VERSION,
                 onnx.defs.onnx_opset_version() + 1):
             with self.assertRaises(RuntimeError):
-                test_onnxruntime.check_output(
-                    self.model, self.x, self.fn, opset_version=opset_version)
+                onnx_chainer.export(
+                    self.model, self.x, opset_version=opset_version)
 
 
 class Model(chainer.Chain):
@@ -88,7 +87,7 @@ class Model(chainer.Chain):
             return self.ops(*([x] + self.args))
 
 
-class TestROIPooling2D(unittest.TestCase):
+class TestROIPooling2D(ONNXModelTest):
 
     def setUp(self):
         # these parameters are referenced from chainer test
@@ -119,14 +118,6 @@ class TestROIPooling2D(unittest.TestCase):
                 return F.roi_pooling_2d(x, rois, **self.kwargs)
 
         self.model = Model(kwargs)
-        self.fn = 'roi_pooling_2d.onnx'
 
     def test_output(self):
-        for opset_version in range(
-                test_onnxruntime.MINIMUM_OPSET_VERSION,
-                onnx.defs.onnx_opset_version() + 1):
-            with warnings.catch_warnings(record=True) as w:
-                test_onnxruntime.check_output(
-                    self.model, [self.x, self.rois], self.fn,
-                    opset_version=opset_version)
-                assert len(w) == 1
+        self.expect(self.model, [self.x, self.rois], with_warning=True)

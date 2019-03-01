@@ -1,14 +1,9 @@
-import unittest
-
 import chainer
 import chainer.functions as F
 import chainer.links as L
 from chainer import testing
-import onnx
 
-import onnx_chainer
 from onnx_chainer.testing import input_generator
-from onnx_chainer.testing import test_onnxruntime
 from tests.helper import ONNXModelTest
 
 
@@ -24,7 +19,7 @@ from tests.helper import ONNXModelTest
     {'name': 'softplus'},
     {'name': 'tanh'},
 )
-class TestActivations(unittest.TestCase):
+class TestActivations(ONNXModelTest):
 
     def setUp(self):
 
@@ -40,14 +35,9 @@ class TestActivations(unittest.TestCase):
         ops = getattr(F, self.name)
         self.model = Model(ops)
         self.x = input_generator.increasing(2, 5)
-        self.fn = self.name + '.onnx'
 
     def test_output(self):
-        for opset_version in range(
-                onnx_chainer.MINIMUM_OPSET_VERSION,
-                onnx.defs.onnx_opset_version() + 1):
-            test_onnxruntime.check_output(
-                self.model, self.x, self.fn, opset_version=opset_version)
+        self.expect(self.model, self.x, self.name)
 
 
 class TestPReLU(ONNXModelTest):
