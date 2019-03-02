@@ -49,7 +49,11 @@ class TestNormalizations(ONNXModelTest):
     {'kwargs': {}},
     {'kwargs': {'use_beta': False}, 'condition': 'use_beta_false'},
     {'kwargs': {'use_gamma': False}, 'condition': 'use_gamma_false'},
-    {'kwargs': {}, 'train': True},
+    {'train': True, 'kwargs': {}},
+    {'train': True,
+     'kwargs': {'use_beta': False}, 'condition': 'use_beta_false'},
+    {'train': True,
+     'kwargs': {'use_gamma': False}, 'condition': 'use_gamma_false'},
 )
 class TestBatchNormalization(ONNXModelTest):
 

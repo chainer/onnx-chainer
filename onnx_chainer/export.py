@@ -215,6 +215,7 @@ def export(model, args, filename=None, export_params=True,
         chainer.config.train = True
     else:
         chainer.config.train = False
+    chainer.config.in_recomputing = False
     chainer.config.enable_backprop = True
 
     if opset_version is None:

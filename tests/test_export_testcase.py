@@ -41,7 +41,7 @@ class TestExportTestCase(unittest.TestCase):
     def test_output_grad(self):
         path = 'out/test_export_testcase_with_grad'
         onnx_chainer.export_testcase(
-            self.model, (self.x,), path, output_grad=True)
+            self.model, (self.x,), path, output_grad=True, train=True)
 
         assert os.path.isfile(os.path.join(path, 'model.onnx'))
         assert os.path.isfile(os.path.join(path, 'test_data_set_0',

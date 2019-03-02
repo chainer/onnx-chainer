@@ -7,22 +7,32 @@ from onnx_chainer import onnx_helper
 
 def convert_BatchNormalization(func, opset_version, input_names,
                                num_outputs, parameters):
-    # Add running_mean and running_var to graph
-    running_mean = chainer.Parameter(func.running_mean)
-    parameters.append(running_mean)
-    input_names.append(str(id(running_mean)))
+    x = func.inputs[0].get_variable().data
+    mean = chainer.Parameter(x.mean(axis=func.axis))
+    parameters.append(mean)
+    input_names.append(str(id(mean)))
+    var = chainer.Parameter(x.var(axis=func.axis))
+    parameters.append(var)
+    input_names.append(str(id(var)))
 
-    running_var = chainer.Parameter(func.running_var)
-    parameters.append(running_var)
-    input_names.append(str(id(running_var)))
+    # unique_layer_name = '{}_{}'.format(func.__class__.__name__, str(id(func)))
+    # num_outputs += [
+    #     unique_layer_name + '_mean',
+    #     unique_layer_name + '_var',
+    #     unique_layer_name + '_saved_mean',
+    #     unique_layer_name + '_saved_var'
+    # ]
 
-    unique_layer_name = '{}_{}'.format(func.__class__.__name__, str(id(func)))
-    num_outputs += [
-        unique_layer_name + '_mean',
-        unique_layer_name + '_var',
-        unique_layer_name + '_saved_mean',
-        unique_layer_name + '_saved_var'
-    ]
+    # if `use_beta=False`, passed None value to the functions
+    if func.inputs[2].get_variable_or_none() is None:
+        beta = chainer.Parameter(np.zeros_like(mean, dtype=mean.dtype))
+        parameters.append(beta)
+        input_names[2] = str(id(beta))
+    # `use_gamma=False` is same
+    if func.inputs[1].get_variable_or_none() is None:
+        gamma = chainer.Parameter(np.ones_like(mean, dtype=mean.dtype))
+        parameters.append(gamma)
+        input_names[1] = str(id(gamma))
 
     if opset_version == 1:
         return onnx_helper.make_node(
@@ -117,7 +127,7 @@ def convert_NormalizeL2(func, opset_version, input_names,
         # default value of F.normaize eps is 1e-5
         raise ValueError(
             '\'eps\' is not supported in the ONNX\'s LpNormalization operator,'
-            ' so that ONNX-Chainer does not accepct custom values for \'eps\' '
+            ' so that ONNX-Chainer does not accept custom values for \'eps\' '
             '({})'.format(func.eps))
     if opset_version == 1:
         return onnx_helper.make_node(
