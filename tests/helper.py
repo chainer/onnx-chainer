@@ -17,7 +17,7 @@ class ONNXModelTest(unittest.TestCase):
         self.default_name = cls_name[len('Test'):].lower()
 
     def expect(self, model, args, name=None, op_name=None,
-               skip_opset_version=None, with_warning=False):
+               skip_opset_version=None, with_warning=False, train=False):
         """Compare model output and test runtime output.
 
         Make an ONNX model from target model with args, and put output
@@ -30,6 +30,7 @@ class ONNXModelTest(unittest.TestCase):
             op_name (str): name of operator. use for getting opset verseion.
             skip_opset_version (list): versions to skip test.
             with_warning (bool): if True, check warnings.
+            train (bool): If True, output computational graph with train mode.
         """
 
         minimum_version = onnx_chainer.MINIMUM_OPSET_VERSION
@@ -50,10 +51,10 @@ class ONNXModelTest(unittest.TestCase):
             if with_warning:
                 with warnings.catch_warnings(record=True) as w:
                     test_path = gen_test_data_set(
-                        model, args, dir_name, opset_version)
+                        model, args, dir_name, opset_version, train)
                 assert len(w) == 1
             else:
                 test_path = gen_test_data_set(
-                    model, args, dir_name, opset_version)
+                    model, args, dir_name, opset_version, train)
 
             check_model_expect(test_path)
