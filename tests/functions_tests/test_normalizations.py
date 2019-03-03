@@ -54,6 +54,8 @@ class TestNormalizations(ONNXModelTest):
      'kwargs': {'use_beta': False}, 'condition': 'use_beta_false'},
     {'train': True,
      'kwargs': {'use_gamma': False}, 'condition': 'use_gamma_false'},
+    {'train': True,
+     'kwargs': {'initial_avg_mean': 0.5}, 'condition': 'init_avg_mean'},
 )
 class TestBatchNormalization(ONNXModelTest):
 
