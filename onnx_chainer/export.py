@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import collections
+import contextlib
 import warnings
 
 import chainer
@@ -94,6 +95,17 @@ def rename_tensors(model):
     for v in tuple(model.graph.input) + tuple(model.graph.output):
         if v.name in names:
             v.name = names[v.name]
+
+
+@contextlib.contextmanager
+def set_temporary_chainer_config(**kwargs):
+    org_config = chainer.config
+    temp_conf = chainer.configuration.LocalConfig(chainer.config)
+    for k, v in kwargs.items():
+        setattr(temp_conf, k, v)
+    chainer.config = temp_conf
+    yield
+    chainer.config = org_config
 
 
 class ONNXExport(chainer.FunctionHook):
@@ -211,13 +223,19 @@ def export(model, args, filename=None, export_params=True,
 
     _check_available()
 
-    if train:
-        chainer.config.train = True
-    else:
-        chainer.config.train = False
-    chainer.config.in_recomputing = False
-    chainer.config.enable_backprop = True
+    chainer_config = {
+        'train': train,
+        'in_recomputing': True,
+        'enable_backprop': True,
+    }
+    with set_temporary_chainer_config(**chainer_config):
+        return _export(
+            model, args, filename, export_params, graph_name, save_text,
+            opset_version, return_flat_inout)
 
+
+def _export(model, args, filename, export_params, graph_name, save_text,
+            opset_version, return_flat_inout):
     if opset_version is None:
         opset_version = int(onnx.defs.onnx_opset_version())
     elif opset_version < MINIMUM_OPSET_VERSION:
