@@ -15,13 +15,9 @@ def convert_BatchNormalization(func, opset_version, input_names,
     parameters.append(var)
     input_names.append(str(id(var)))
 
-    # unique_layer_name = '{}_{}'.format(func.__class__.__name__, str(id(func)))
-    # num_outputs += [
-    #     unique_layer_name + '_mean',
-    #     unique_layer_name + '_var',
-    #     unique_layer_name + '_saved_mean',
-    #     unique_layer_name + '_saved_var'
-    # ]
+    # TODO(disktnk): ONNX's BatchNormalization operator outputs one required
+    # output and four optional outputs. This converter must make 5 values for
+    # output and return them.
 
     # if `use_beta=False`, passed None value to the functions
     if func.inputs[2].get_variable_or_none() is None:
