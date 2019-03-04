@@ -130,7 +130,9 @@ def convert_Pad(func, opset_version, input_names, num_outputs,
                 'ONNX doesn\'t support multiple constant values for Pad '
                 'operation')
         elif not isinstance(values, int):
-            values = values[0]
+            values = float(values[0])
+        else:
+            values = float(values)
 
         if opset_version == 1:
             node = onnx_helper.make_node(
