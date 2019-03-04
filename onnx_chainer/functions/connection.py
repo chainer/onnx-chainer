@@ -4,7 +4,8 @@ from onnx_chainer import onnx_helper
 
 
 def convert_Convolution2DFunction(func, opset_version,
-                                  input_names, num_outputs, parameters):
+                                  input_names, num_outputs, context,
+                                  parameters):
     if opset_version == 1:
         if hasattr(func, 'dy') and hasattr(func, 'dx'):
             node = onnx_helper.make_node(
@@ -29,7 +30,8 @@ def convert_Convolution2DFunction(func, opset_version,
 
 
 def convert_ConvolutionND(func, opset_version, input_names,
-                          num_outputs, parameters):
+                          num_outputs, context,
+                          parameters):
     pad = []
     x_ndim = len(func.inputs[0].shape)
     w_ndim = len(func.inputs[1].shape)
@@ -49,7 +51,8 @@ def convert_ConvolutionND(func, opset_version, input_names,
 
 
 def convert_Deconvolution2DFunction(func, opset_version,
-                                    input_names, num_outputs, parameters):
+                                    input_names, num_outputs, context,
+                                    parameters):
     if opset_version == 1:
         return onnx_helper.make_node(
             'ConvTranspose', input_names, num_outputs,
@@ -62,7 +65,7 @@ def convert_Deconvolution2DFunction(func, opset_version,
 
 
 def convert_DeconvolutionND(func, opset_version, input_names,
-                            num_outputs, parameters):
+                            num_outputs, context, parameters):
     pad = []
     x_ndim = len(func.inputs[0].shape)
     w_ndim = len(func.inputs[1].shape)
@@ -83,7 +86,7 @@ def convert_DeconvolutionND(func, opset_version, input_names,
 
 
 def convert_EmbedIDFunction(func, opset_version, input_names,
-                            num_outputs, parameters):
+                            num_outputs, context, parameters):
     x_index_name, W_name = input_names
     input_names = [W_name, x_index_name]
 
@@ -97,14 +100,14 @@ def convert_EmbedIDFunction(func, opset_version, input_names,
 
 
 def convert_LinearFunction(func, opset_version, input_names,
-                           num_outputs, parameters):
+                           num_outputs, context, parameters):
     # When the func has bias
     if len(func.inputs) == 2:
         bias_dim = func.inputs[1].shape[0]
         bias = np.zeros((bias_dim,), dtype=np.float32)
         bias_param = chainer.Parameter(bias)
         parameters.append(bias_param)
-        input_names.append(str(id(bias_param)))
+        input_names.append(context.get_name(bias_param))
 
     if opset_version == 1 or opset_version == 6:
         return onnx_helper.make_node(

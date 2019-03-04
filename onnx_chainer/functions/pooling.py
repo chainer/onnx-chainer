@@ -8,7 +8,7 @@ from onnx_chainer import onnx_helper
 
 
 def convert_AveragePooling2D(func, opset_version, input_names,
-                             num_outputs, parameters):
+                             num_outputs, context, parameters):
     pad = [func.ph, func.pw]
     stride = [func.sy, func.sx]
     ksize = [func.kh, func.kw]
@@ -39,7 +39,7 @@ def convert_AveragePooling2D(func, opset_version, input_names,
 
 
 def convert_AveragePoolingND(func, opset_version, input_names,
-                             num_outputs, parameters):
+                             num_outputs, context, parameters):
     pad = list(func.pad[:])
     if func.cover_all:
         # Supports cover_all by setting extra padding
@@ -70,7 +70,7 @@ def convert_AveragePoolingND(func, opset_version, input_names,
 
 
 def convert_MaxPooling2D(func, opset_version, input_names,
-                         num_outputs, parameters):
+                         num_outputs, context, parameters):
     pad = [func.ph, func.pw]
     stride = [func.sy, func.sx]
     ksize = [func.kh, func.kw]
@@ -104,7 +104,7 @@ def convert_MaxPooling2D(func, opset_version, input_names,
 
 
 def convert_MaxPoolingND(func, opset_version, input_names,
-                         num_outputs, parameters):
+                         num_outputs, context, parameters):
     pad = list(func.pad[:])
     if func.cover_all:
         # Supports cover_all by setting extra padding
@@ -138,7 +138,7 @@ def convert_MaxPoolingND(func, opset_version, input_names,
 
 
 def convert_ROIPooling2D(func, opset_version, input_names,
-                         num_outputs, parameters):
+                         num_outputs, context, parameters):
     warnings.warn(
         'It\'s possible that output does not match with Chainer, please check '
         'each runtime\'s implementation. For example, when input x has '
@@ -152,7 +152,7 @@ def convert_ROIPooling2D(func, opset_version, input_names,
 
 
 def convert_Unpooling2D(func, opset_version, input_names, num_outputs,
-                        parameters):
+                        context, parameters):
     pad = [func.ph, func.pw]
     stride = [func.sy, func.sx]
     ksize = [func.kh, func.kw]
@@ -187,5 +187,5 @@ def convert_Unpooling2D(func, opset_version, input_names, num_outputs,
         scales = np.array(scales, dtype=np.float32)
         scales_param = chainer.Parameter(scales)
         parameters.append(scales_param)
-        input_names.append(str(id(scales_param)))
+        input_names.append(context.get_name(scales_param))
         return onnx_helper.make_node('Upsample', input_names, num_outputs),
