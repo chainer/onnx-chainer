@@ -104,9 +104,11 @@ def set_temporary_chainer_config(**kwargs):
     temp_conf = chainer.configuration.LocalConfig(chainer.config)
     for k, v in kwargs.items():
         setattr(temp_conf, k, v)
-    chainer.config = temp_conf
-    yield
-    chainer.config = org_config
+    try:
+        chainer.config = temp_conf
+        yield
+    finally:
+        chainer.config = org_config
 
 
 class ONNXExport(chainer.FunctionHook):
