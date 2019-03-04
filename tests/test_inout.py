@@ -1,5 +1,3 @@
-import unittest
-
 import chainer
 import chainer.functions as F
 import chainer.links as L
@@ -7,10 +5,10 @@ from chainer import testing
 import numpy as np
 
 from onnx_chainer.testing import input_generator
-from onnx_chainer.testing import test_onnxruntime
+from tests.helper import ONNXModelTest
 
 
-class TestMultipleInputs(unittest.TestCase):
+class TestMultipleInputs(ONNXModelTest):
 
     def setUp(self):
 
@@ -26,30 +24,30 @@ class TestMultipleInputs(unittest.TestCase):
 
         self.model = Model()
         self.ins = (input_generator.increasing(1, 5),
-                    input_generator.increasing(1, 5),
-                    input_generator.increasing(1, 5))
-        self.fn = 'MultiInputs.onnx'
+                    input_generator.increasing(1, 5)*1.1,
+                    input_generator.increasing(1, 5)*1.2)
+        self.base_name = 'multiple_inputs'
 
     def test_arrays(self):
-        test_onnxruntime.check_output(self.model, self.ins, self.fn)
+        self.expect(self.model, self.ins, name=self.base_name+'_arrays')
 
     def test_variables(self):
         ins = [chainer.Variable(i) for i in self.ins]
-        test_onnxruntime.check_output(self.model, ins, self.fn)
+        self.expect(self.model, ins, name=self.base_name+'_vars')
 
     def test_array_dicts(self):
         arg_names = ['x', 'y', 'z']  # current exporter ignores these names
         ins = {arg_names[i]: v for i, v in enumerate(self.ins)}
-        test_onnxruntime.check_output(self.model, ins, self.fn)
+        self.expect(self.model, ins, name=self.base_name+'_dicts')
 
     def test_variable_dicts(self):
         arg_names = ['x', 'y', 'z']  # current exporter ignores these names
         ins = {arg_names[i]: chainer.Variable(v)
                for i, v in enumerate(self.ins)}
-        test_onnxruntime.check_output(self.model, ins, self.fn)
+        self.expect(self.model, ins, name=self.base_name+'_vardicts')
 
 
-class TestImplicitInput(unittest.TestCase):
+class TestImplicitInput(ONNXModelTest):
 
     def setUp(self):
 
@@ -64,11 +62,10 @@ class TestImplicitInput(unittest.TestCase):
                 return x / self.frac
 
         self.model = Model()
-        self.fn = 'ImplicitInput.onnx'
 
     def test_implicit_input(self):
         x = chainer.Variable(np.array(1, dtype=np.float32))
-        test_onnxruntime.check_output(self.model, x, self.fn)
+        self.expect(self.model, x)
 
 
 @testing.parameterize(
@@ -77,7 +74,7 @@ class TestImplicitInput(unittest.TestCase):
     {'use_bn': True, 'out_type': 'tuple'},
     {'use_bn': True, 'out_type': 'list'},
 )
-class TestMultipleOutput(unittest.TestCase):
+class TestMultipleOutput(ONNXModelTest):
 
     def get_model(self, use_bn=False, out_type=None):
         class Model(chainer.Chain):
@@ -113,14 +110,10 @@ class TestMultipleOutput(unittest.TestCase):
     def test_multiple_outputs(self):
         model = self.get_model(use_bn=self.use_bn, out_type=self.out_type)
         x = np.zeros((1, 3, 32, 32), dtype=np.float32)
-        # 'out_keys' is necessary even if self.out_type is tuple or list
-        # because onnxruntime does not guarantee the order of outputs when
-        # output keys are None.
-        test_onnxruntime.check_output(
-            model, x, 'MultipleOutputs.onnx', out_keys=['Tanh_0', 'Sigmoid_0'])
+        self.expect(model, x)
 
 
-class TestIntermediateOutput(unittest.TestCase):
+class TestIntermediateOutput(ONNXModelTest):
 
     def get_model(self):
         class Model(chainer.Chain):
@@ -140,7 +133,6 @@ class TestIntermediateOutput(unittest.TestCase):
     def test_outputs(self):
         model = self.get_model()
         x = np.ones((1, 3), dtype=np.float32)
-        # TODO(disktnk) output keys are not intuitive
-        test_onnxruntime.check_output(
-            model, x, 'IntermediateOutput.onnx',
-            out_keys=['Identity_0', 'Gemm_1'])
+        # TODO(disktnk) output keys will be ['Identity_0', 'Gemm_1'], not
+        # intuitive. ONNX-Chainer should support outputs name to customize them
+        self.expect(model, x)

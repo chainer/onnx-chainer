@@ -1,3 +1,4 @@
+import os
 import unittest
 import warnings
 
@@ -57,4 +58,30 @@ class ONNXModelTest(unittest.TestCase):
                 test_path = gen_test_data_set(
                     model, args, dir_name, opset_version, train)
 
-            check_model_expect(test_path)
+            onnx_model_path = os.path.join(test_path, 'model.onnx')
+            assert os.path.isfile(onnx_model_path)
+            with open(onnx_model_path, 'rb') as f:
+                onnx_model = onnx.load_model(f)
+            check_all_connected_from_inputs(onnx_model)
+
+            graph_input_names = _get_graph_input_names(onnx_model)
+            check_model_expect(test_path, input_names=graph_input_names)
+
+
+def check_all_connected_from_inputs(onnx_model):
+    edge_names = set(_get_graph_input_names(onnx_model))
+    # Nodes which are not connected from the network inputs.
+    orphan_nodes = []
+    for node in onnx_model.graph.node:
+        if not edge_names.intersection(node.input):
+            orphan_nodes.append(node)
+        for output_name in node.output:
+            edge_names.add(output_name)
+    assert not(orphan_nodes), '{}'.format(orphan_nodes)
+
+
+def _get_graph_input_names(onnx_model):
+    initialized_graph_input_names = {
+        i.name for i in onnx_model.graph.initializer}
+    return [i.name for i in onnx_model.graph.input if i.name not in
+            initialized_graph_input_names]

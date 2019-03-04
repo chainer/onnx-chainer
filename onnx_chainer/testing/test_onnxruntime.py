@@ -23,7 +23,7 @@ MINIMUM_OPSET_VERSION = 7
 TEST_OUT_DIR = 'out'
 
 
-def check_model_expect(test_path):
+def check_model_expect(test_path, input_names=None):
     if not ONNXRUNTIME_AVAILABLE:
         raise ImportError('check_output requires onnxruntime.')
 
@@ -52,9 +52,18 @@ def check_model_expect(test_path):
                 outputs.append(array)
 
         sess = rt.InferenceSession(onnx_model.SerializeToString())
-        input_names = [i.name for i in sess.get_inputs()]
+
+        # To detect unexpected inputs created by exporter, check input names
+        # TODO(disktnk): `input_names` got from onnxruntime session includes
+        # only network inputs, does not include internal inputs such as weight
+        # attribute etc. so that need to collect network inputs from
+        # `onnx_model`.
+        rt_input_names = [i.name for i in sess.get_inputs()]
+        if input_names is not None:
+            assert list(sorted(input_names)) == list(sorted(rt_input_names))
+
         rt_out = sess.run(
-            None, {name: array for name, array in zip(input_names, inputs)})
+            None, {name: array for name, array in zip(rt_input_names, inputs)})
         for cy, my in zip(outputs, rt_out):
             np.testing.assert_allclose(cy, my, rtol=1e-5, atol=1e-5)
 
