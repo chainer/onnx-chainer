@@ -98,19 +98,6 @@ def rename_tensors(model):
             v.name = names[v.name]
 
 
-@contextlib.contextmanager
-def set_temporary_chainer_config(**kwargs):
-    org_config = chainer.config
-    temp_conf = chainer.configuration.LocalConfig(chainer.config)
-    for k, v in kwargs.items():
-        setattr(temp_conf, k, v)
-    try:
-        chainer.config = temp_conf
-        yield
-    finally:
-        chainer.config = org_config
-
-
 class ONNXExport(chainer.FunctionHook):
 
     def __init__(self, context, opset_version=None):
@@ -228,12 +215,9 @@ def export(model, args, filename=None, export_params=True,
 
     _check_available()
 
-    chainer_config = {
-        'train': train,
-        'in_recomputing': True,
-        'enable_backprop': True,
-    }
-    with set_temporary_chainer_config(**chainer_config):
+    with chainer.using_config('train', train),\
+            chainer.using_config('in_recomputing', True),\
+            chainer.using_config('enable_backprop', True):
         return _export(
             model, args, filename, export_params, graph_name, save_text,
             opset_version, return_flat_inout)
