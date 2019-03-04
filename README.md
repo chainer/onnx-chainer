@@ -1,7 +1,8 @@
 # ONNX-Chainer
-![pypi](https://img.shields.io/pypi/v/onnx-chainer.svg)
-![Build Status](https://travis-ci.org/chainer/onnx-chainer.svg?branch=master)
-![MIT License](https://img.shields.io/github/license/mitmul/onnx-chainer.svg)
+[![PyPI](https://img.shields.io/pypi/v/onnx-chainer.svg)](https://pypi.org/project/onnx-chainer/)
+[![GitHub license](https://img.shields.io/github/license/chainer/onnx-chainer.svg)](https://github.com/chainer/onnx-chainer)
+[![Build Status](https://travis-ci.org/chainer/onnx-chainer.svg?branch=master)](https://travis-ci.org/chainer/onnx-chainer)
+[![codecov](https://codecov.io/gh/chainer/onnx-chainer/branch/master/graph/badge.svg)](https://codecov.io/gh/chainer/onnx-chainer)
 
 This is an add-on package for ONNX support by Chainer.
 ONNX-Chainer supports opset version <= 7.
