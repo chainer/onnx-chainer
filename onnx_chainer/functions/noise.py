@@ -4,7 +4,7 @@ from onnx_chainer import onnx_helper
 
 def convert_Dropout(
         func, opset_version, input_names,
-        num_outputs, parameters):
+        num_outputs, context, parameters):
     if opset_version == 1:
         return onnx_helper.make_node(
             'Dropout', input_names, num_outputs,
