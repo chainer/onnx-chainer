@@ -75,9 +75,7 @@ class TestBatchNormalization(ONNXModelTest):
         self.x = input_generator.increasing(2, 5)
 
     def test_output(self):
-        train = False
-        if hasattr(self, 'train'):
-            train = self.train
+        train = getattr(self, 'train', False)
         name = 'batch_normalization'
         if not train:
             name = 'fixed_' + name
