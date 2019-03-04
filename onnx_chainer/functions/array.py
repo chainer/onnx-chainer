@@ -74,7 +74,7 @@ def convert_GetItem(func, opset_version, input_names,
             ends.append(idx+1)
             squeeze_idxs.append(axis)
         elif isinstance(idx, np.ndarray) and idx.ndim == 0:
-            scalar_idx = np.asscalar(idx)
+            scalar_idx = idx.item()
             axes.append(axis)
             starts.append(scalar_idx)
             ends.append(scalar_idx+1)
