@@ -1,10 +1,9 @@
 import os
 
 import chainer
-import numpy as np
-from onnx import numpy_helper
 
 from onnx_chainer.export import export
+from onnx_chainer.onnx_helper import write_tensor_pb
 
 
 def export_testcase(
@@ -32,33 +31,42 @@ def export_testcase(
     """
     os.makedirs(out_dir, exist_ok=True)
     model.cleargrads()
-    _, inputs, outputs = export(
+    onnx_model, inputs, outputs = export(
         model, args, filename=os.path.join(out_dir, 'model.onnx'),
         graph_name=graph_name, opset_version=opset_version,
         train=train, return_flat_inout=True)
 
     test_data_dir = os.path.join(out_dir, 'test_data_set_0')
     os.makedirs(test_data_dir, exist_ok=True)
+    # TODO(disktnk): consider to resolve input names smarter
+    input_names = _get_graph_input_names(onnx_model)
     for i, var in enumerate(inputs):
-        with open(os.path.join(test_data_dir, 'input_%d.pb' % i), 'wb') as f:
-            t = numpy_helper.from_array(var.data, 'Input_%d' % i)
-            f.write(t.SerializeToString())
+        pb_name = os.path.join(test_data_dir, 'input_{}.pb'.format(i))
+        array = chainer.cuda.to_cpu(var.array)
+        write_tensor_pb(pb_name, input_names[i], array)
 
     for i, var in enumerate(outputs):
-        with open(os.path.join(test_data_dir, 'output_%d.pb' % i), 'wb') as f:
-            t = numpy_helper.from_array(var.data, '')
-            f.write(t.SerializeToString())
+        pb_name = os.path.join(test_data_dir, 'output_{}.pb'.format(i))
+        array = chainer.cuda.to_cpu(var.array)
+        # TODO(disktnk): set customized output name
+        write_tensor_pb(pb_name, '', array)
 
     if output_grad:
         # Perform backward computation
         if len(outputs) > 1:
             outputs = chainer.functions.identity(*outputs)
         for out in outputs:
-            out.grad = np.ones_like(out.data)
+            out.grad = model.xp.ones_like(out.array)
         outputs[0].backward()
 
         for i, (name, param) in enumerate(model.namedparams()):
-            path = os.path.join(test_data_dir, 'gradient_%d.pb' % i)
-            with open(path, 'wb') as f:
-                t = numpy_helper.from_array(param.grad, name)
-                f.write(t.SerializeToString())
+            pb_name = os.path.join(test_data_dir, 'gradient_{}.pb'.format(i))
+            grad = chainer.cuda.to_cpu(param.grad)
+            write_tensor_pb(pb_name, '', grad)
+
+
+def _get_graph_input_names(onnx_model):
+    initialized_graph_input_names = {
+        i.name for i in onnx_model.graph.initializer}
+    return [i.name for i in onnx_model.graph.input if i.name not in
+            initialized_graph_input_names]

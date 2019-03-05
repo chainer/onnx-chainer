@@ -1,7 +1,9 @@
 import os
 
 import onnx_chainer
-from onnx_chainer.testing.test_onnxruntime import TEST_OUT_DIR
+
+
+TEST_OUT_DIR = 'out'
 
 
 def gen_test_data_set(model, args, name, opset_version, train):
