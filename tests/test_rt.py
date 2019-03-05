@@ -1,15 +1,11 @@
-import unittest
-
 import chainer
 import chainer.functions as F
 import chainer.links as L
 from chainer.testing import attr
 import numpy as np
-import onnx
 
 import chainercv.links as C
-import onnx_chainer
-from onnx_chainer.testing import test_onnxruntime
+from tests.helper import ONNXModelTest
 
 
 def _to_gpu(model, x):
@@ -19,7 +15,7 @@ def _to_gpu(model, x):
     return model, x
 
 
-class TestLeNet5(unittest.TestCase):
+class TestLeNet5(ONNXModelTest):
 
     def setUp(self):
         self.model = chainer.Sequential(
@@ -34,49 +30,33 @@ class TestLeNet5(unittest.TestCase):
             L.Linear(100, 10)
         )
         self.x = np.zeros((1, 3, 28, 28), dtype=np.float32)
-        self.fn = 'LeNet5.onnx'
-
-    def check_output(self, model, x):
-        for opset_version in range(
-                onnx_chainer.MINIMUM_OPSET_VERSION,
-                onnx.defs.onnx_opset_version() + 1):
-            test_onnxruntime.check_output(
-                model, x, self.fn, opset_version=opset_version)
 
     def test_output(self):
-        self.check_output(self.model, self.x)
+        self.expect(self.model, self.x)
 
     @attr.gpu
     def test_output_gpu(self):
         model, x = _to_gpu(self.model, self.x)
-        self.check_output(model, x)
+        self.expect(model, x)
 
 
-class TestVGG16(unittest.TestCase):
+class TestVGG16(ONNXModelTest):
 
     def setUp(self):
         self.model = C.VGG16(
             pretrained_model=None, initialW=chainer.initializers.Uniform(1))
         self.x = np.zeros((1, 3, 224, 224), dtype=np.float32)
-        self.fn = 'VGG16.onnx'
-
-    def check_output(self, model, x):
-        for opset_version in range(
-                onnx_chainer.MINIMUM_OPSET_VERSION,
-                onnx.defs.onnx_opset_version() + 1):
-            test_onnxruntime.check_output(
-                model, x, self.fn, opset_version=opset_version)
 
     def test_output(self):
-        self.check_output(self.model, self.x)
+        self.expect(self.model, self.x)
 
     @attr.gpu
     def test_output_gpu(self):
         model, x = _to_gpu(self.model, self.x)
-        self.check_output(model, x)
+        self.expect(model, x)
 
 
-class TestResNet50(unittest.TestCase):
+class TestResNet50(ONNXModelTest):
 
     def setUp(self):
         self.model = C.ResNet50(
@@ -85,19 +65,11 @@ class TestResNet50(unittest.TestCase):
         self.model.pool1 = lambda x: F.max_pooling_2d(
             x, ksize=3, stride=2, cover_all=False)
         self.x = np.zeros((1, 3, 224, 224), dtype=np.float32)
-        self.fn = 'ResNet50.onnx'
-
-    def check_output(self, model, x):
-        for opset_version in range(
-                onnx_chainer.MINIMUM_OPSET_VERSION,
-                onnx.defs.onnx_opset_version() + 1):
-            test_onnxruntime.check_output(
-                model, x, self.fn, opset_version=opset_version)
 
     def test_output(self):
-        self.check_output(self.model, self.x)
+        self.expect(self.model, self.x)
 
     @attr.gpu
     def test_output_gpu(self):
         model, x = _to_gpu(self.model, self.x)
-        self.check_output(model, x)
+        self.expect(model, x)
