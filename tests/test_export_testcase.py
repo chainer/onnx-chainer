@@ -52,4 +52,4 @@ def test_output_grad(tmpdir, model, x):
         assert os.path.isfile(
             os.path.join(path, 'test_data_set_0', 'gradient_{}.pb'.format(i)))
     assert not os.path.isfile(
-            os.path.join(path, 'test_data_set_0', 'gradient_10.pb'))
+        os.path.join(path, 'test_data_set_0', 'gradient_10.pb'))
