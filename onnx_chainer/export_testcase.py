@@ -1,7 +1,6 @@
 import os
 
 import chainer
-import numpy as np
 from onnx import numpy_helper
 
 from onnx_chainer.export import export
@@ -41,12 +40,14 @@ def export_testcase(
     os.makedirs(test_data_dir, exist_ok=True)
     for i, var in enumerate(inputs):
         with open(os.path.join(test_data_dir, 'input_%d.pb' % i), 'wb') as f:
-            t = numpy_helper.from_array(var.data, 'Input_%d' % i)
+            array = chainer.cuda.to_cpu(var.array)
+            t = numpy_helper.from_array(array, 'Input_%d' % i)
             f.write(t.SerializeToString())
 
     for i, var in enumerate(outputs):
         with open(os.path.join(test_data_dir, 'output_%d.pb' % i), 'wb') as f:
-            t = numpy_helper.from_array(var.data, '')
+            array = chainer.cuda.to_cpu(var.array)
+            t = numpy_helper.from_array(array, '')
             f.write(t.SerializeToString())
 
     if output_grad:
@@ -54,7 +55,7 @@ def export_testcase(
         if len(outputs) > 1:
             outputs = chainer.functions.identity(*outputs)
         for out in outputs:
-            out.grad = np.ones_like(out.data)
+            out.grad = model.xp.ones_like(out.data)
         outputs[0].backward()
 
         for i, (name, param) in enumerate(model.namedparams()):
