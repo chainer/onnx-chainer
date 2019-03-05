@@ -47,8 +47,15 @@ class TestNormalizations(ONNXModelTest):
 
 @testing.parameterize(
     {'kwargs': {}},
-    {'kwargs': {'use_beta': False}, 'name': 'use_beta_false'},
-    {'kwargs': {'use_gamma': False}, 'name': 'use_gamma_false'},
+    {'kwargs': {'use_beta': False}, 'condition': 'use_beta_false'},
+    {'kwargs': {'use_gamma': False}, 'condition': 'use_gamma_false'},
+    {'train': True, 'kwargs': {}},
+    {'train': True,
+     'kwargs': {'use_beta': False}, 'condition': 'use_beta_false'},
+    {'train': True,
+     'kwargs': {'use_gamma': False}, 'condition': 'use_gamma_false'},
+    {'train': True,
+     'kwargs': {'initial_avg_mean': 0.5}, 'condition': 'init_avg_mean'},
 )
 class TestBatchNormalization(ONNXModelTest):
 
@@ -68,7 +75,10 @@ class TestBatchNormalization(ONNXModelTest):
         self.x = input_generator.increasing(2, 5)
 
     def test_output(self):
-        name = 'batchnormalization'
-        if hasattr(self, 'name'):
-            name += '_' + self.name
-        self.expect(self.model, self.x, name=name)
+        train = getattr(self, 'train', False)
+        name = 'batch_normalization'
+        if not train:
+            name = 'fixed_' + name
+        if hasattr(self, 'condition'):
+            name += '_' + self.condition
+        self.expect(self.model, self.x, name=name, train=train)

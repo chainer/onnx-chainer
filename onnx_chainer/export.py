@@ -170,7 +170,7 @@ class ONNXExport(chainer.FunctionHook):
 
 def export(model, args, filename=None, export_params=True,
            graph_name='Graph', save_text=False, opset_version=None,
-           return_flat_inout=False):
+           train=False, return_flat_inout=False):
     """Export function for chainer.Chain in ONNX format.
 
     This function performs a forward computation of the given
@@ -200,6 +200,7 @@ def export(model, args, filename=None, export_params=True,
             or ``None`` is given, the latest opset version of the onnx module
             is used. If an integer is given, it will be ensured that all the
             operator version in the exported ONNX file is less than this value.
+        train (bool): If True, output computational graph with train mode.
         return_flat_inout (bool): If set True, return ONNX model with flat
             inputs, and flat outputs.
 
@@ -213,9 +214,16 @@ def export(model, args, filename=None, export_params=True,
 
     _check_available()
 
-    chainer.config.train = False
-    chainer.config.enable_backprop = True
+    with chainer.using_config('train', train),\
+            chainer.using_config('in_recomputing', True),\
+            chainer.using_config('enable_backprop', True):
+        return _export(
+            model, args, filename, export_params, graph_name, save_text,
+            opset_version, return_flat_inout)
 
+
+def _export(model, args, filename, export_params, graph_name, save_text,
+            opset_version, return_flat_inout):
     if opset_version is None:
         opset_version = int(onnx.defs.onnx_opset_version())
     elif opset_version < MINIMUM_OPSET_VERSION:
