@@ -96,3 +96,9 @@ class GraphBuilder(object):
           value of converter functions.
         """
         return tuple(self._nodes)
+
+
+def write_tensor_pb(filename, name, value):
+    with open(filename, 'wb') as f:
+        t = onnx.numpy_helper.from_array(value, name)
+        f.write(t.SerializeToString())
