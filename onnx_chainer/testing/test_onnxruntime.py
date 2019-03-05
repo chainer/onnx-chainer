@@ -15,11 +15,6 @@ except ImportError:
     ONNXRUNTIME_AVAILABLE = False
 
 
-MINIMUM_OPSET_VERSION = 7
-
-TEST_OUT_DIR = 'out'
-
-
 def check_model_expect(test_path, input_names=None):
     if not ONNXRUNTIME_AVAILABLE:
         raise ImportError('check_output requires onnxruntime.')
