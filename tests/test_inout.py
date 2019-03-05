@@ -69,10 +69,10 @@ class TestImplicitInput(ONNXModelTest):
 
 
 @testing.parameterize(
-    {'use_bn': True, 'out_type': 'dict'},
-    {'use_bn': False, 'out_type': 'dict'},
-    {'use_bn': True, 'out_type': 'tuple'},
-    {'use_bn': True, 'out_type': 'list'},
+    {'use_bn': True, 'out_type': 'dict', 'condition': 'bn_out_dict'},
+    {'use_bn': False, 'out_type': 'dict', 'condition': 'out_dict'},
+    {'use_bn': True, 'out_type': 'tuple', 'condition': 'bn_out_tuple'},
+    {'use_bn': True, 'out_type': 'list', 'condition': 'bn_out_list'},
 )
 class TestMultipleOutput(ONNXModelTest):
 
@@ -110,7 +110,8 @@ class TestMultipleOutput(ONNXModelTest):
     def test_multiple_outputs(self):
         model = self.get_model(use_bn=self.use_bn, out_type=self.out_type)
         x = np.zeros((1, 3, 32, 32), dtype=np.float32)
-        self.expect(model, x)
+        name = 'multipleoutput_' + self.condition
+        self.expect(model, x, name=name)
 
 
 class TestIntermediateOutput(ONNXModelTest):
