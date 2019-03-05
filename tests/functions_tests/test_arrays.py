@@ -37,6 +37,17 @@ from tests.helper import ONNXModelTest
      'args': {'pad_width': ((0, 0), (0, 0), (2, 2), (2, 2)),
               'mode': 'edge'},
      'name': 'pad_edge'},
+    {'ops': 'pad', 'input_shape': (1, 2, 3, 4),
+     'input_argname': 'x',
+     'args': {'pad_width': ((1, 3), (2, 0), (7, 1), (4, 4)),
+              'mode': 'constant'},
+     'name': 'pad_imbalance_pad_width'},
+    {'ops': 'pad', 'input_shape': (1, 2, 3, 4),
+     'input_argname': 'x',
+     'args': {'pad_width': ((0, 0), (0, 0), (2, 2), (2, 2)),
+              'mode': 'constant',
+              'constant_values': -1},
+     'name': 'pad_with_constant_values'},
 
     # reshape
     {'ops': 'reshape', 'input_shape': (1, 6),
