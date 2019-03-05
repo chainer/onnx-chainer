@@ -64,6 +64,10 @@ class ONNXModelTest(unittest.TestCase):
                 onnx_model = onnx.load_model(f)
             check_all_connected_from_inputs(onnx_model)
 
+            # TODO(disktnk): `input_names` got from onnxruntime session
+            # includes only network inputs, does not include internal inputs
+            # such as weight attribute etc. so that need to collect network
+            # inputs from `onnx_model`.
             graph_input_names = _get_graph_input_names(onnx_model)
             check_model_expect(test_path, input_names=graph_input_names)
 
