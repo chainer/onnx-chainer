@@ -8,7 +8,6 @@ import onnx
 from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 
 from onnx_chainer.context import Context
-from onnx_chainer import functions
 from onnx_chainer import mapping
 from onnx_chainer import onnx_helper
 
@@ -51,23 +50,16 @@ def convert_parameter(parameter, context):
 def create_node(
         func_name, opset_version, func, input_names,
         output_names, context, parameters):
-    for opver in sorted(mapping.operators[func_name], reverse=True):
-        if opver <= opset_version:
-            break
-    opset_version = opver
-
-    converter_name = 'convert_{}'.format(func_name)
-    if hasattr(functions, converter_name):
-        onnx_helper.set_func_name(func_name)
-        converter = getattr(functions, converter_name)
-        nodes = converter(
-            func, opset_version, input_names, len(output_names),
-            context, parameters)
-        nodes = list(reversed(nodes))
-        assert len(nodes[0].output) == len(output_names)
-        nodes[0].output[:] = output_names
-    else:
+    onnx_helper.set_func_name(func_name)
+    converter = mapping.converters.get(func_name, None)
+    if converter is None:
         raise ValueError('{} is not supported.'.format(func_name))
+    nodes = converter(
+        func, opset_version, input_names, len(output_names),
+        context, parameters)
+    nodes = list(reversed(nodes))
+    assert len(nodes[0].output) == len(output_names)
+    nodes[0].output[:] = output_names
     return nodes
 
 
@@ -144,26 +136,8 @@ class ONNXExport(chainer.FunctionHook):
                 output_name = self.context.get_name(o())
             output_names.append(output_name)
 
-        opset_versions = mapping.operators[func_name]
-        if isinstance(opset_versions, int):
-            opset_version = opset_versions
-        elif self.specified_opset_version is None:
-            # If no opset version is specified,
-            # use the latest version for the operator
-            opset_version = opset_versions[-1]
-        else:
-            # If a version is specified, use the last version <= specified one
-            for opset_version in sorted(opset_versions, reverse=True):
-                if opset_version <= self.specified_opset_version:
-                    break
-
-        if opset_version > self.specified_opset_version:
-            raise RuntimeError('ONNX-chainer cannot convert `{}` of Chainer '
-                               'with ONNX opset_version {}'.format(
-                                   func_name, self.specified_opset_version))
-
         nodes = create_node(
-            func_name, opset_version, function, input_names,
+            func_name, self.specified_opset_version, function, input_names,
             output_names, self.context, self.additional_parameters)
         self.graph.extend(nodes)
 

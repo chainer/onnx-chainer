@@ -1,7 +1,10 @@
 import chainer
+
+from onnx_chainer.functions.opset_version import support
 from onnx_chainer import onnx_helper
 
 
+@support((1, 6, 7))
 def convert_Dropout(
         func, opset_version, input_names,
         num_outputs, context, parameters):

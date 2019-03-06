@@ -2,9 +2,12 @@ import sys
 
 import chainer
 import numpy as np
+
+from onnx_chainer.functions.opset_version import support
 from onnx_chainer import onnx_helper
 
 
+@support((1, 6, 7))
 def convert_BatchNormalization(func, opset_version, input_names,
                                num_outputs, context, parameters):
     if len(func.inputs) <= 3:
@@ -63,6 +66,7 @@ def convert_BatchNormalization(func, opset_version, input_names,
         ),
 
 
+@support((1, 6, 7))
 def convert_FixedBatchNormalization(func, opset_version,
                                     input_names, num_outputs, context,
                                     parameters):
@@ -73,15 +77,14 @@ def convert_FixedBatchNormalization(func, opset_version,
 def convert_LocalResponseNormalization(func, opset_version,
                                        input_names, num_outputs, context,
                                        parameters):
-    if opset_version == 1:
-        size = int(func.n)
-        return onnx_helper.make_node(
-            'LRN', input_names, num_outputs,
-            alpha=float(func.alpha) * size,
-            beta=float(func.beta),
-            bias=float(func.k),
-            size=size,
-        ),
+    size = int(func.n)
+    return onnx_helper.make_node(
+        'LRN', input_names, num_outputs,
+        alpha=float(func.alpha) * size,
+        beta=float(func.beta),
+        bias=float(func.k),
+        size=size,
+    ),
 
 
 def convert_NormalizeL2(func, opset_version, input_names,
@@ -96,9 +99,9 @@ def convert_NormalizeL2(func, opset_version, input_names,
             '\'eps\' is not supported in the ONNX\'s LpNormalization operator,'
             ' so that ONNX-Chainer does not accept custom values for \'eps\' '
             '({})'.format(func.eps))
-    if opset_version == 1:
-        return onnx_helper.make_node(
-            'LpNormalization', input_names, num_outputs,
-            axis=int(func.axis[0]),
-            p=2,
-        ),
+
+    return onnx_helper.make_node(
+        'LpNormalization', input_names, num_outputs,
+        axis=int(func.axis[0]),
+        p=2,
+    ),

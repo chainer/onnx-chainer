@@ -17,8 +17,8 @@ class ONNXModelTest(unittest.TestCase):
         cls_name = request.cls.__name__
         self.default_name = cls_name[len('Test'):].lower()
 
-    def expect(self, model, args, name=None, op_name=None,
-               skip_opset_version=None, with_warning=False, train=False):
+    def expect(self, model, args, name=None, skip_opset_version=None,
+               with_warning=False, train=False):
         """Compare model output and test runtime output.
 
         Make an ONNX model from target model with args, and put output
@@ -28,21 +28,16 @@ class ONNXModelTest(unittest.TestCase):
             model (~chainer.Chain): the target model.
             args (list or dict): arguments of the target model.
             name (str): name of test. set class name on default.
-            op_name (str): name of operator. use for getting opset verseion.
             skip_opset_version (list): versions to skip test.
             with_warning (bool): if True, check warnings.
             train (bool): If True, output computational graph with train mode.
         """
 
-        minimum_version = onnx_chainer.MINIMUM_OPSET_VERSION
-        if op_name is not None:
-            opset_ids = onnx_chainer.mapping.operators[op_name]
-            minimum_version = max(minimum_version, opset_ids[0])
         test_name = name
         if test_name is None:
             test_name = self.default_name
 
-        for opset_version in range(minimum_version,
+        for opset_version in range(onnx_chainer.MINIMUM_OPSET_VERSION,
                                    onnx.defs.onnx_opset_version() + 1):
             if skip_opset_version is not None and\
                     opset_version in skip_opset_version:
