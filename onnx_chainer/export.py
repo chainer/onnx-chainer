@@ -49,9 +49,9 @@ def convert_parameter(parameter, context):
 
 def create_node(
         func_name, opset_version, func, input_names,
-        output_names, context, parameters):
+        output_names, context, parameters, converters):
     onnx_helper.set_func_name(func_name)
-    converter = mapping.converters.get(func_name, None)
+    converter = converters.get(func_name, None)
     if converter is None:
         raise ValueError('{} is not supported.'.format(func_name))
     nodes = converter(
@@ -91,8 +91,9 @@ def rename_tensors(model):
 
 class ONNXExport(chainer.FunctionHook):
 
-    def __init__(self, context, opset_version=None):
+    def __init__(self, context, converters, opset_version=None):
         self.context = context
+        self.converters = converters
 
         self.graph = []
         self.inputs = {}  # Input `Variable` objects keyed by string IDs
@@ -138,13 +139,14 @@ class ONNXExport(chainer.FunctionHook):
 
         nodes = create_node(
             func_name, self.specified_opset_version, function, input_names,
-            output_names, self.context, self.additional_parameters)
+            output_names, self.context, self.additional_parameters,
+            self.converters)
         self.graph.extend(nodes)
 
 
 def export(model, args, filename=None, export_params=True,
            graph_name='Graph', save_text=False, opset_version=None,
-           train=False, return_flat_inout=False):
+           train=False, return_flat_inout=False, external_converters=None):
     """Export function for chainer.Chain in ONNX format.
 
     This function performs a forward computation of the given
@@ -177,6 +179,7 @@ def export(model, args, filename=None, export_params=True,
         train (bool): If True, output computational graph with train mode.
         return_flat_inout (bool): If set True, return ONNX model with flat
             inputs, and flat outputs.
+        external_converters (dict): Add-on converter.
 
     Returns:
         ~onnx.ModelProto or tuple:
@@ -193,11 +196,11 @@ def export(model, args, filename=None, export_params=True,
             chainer.using_config('enable_backprop', True):
         return _export(
             model, args, filename, export_params, graph_name, save_text,
-            opset_version, return_flat_inout)
+            opset_version, return_flat_inout, external_converters)
 
 
 def _export(model, args, filename, export_params, graph_name, save_text,
-            opset_version, return_flat_inout):
+            opset_version, return_flat_inout, external_converters):
     if opset_version is None:
         opset_version = int(onnx.defs.onnx_opset_version())
     elif opset_version < MINIMUM_OPSET_VERSION:
@@ -264,7 +267,11 @@ def _export(model, args, filename, export_params, graph_name, save_text,
         input_tensors.append(helper.make_tensor_value_info(
             name, NP_TYPE_TO_TENSOR_TYPE[i.dtype], i.shape))
 
-    with ONNXExport(context, opset_version) as o:
+    if external_converters is not None:
+        converters = dict(mapping.converters, **external_converters)
+    else:
+        converters = mapping.converters
+    with ONNXExport(context, converters, opset_version) as o:
         if isinstance(outputs, (list, tuple)):
             flat_outputs = outputs
         elif isinstance(outputs, dict):
