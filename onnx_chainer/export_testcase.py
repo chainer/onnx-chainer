@@ -8,7 +8,7 @@ from onnx_chainer.onnx_helper import write_tensor_pb
 
 def export_testcase(
         model, args, out_dir, graph_name='Graph', output_grad=False,
-        opset_version=None, train=False):
+        opset_version=None, train=False, external_converters=None):
     """Export model and I/O tensors of the model in protobuf format.
 
     Similar to the `export` function, this function first performs a forward
@@ -34,7 +34,8 @@ def export_testcase(
     onnx_model, inputs, outputs = export(
         model, args, filename=os.path.join(out_dir, 'model.onnx'),
         graph_name=graph_name, opset_version=opset_version,
-        train=train, return_flat_inout=True)
+        train=train, return_flat_inout=True,
+        external_converters=external_converters)
 
     test_data_dir = os.path.join(out_dir, 'test_data_set_0')
     os.makedirs(test_data_dir, exist_ok=True)
