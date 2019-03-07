@@ -17,11 +17,11 @@ setup(
     keywords='ONNX Chainer model converter deep learning',
     install_requires=[
         'chainer>=3.2.0',
-        'onnx==1.3.0'
+        'onnx>=1.4.0'
     ],
     tests_require=[
         'chainer>=3.2.0',
-        'onnx==1.3.0',
+        'onnx>=1.4.0',
         'onnxruntime==0.2.1',
         'numpy',
     ],

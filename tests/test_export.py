@@ -1,7 +1,9 @@
 import os
+import warnings
 
 import chainer
 import numpy as np
+import pytest
 
 from onnx_chainer import export_testcase
 from onnx_chainer import onnx_helper
@@ -29,7 +31,8 @@ def test_export_external_converters_overwrite(tmpdir):
     check_model_expect(path)
 
 
-def test_export_external_converters_custom_op(tmpdir):
+@pytest.mark.parametrize('domain,version', [(None, 0), ('domain', 0)])
+def test_export_external_converters_custom_op(tmpdir, domain, version):
     path = tmpdir.mkdir('test_export_external_converters_custom_op').dirname
 
     class Dummy(chainer.FunctionNode):
@@ -49,7 +52,17 @@ def test_export_external_converters_custom_op(tmpdir):
 
     def custom_converter(func, opset_version, input_names, num_outputs,
                          context, parameters):
-        return onnx_helper.make_node('Dummy', input_names, num_outputs),
+        return onnx_helper.make_node(
+            'Dummy', input_names, num_outputs, domain=domain),
 
     addon_converters = {'Dummy': custom_converter}
-    export_testcase(model, x, path, external_converters=addon_converters)
+
+    external_opset_imports = {}
+    if domain is not None:
+        external_opset_imports[domain] = version
+    with warnings.catch_warnings(record=True) as w:
+        export_testcase(
+            model, x, path, external_converters=addon_converters,
+            external_opset_imports=external_opset_imports)
+        assert len(w) == 1
+        assert '"Dummy"' in str(w[-1].message)

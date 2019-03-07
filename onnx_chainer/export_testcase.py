@@ -6,9 +6,7 @@ from onnx_chainer.export import export
 from onnx_chainer.onnx_helper import write_tensor_pb
 
 
-def export_testcase(
-        model, args, out_dir, graph_name='Graph', output_grad=False,
-        opset_version=None, train=False, external_converters=None):
+def export_testcase(model, args, out_dir, output_grad=False, **kwargs):
     """Export model and I/O tensors of the model in protobuf format.
 
     Similar to the `export` function, this function first performs a forward
@@ -23,19 +21,15 @@ def export_testcase(
         args (list): The arguments which are given to the model
             directly. Unlike `export` function, only `list` type is accepted.
         out_dir (str): The directory name used for saving the input and output.
-        graph_name (str): A string to be used for the ``name`` field of the
-            graph in the exported ONNX model.
         output_grad (bool): If True, this function will output model's
             gradient with names 'gradient_%d.pb'.
-        train (bool): If True, output computational graph with train mode.
+        **kwargs (dict): keyword arguments for ``onnx_chainer.export``.
     """
     os.makedirs(out_dir, exist_ok=True)
     model.cleargrads()
     onnx_model, inputs, outputs = export(
         model, args, filename=os.path.join(out_dir, 'model.onnx'),
-        graph_name=graph_name, opset_version=opset_version,
-        train=train, return_flat_inout=True,
-        external_converters=external_converters)
+        return_flat_inout=True, **kwargs)
 
     test_data_dir = os.path.join(out_dir, 'test_data_set_0')
     os.makedirs(test_data_dir, exist_ok=True)

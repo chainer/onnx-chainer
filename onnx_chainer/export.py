@@ -143,7 +143,8 @@ class ONNXExport(chainer.FunctionHook):
 
 def export(model, args, filename=None, export_params=True,
            graph_name='Graph', save_text=False, opset_version=None,
-           train=False, return_flat_inout=False, external_converters=None):
+           train=False, return_flat_inout=False, external_converters=None,
+           external_opset_imports=None):
     """Export function for chainer.Chain in ONNX format.
 
     This function performs a forward computation of the given
@@ -177,6 +178,7 @@ def export(model, args, filename=None, export_params=True,
         return_flat_inout (bool): If set True, return ONNX model with flat
             inputs, and flat outputs.
         external_converters (dict): Add-on converter.
+        external_opset_imports (dict): Import external opset.
 
     Returns:
         ~onnx.ModelProto or tuple:
@@ -193,11 +195,13 @@ def export(model, args, filename=None, export_params=True,
             chainer.using_config('enable_backprop', True):
         return _export(
             model, args, filename, export_params, graph_name, save_text,
-            opset_version, return_flat_inout, external_converters)
+            opset_version, return_flat_inout, external_converters,
+            external_opset_imports)
 
 
 def _export(model, args, filename, export_params, graph_name, save_text,
-            opset_version, return_flat_inout, external_converters):
+            opset_version, return_flat_inout, external_converters,
+            external_opset_imports):
     if opset_version is None:
         opset_version = int(onnx.defs.onnx_opset_version())
     elif opset_version < MINIMUM_OPSET_VERSION:
@@ -321,17 +325,38 @@ def _export(model, args, filename, export_params, graph_name, save_text,
         graph, graph_name, input_tensors, output_tensors,
         initializer=initializers)
 
+    opset_imports = [helper.make_operatorsetid('', opset_version)]
+    if external_opset_imports is not None:
+        for domain, version in external_opset_imports.items():
+            opset_imports.append(helper.make_operatorsetid(domain, version))
     model = helper.make_model(
         onnx_graph,
         producer_name='Chainer',
         producer_version=chainer.__version__,
-        opset_imports=[helper.make_opsetid('', opset_version)]
+        opset_imports=opset_imports
     )
 
     model.ir_version = onnx.IR_VERSION
 
     rename_tensors(model)
-    checker.check_model(model)
+    try:
+        checker.check_model(model)
+    except Exception as e:
+        if external_converters is None:
+            raise e
+        else:
+            if not isinstance(
+                    e, onnx.onnx_cpp2py_export.checker.ValidationError):
+                raise e
+            elif 'No Op or Function registered' not in str(e):
+                # this error message is onnx>=1.4.0
+                raise e
+            else:
+                warnings.warn(
+                    'Unregistered operator error is occurred but ignored '
+                    'because exporting with `external_converters`, please take'
+                    ' care about ONNX format check is insufficient. Error '
+                    'message:\n{}'.format(str(e)))
 
     if filename is not None and isinstance(filename, str):
         with open(filename, 'wb') as fp:
