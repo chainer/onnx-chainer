@@ -1,5 +1,3 @@
-import threading
-
 from onnx_chainer import functions
 
 
@@ -88,19 +86,17 @@ _supported_function_node_set = {
     'SoftmaxCrossEntropy',
 }
 
-_mutex = threading.Lock()
 _converters = None
 
 
 def _get_converters():
     global _converters
 
-    with _mutex:
-        if _converters is not None:
-            return _converters
+    if _converters is not None:
+        return _converters
 
-        _converters = {name: getattr(functions, 'convert_'+name, None)
-                       for name in _supported_function_node_set}
+    _converters = {name: getattr(functions, 'convert_'+name, None)
+                   for name in _supported_function_node_set}
     return _converters
 
 
