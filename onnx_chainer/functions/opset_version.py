@@ -1,4 +1,30 @@
-def support(opset_versions=None):
+def support(opset_versions):
+    """Detect lowest supported version of the target converter
+
+    A simple wrap function for convert functions to detect lowest number of
+    supported opset version. For example, the target ONNX operater is added
+    from 6 and updated on 8, add this function as decorator like the below.
+
+    >>> @support((6, 8))
+    >>> def own_converter(func, opset_version, *args):
+    >>>     print(opset_version)
+    >>>
+    >>> own_converter(None, 6)
+    6
+    >>> own_converter(None, 7)
+    6
+    >>> own_converter(None, 8)
+    8
+    >>> own_converter(None, 9)
+    8
+    >>> own_converter(None, 5)
+    RuntimeError: ONNX-Chainer cannot convert ...(snip)
+
+    Arguments:
+        opset_versions (tuple): Tuple of opset versions.
+
+    """
+
     def _wrapper(func):
         def _func_with_lower_opset_version(*args, **kwargs):
             if opset_versions is None:

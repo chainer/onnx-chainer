@@ -1,14 +1,15 @@
-class ConvertParams(object):
+class FunctionConverterParams(object):
 
     def __init__(
             self, func=None, opset_version=None, input_names=None,
             output_names=None, context=None, parameters=None):
         """Wrapper of converter parameters
 
-        Exporter pass this parameters to the target converter.
+        Exporter set this parameters to the target converter's argument.
 
         >>> def own_converter(params):
-        >>>     # params is ConvertParams, so enable to get each attributes.
+        >>>     # params is FunctionConverterParams
+        >>>     # so enable to get each attributes:
         >>>     func_name = params.func.__class__.__name__
 
         Arguments:
@@ -28,10 +29,13 @@ class ConvertParams(object):
         self.parameters = parameters
 
 
-class OperatorConverter(object):
+class FunctionConverter(object):
 
     def __init__(self, converter):
         """Wrapper of ONNX-Chainer converter
+
+        Exporter set arguments wrapped by ``FunctionConverterParams``, and
+        this class breaks downs to each argument.
 
         Arguments:
             converter (function): The target converter function.

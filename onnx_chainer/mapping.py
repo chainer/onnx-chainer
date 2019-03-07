@@ -1,5 +1,5 @@
 from onnx_chainer import functions
-from onnx_chainer.functions.converter import OperatorConverter
+from onnx_chainer.functions.converter import FunctionConverter
 
 
 _supported_function_node_set = {
@@ -97,7 +97,7 @@ def _get_converters():
         return _converters
 
     _converters = {
-        name: OperatorConverter(getattr(functions, 'convert_'+name, None))
+        name: FunctionConverter(getattr(functions, 'convert_'+name, None))
         for name in _supported_function_node_set}
     return _converters
 

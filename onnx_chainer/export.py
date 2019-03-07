@@ -8,7 +8,7 @@ import onnx
 from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 
 from onnx_chainer.context import Context
-from onnx_chainer.functions.converter import ConvertParams
+from onnx_chainer.functions.converter import FunctionConverterParams
 from onnx_chainer import mapping
 from onnx_chainer import onnx_helper
 
@@ -93,7 +93,7 @@ class ONNXExport(chainer.FunctionHook):
         converter = self.converters.get(func_name, None)
         if converter is None:
             raise ValueError('{} is not supported'.format(func_name))
-        params = ConvertParams(
+        params = FunctionConverterParams(
             func, self.specified_opset_version, input_names, output_names,
             self.context, parameters)
         nodes = converter(params)
@@ -154,7 +154,24 @@ def export(model, args, filename=None, export_params=True,
     directly. It means, the output :class:`~chainer.Variable` object ``y`` to
     make the computational graph will be created by:
 
-    y = model(*args)
+    ``y = model(*args)``
+
+    ``external_converters`` and ``external_opset_import`` are for external
+    custom operator. When some ~chainer.FunctionNode are expected to convert to
+    own customized operator, set converter function with ~chainer.FunctionNode
+    name.
+
+    >>> def custom_converter(param):
+    >>>     return onnx.make_node('CustomizedOp', domain='chainer'),
+    >>>
+    >>> external_converters = {'TargetFuncName': custom_converter}
+    >>> external_imports = {'chainer': 0}
+    >>>
+    >>> export(model, args,
+    >>>        external_converters=external_converters,
+    >>>        external_imports=external_imports)
+
+    Returned model has ``CustomizedOp` node.
 
     Args:
         model (~chainer.Chain): The model object you want to export in ONNX
@@ -179,8 +196,10 @@ def export(model, args, filename=None, export_params=True,
         train (bool): If True, output computational graph with train mode.
         return_flat_inout (bool): If set True, return ONNX model with flat
             inputs, and flat outputs.
-        external_converters (dict): Add-on converter.
-        external_opset_imports (dict): Import external opset.
+        external_converters (dict): Add-on converter. Convert functions
+            keyed by ~chainer.FunctionNode name.
+        external_opset_imports (dict): Import external opset. opset version
+            number keyed by domain name.
 
     Returns:
         ~onnx.ModelProto or tuple:
