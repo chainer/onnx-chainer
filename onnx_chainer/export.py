@@ -47,22 +47,6 @@ def convert_parameter(parameter, context):
     return numpy_helper.from_array(array, context.get_name(parameter))
 
 
-def create_node(
-        func_name, opset_version, func, input_names,
-        output_names, context, parameters, converters):
-    onnx_helper.set_func_name(func_name)
-    converter = converters.get(func_name, None)
-    if converter is None:
-        raise ValueError('{} is not supported.'.format(func_name))
-    nodes = converter(
-        func, opset_version, input_names, len(output_names),
-        context, parameters)
-    nodes = list(reversed(nodes))
-    assert len(nodes[0].output) == len(output_names)
-    nodes[0].output[:] = output_names
-    return nodes
-
-
 def rename_tensors(model):
     names = {v.name: v.name for v in model.graph.initializer}
     op_counts = collections.defaultdict(int)
@@ -102,6 +86,20 @@ class ONNXExport(chainer.FunctionHook):
         self.additional_parameters = []
         self.specified_opset_version = opset_version
 
+    def create_node(
+            self, func_name, func, input_names, output_names, parameters):
+        onnx_helper.set_func_name(func_name)
+        converter = self.converters.get(func_name, None)
+        if converter is None:
+            raise ValueError('{} is not supported'.format(func_name))
+        nodes = converter(
+            func, self.specified_opset_version, input_names, len(output_names),
+            self.context, parameters)
+        nodes = list(reversed(nodes))
+        assert len(nodes[0].output) == len(output_names)
+        nodes[0].output[:] = output_names
+        return nodes
+
     def backward_postprocess(self, function, in_data, out_grad):
         if isinstance(function, chainer.function.FunctionAdapter):
             function = function.function
@@ -137,10 +135,9 @@ class ONNXExport(chainer.FunctionHook):
                 output_name = self.context.get_name(o())
             output_names.append(output_name)
 
-        nodes = create_node(
-            func_name, self.specified_opset_version, function, input_names,
-            output_names, self.context, self.additional_parameters,
-            self.converters)
+        nodes = self.create_node(
+            func_name, function, input_names, output_names,
+            self.additional_parameters)
         self.graph.extend(nodes)
 
 
