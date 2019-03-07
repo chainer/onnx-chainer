@@ -3,6 +3,7 @@ import warnings
 
 import chainer
 import numpy as np
+import onnx
 import pytest
 
 from onnx_chainer import export_testcase
@@ -66,3 +67,9 @@ def test_export_external_converters_custom_op(tmpdir, domain, version):
             external_opset_imports=external_opset_imports)
         assert len(w) == 1
         assert '"Dummy"' in str(w[-1].message)
+
+    output_path = os.path.join(path, 'test_data_set_0', 'output_0.pb')
+    assert os.path.isfile(output_path)
+    output = onnx.numpy_helper.to_array(onnx.load_tensor(output_path))
+    expected_output = np.ones_like(x)
+    np.testing.assert_allclose(output, expected_output, rtol=1e-5, atol=1e-5)
