@@ -8,6 +8,7 @@ import onnx
 from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 
 from onnx_chainer.context import Context
+from onnx_chainer.functions.converter import ConvertParams
 from onnx_chainer import mapping
 from onnx_chainer import onnx_helper
 
@@ -92,9 +93,10 @@ class ONNXExport(chainer.FunctionHook):
         converter = self.converters.get(func_name, None)
         if converter is None:
             raise ValueError('{} is not supported'.format(func_name))
-        nodes = converter(
-            func, self.specified_opset_version, input_names, len(output_names),
+        params = ConvertParams(
+            func, self.specified_opset_version, input_names, output_names,
             self.context, parameters)
+        nodes = converter(params)
         nodes = list(reversed(nodes))
         assert len(nodes[0].output) == len(output_names)
         nodes[0].output[:] = output_names

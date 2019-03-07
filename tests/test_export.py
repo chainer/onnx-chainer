@@ -18,9 +18,9 @@ def test_export_external_converters_overwrite(tmpdir):
     model = chainer.Sequential(chainer.functions.sigmoid)
     x = input_generator.positive_increasing(2, 5)
 
-    def custom_converter(func, opset_version, input_names, num_outputs,
-                         context, parameters):
-        return onnx_helper.make_node('Tanh', input_names, num_outputs),
+    def custom_converter(params):
+        return onnx_helper.make_node(
+            'Tanh', params.input_names, len(params.output_names)),
 
     addon_converters = {'Sigmoid': custom_converter}
     export_testcase(model, x, path, external_converters=addon_converters)
@@ -51,10 +51,10 @@ def test_export_external_converters_custom_op(tmpdir, domain, version):
     model = chainer.Sequential(dummy_function)
     x = input_generator.increasing(2, 5)
 
-    def custom_converter(func, opset_version, input_names, num_outputs,
-                         context, parameters):
+    def custom_converter(params):
         return onnx_helper.make_node(
-            'Dummy', input_names, num_outputs, domain=domain),
+            'Dummy', params.input_names, len(params.output_names),
+            domain=domain),
 
     addon_converters = {'Dummy': custom_converter}
 
