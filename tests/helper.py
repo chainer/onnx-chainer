@@ -12,6 +12,10 @@ from onnx_chainer.testing.test_onnxruntime import check_model_expect
 
 class ONNXModelTest(unittest.TestCase):
 
+    @pytest.fixture(autouse=True)
+    def set_config(self, desable_experimental_warning):
+        pass
+
     @pytest.fixture(autouse=True, scope='function')
     def set_name(self, request):
         cls_name = request.cls.__name__

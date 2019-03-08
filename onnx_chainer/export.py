@@ -161,17 +161,20 @@ def export(model, args, filename=None, export_params=True,
     own customized operator, set converter function with ~chainer.FunctionNode
     name.
 
+    >>> import onnx
     >>> def custom_converter(param):
-    >>>     return onnx.make_node('CustomizedOp', domain='chainer'),
+    >>>     return onnx.helper.make_node(
+    >>>         'CustomizedRelu', param.input_names, param.output_names,
+    >>>         domain='chainer'),
     >>>
-    >>> external_converters = {'TargetFuncName': custom_converter}
+    >>> external_converters = {'ReLU': custom_converter}
     >>> external_imports = {'chainer': 0}
     >>>
     >>> export(model, args,
     >>>        external_converters=external_converters,
     >>>        external_imports=external_imports)
 
-    Returned model has ``CustomizedOp` node.
+    Returned model has ``CustomizedRelu` node.
 
     Args:
         model (~chainer.Chain): The model object you want to export in ONNX
@@ -289,7 +292,8 @@ def _export(model, args, filename, export_params, graph_name, save_text,
         input_tensors.append(helper.make_tensor_value_info(
             name, NP_TYPE_TO_TENSOR_TYPE[i.dtype], i.shape))
 
-    if external_converters is not None:
+    if external_converters:
+        chainer.utils.experimental('external_converters')
         converters = dict(mapping.converters, **external_converters)
     else:
         converters = mapping.converters
@@ -347,7 +351,8 @@ def _export(model, args, filename, export_params, graph_name, save_text,
         initializer=initializers)
 
     opset_imports = [helper.make_operatorsetid('', opset_version)]
-    if external_opset_imports is not None:
+    if external_opset_imports:
+        chainer.utils.experimental('external_opset_imports')
         for domain, version in external_opset_imports.items():
             opset_imports.append(helper.make_operatorsetid(domain, version))
     model = helper.make_model(
@@ -362,22 +367,15 @@ def _export(model, args, filename, export_params, graph_name, save_text,
     rename_tensors(model)
     try:
         checker.check_model(model)
-    except Exception as e:
+    except onnx.checker.ValidationError as e:
         if external_converters is None:
             raise e
         else:
-            if not isinstance(
-                    e, onnx.onnx_cpp2py_export.checker.ValidationError):
-                raise e
-            elif 'No Op or Function registered' not in str(e):
-                # this error message is onnx>=1.4.0
-                raise e
-            else:
-                warnings.warn(
-                    'Unregistered operator error is occurred but ignored '
-                    'because exporting with `external_converters`, please take'
-                    ' care about ONNX format check is insufficient. Error '
-                    'message:\n{}'.format(str(e)))
+            warnings.warn(
+                'Unregistered operator error is occurred but ignored because '
+                'exporting with `external_converters`, please take care about '
+                'ONNX format check is insufficient. Error message:\n{}'.format(
+                    str(e)))
 
     if filename is not None and isinstance(filename, str):
         with open(filename, 'wb') as fp:
@@ -389,5 +387,6 @@ def _export(model, args, filename, export_params, graph_name, save_text,
         filename.write(model.SerializeToString())
 
     if return_flat_inout:
+        chainer.utils.experimental('return_flat_inout')
         return model, flat_args, flat_outputs
     return model

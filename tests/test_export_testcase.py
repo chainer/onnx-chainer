@@ -29,7 +29,7 @@ def x():
     return np.zeros((1, 3, 28, 28), dtype=np.float32)
 
 
-def test_export_testcase(tmpdir, model, x):
+def test_export_testcase(tmpdir, model, x, desable_experimental_warning):
     # Just check the existence of pb files
     path = tmpdir.mkdir('test_export_testcase').dirname
     export_testcase(model, (x,), path)
@@ -39,7 +39,7 @@ def test_export_testcase(tmpdir, model, x):
     assert os.path.isfile(os.path.join(path, 'test_data_set_0', 'output_0.pb'))
 
 
-def test_output_grad(tmpdir, model, x):
+def test_output_grad(tmpdir, model, x, desable_experimental_warning):
     path = tmpdir.mkdir('test_export_testcase_with_grad').dirname
     export_testcase(model, (x,), path, output_grad=True, train=True)
 
