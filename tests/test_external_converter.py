@@ -43,7 +43,7 @@ def test_export_external_converters_custom_op(tmpdir, domain, version):
             return np.ones_like(inputs[0]),
 
         def backward(self, indexes, grad_outputs):
-            return np.zeros_like(self.x),
+            return chainer.Variable(np.zeros_like(self.x)),
 
     def dummy_function(x):
         return Dummy().apply((x,))[0]
