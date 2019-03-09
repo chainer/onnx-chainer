@@ -1,6 +1,8 @@
+from onnx_chainer.functions.opset_version import support
 from onnx_chainer import onnx_helper
 
 
+@support((1, 6))
 def convert_ClippedReLU(func, opset_version, input_names,
                         num_outputs, context, parameters):
     if opset_version == 1:
@@ -16,6 +18,7 @@ def convert_ClippedReLU(func, opset_version, input_names,
         ),
 
 
+@support((1, 6))
 def convert_ELU(func, opset_version, input_names, num_outputs,
                 context, parameters):
     if opset_version == 1:
@@ -30,6 +33,7 @@ def convert_ELU(func, opset_version, input_names, num_outputs,
         ),
 
 
+@support((1, 6))
 def convert_HardSigmoid(func, opset_version, input_names,
                         num_outputs, context, parameters):
     if opset_version == 1:
@@ -47,6 +51,7 @@ def convert_HardSigmoid(func, opset_version, input_names,
         ),
 
 
+@support((1, 6))
 def convert_LeakyReLU(func, opset_version, input_names,
                       num_outputs, context, parameters):
     if opset_version == 1:
@@ -70,6 +75,7 @@ def convert_LogSoftmax(func, opset_version, input_names,
     ),
 
 
+@support((1, 6, 7))
 def convert_PReLUFunction(func, opset_version, input_names,
                           num_outputs, context, parameters):
     if opset_version == 1:
@@ -81,6 +87,7 @@ def convert_PReLUFunction(func, opset_version, input_names,
         return onnx_helper.make_node('PRelu', input_names, num_outputs),
 
 
+@support((1, 6))
 def convert_ReLU(func, opset_version, input_names, num_outputs,
                  context, parameters):
     if opset_version == 1:
@@ -91,6 +98,7 @@ def convert_ReLU(func, opset_version, input_names, num_outputs,
         return onnx_helper.make_node('Relu', input_names, num_outputs),
 
 
+@support((1, 6))
 def convert_Sigmoid(func, opset_version, input_names,
                     num_outputs, context, parameters):
     if opset_version == 1:
@@ -114,6 +122,7 @@ def convert_Softplus(func, opset_version, input_names,
     return onnx_helper.make_node('Softplus', input_names, num_outputs),
 
 
+@support((1, 6))
 def convert_Tanh(func, opset_version, input_names, num_outputs,
                  context, parameters):
     if opset_version == 1:

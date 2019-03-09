@@ -12,13 +12,17 @@ from onnx_chainer.testing.test_onnxruntime import check_model_expect
 
 class ONNXModelTest(unittest.TestCase):
 
+    @pytest.fixture(autouse=True)
+    def set_config(self, desable_experimental_warning):
+        pass
+
     @pytest.fixture(autouse=True, scope='function')
     def set_name(self, request):
         cls_name = request.cls.__name__
         self.default_name = cls_name[len('Test'):].lower()
 
-    def expect(self, model, args, name=None, op_name=None,
-               skip_opset_version=None, with_warning=False, train=False):
+    def expect(self, model, args, name=None, skip_opset_version=None,
+               with_warning=False, train=False):
         """Compare model output and test runtime output.
 
         Make an ONNX model from target model with args, and put output
@@ -28,21 +32,16 @@ class ONNXModelTest(unittest.TestCase):
             model (~chainer.Chain): the target model.
             args (list or dict): arguments of the target model.
             name (str): name of test. set class name on default.
-            op_name (str): name of operator. use for getting opset verseion.
             skip_opset_version (list): versions to skip test.
             with_warning (bool): if True, check warnings.
             train (bool): If True, output computational graph with train mode.
         """
 
-        minimum_version = onnx_chainer.MINIMUM_OPSET_VERSION
-        if op_name is not None:
-            opset_ids = onnx_chainer.mapping.operators[op_name]
-            minimum_version = max(minimum_version, opset_ids[0])
         test_name = name
         if test_name is None:
             test_name = self.default_name
 
-        for opset_version in range(minimum_version,
+        for opset_version in range(onnx_chainer.MINIMUM_OPSET_VERSION,
                                    onnx.defs.onnx_opset_version() + 1):
             if skip_opset_version is not None and\
                     opset_version in skip_opset_version:
@@ -64,6 +63,11 @@ class ONNXModelTest(unittest.TestCase):
                 onnx_model = onnx.load_model(f)
             check_all_connected_from_inputs(onnx_model)
 
+            # TODO(disktnk): some operators such as BatchNormalization are not
+            # supported on latest onnxruntime, should skip ONLY not supported
+            # operators, but it's hard to write down skip op list.
+            if opset_version >= 9:
+                continue
             # TODO(disktnk): `input_names` got from onnxruntime session
             # includes only network inputs, does not include internal inputs
             # such as weight attribute etc. so that need to collect network

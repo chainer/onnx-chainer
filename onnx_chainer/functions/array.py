@@ -2,17 +2,38 @@ import chainer
 import numpy as np
 from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 
-from onnx_chainer import mapping
+from onnx_chainer.functions.opset_version import support
 from onnx_chainer import onnx_helper
 
 
+TENSOR_TYPE_TO_NAME = {
+    0: 'UNDEFINED',
+    1: 'FLOAT',
+    2: 'UINT8',
+    3: 'INT8',
+    4: 'UINT16',
+    5: 'INT16',
+    6: 'INT32',
+    7: 'INT64',
+    8: 'STRING',
+    9: 'BOOL',
+    10: 'FLOAT16',
+    11: 'DOUBLE',
+    12: 'UINT32',
+    13: 'UINT64',
+    14: 'COMPLEX64',
+    15: 'COMPLEX128',
+}
+
+
+@support((1, 6))
 def convert_Cast(func, opset_version, input_names, num_outputs,
                  context, parameters):
     typ = func.type if isinstance(func.type, np.dtype) else np.dtype(func.type)
     if opset_version == 1:
         return onnx_helper.make_node(
             'Cast', input_names, num_outputs,
-            to=mapping.TENSOR_TYPE_TO_NAME[NP_TYPE_TO_TENSOR_TYPE[typ]]
+            to=TENSOR_TYPE_TO_NAME[NP_TYPE_TO_TENSOR_TYPE[typ]]
         ),
     elif opset_version == 6:
         return onnx_helper.make_node(
@@ -21,6 +42,7 @@ def convert_Cast(func, opset_version, input_names, num_outputs,
         ),
 
 
+@support((1, 4))
 def convert_Concat(func, opset_version, input_names,
                    num_outputs, context, parameters):
     if opset_version == 1:
@@ -109,6 +131,7 @@ def convert_GetItem(func, opset_version, input_names,
     return gb.nodes()
 
 
+@support((1, 2))
 def convert_Pad(func, opset_version, input_names, num_outputs,
                 context, parameters):
     if func.mode not in ['constant', 'reflect', 'edge']:
@@ -167,6 +190,7 @@ def convert_Pad(func, opset_version, input_names, num_outputs,
     return node,
 
 
+@support((1, 5))
 def convert_Reshape(func, opset_version, input_names,
                     num_outputs, context, parameters):
     if opset_version == 1:
@@ -193,6 +217,7 @@ def convert_Space2Depth(func, opset_version, input_names,
     ),
 
 
+@support((1, 2))
 def convert_SplitAxis(func, opset_version, input_names,
                       num_outputs, context, parameters):
     if func.indices is not None:
@@ -240,6 +265,7 @@ def convert_Squeeze(func, opset_version, input_names,
     ),
 
 
+@support((1, 6))
 def convert_Tile(func, opset_version, input_names, num_outputs,
                  context, parameters):
     # Add tiles and axis to graph

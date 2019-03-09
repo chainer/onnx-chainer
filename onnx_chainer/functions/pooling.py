@@ -1,12 +1,14 @@
 import warnings
 
-import numpy as np
-
 import chainer
 from chainer.utils import conv
+import numpy as np
+
+from onnx_chainer.functions.opset_version import support
 from onnx_chainer import onnx_helper
 
 
+@support((1, 7))
 def convert_AveragePooling2D(func, opset_version, input_names,
                              num_outputs, context, parameters):
     pad = [func.ph, func.pw]
@@ -38,6 +40,7 @@ def convert_AveragePooling2D(func, opset_version, input_names,
         ),
 
 
+@support((1, 7))
 def convert_AveragePoolingND(func, opset_version, input_names,
                              num_outputs, context, parameters):
     pad = list(func.pad[:])
@@ -69,6 +72,7 @@ def convert_AveragePoolingND(func, opset_version, input_names,
         ),
 
 
+@support((1, 8))
 def convert_MaxPooling2D(func, opset_version, input_names,
                          num_outputs, context, parameters):
     pad = [func.ph, func.pw]
@@ -103,6 +107,7 @@ def convert_MaxPooling2D(func, opset_version, input_names,
         ),
 
 
+@support((1, 8))
 def convert_MaxPoolingND(func, opset_version, input_names,
                          num_outputs, context, parameters):
     pad = list(func.pad[:])
@@ -151,6 +156,7 @@ def convert_ROIPooling2D(func, opset_version, input_names,
     ),
 
 
+@support((7, 9))
 def convert_Unpooling2D(func, opset_version, input_names, num_outputs,
                         context, parameters):
     pad = [func.ph, func.pw]

@@ -67,7 +67,11 @@ class TestUnaryMathOperators(ONNXModelTest):
         name = self.op_name.lower()
         if hasattr(self, 'condition'):
             name += '_' + self.condition
-        self.expect(self.model, self.a, name=name, op_name=self.op_name)
+        skip_opset_version = []
+        if self.op_name == 'BroadcastTo':
+            skip_opset_version.append(7)
+        self.expect(self.model, self.a, name=name,
+                    skip_opset_version=skip_opset_version)
 
 
 @testing.parameterize(

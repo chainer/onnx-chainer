@@ -1,9 +1,11 @@
 import chainer
 import numpy as np
 
+from onnx_chainer.functions.opset_version import support
 from onnx_chainer import onnx_helper
 
 
+@support((9,))
 def convert_SoftmaxCrossEntropy(
         func, opset_version, input_names,
         num_outputs, context, parameters):

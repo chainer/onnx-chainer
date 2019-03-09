@@ -1,32 +1,33 @@
 import chainer
 import numpy as np
+
+from onnx_chainer.functions.opset_version import support
 from onnx_chainer import onnx_helper
 
 
 def convert_Convolution2DFunction(func, opset_version,
                                   input_names, num_outputs, context,
                                   parameters):
-    if opset_version == 1:
-        if hasattr(func, 'dy') and hasattr(func, 'dx'):
-            node = onnx_helper.make_node(
-                'Conv', input_names, num_outputs,
-                dilations=(func.dy, func.dx),
-                kernel_shape=func.inputs[1].shape[2:],
-                # pads: [x1_begin, x2_begin...x1_end, x2_end,...]
-                pads=(func.ph, func.pw, func.ph, func.pw),
-                strides=(func.sy, func.sx),
-                group=func.groups,
-            )
-        else:
-            node = onnx_helper.make_node(
-                'Conv', input_names, num_outputs,
-                dilations=(1, 1),
-                kernel_shape=func.inputs[1].shape[2:],
-                pads=(func.ph, func.pw, func.ph, func.pw),
-                strides=(func.sy, func.sx),
-                group=func.groups,
-            )
-        return node,
+    if hasattr(func, 'dy') and hasattr(func, 'dx'):
+        node = onnx_helper.make_node(
+            'Conv', input_names, num_outputs,
+            dilations=(func.dy, func.dx),
+            kernel_shape=func.inputs[1].shape[2:],
+            # pads: [x1_begin, x2_begin...x1_end, x2_end,...]
+            pads=(func.ph, func.pw, func.ph, func.pw),
+            strides=(func.sy, func.sx),
+            group=func.groups,
+        )
+    else:
+        node = onnx_helper.make_node(
+            'Conv', input_names, num_outputs,
+            dilations=(1, 1),
+            kernel_shape=func.inputs[1].shape[2:],
+            pads=(func.ph, func.pw, func.ph, func.pw),
+            strides=(func.sy, func.sx),
+            group=func.groups,
+        )
+    return node,
 
 
 def convert_ConvolutionND(func, opset_version, input_names,
@@ -41,27 +42,25 @@ def convert_ConvolutionND(func, opset_version, input_names,
         pad.append(p)
     pad = pad * 2
 
-    if opset_version == 1:
-        return onnx_helper.make_node(
-            'Conv', input_names, num_outputs,
-            kernel_shape=func.inputs[1].shape[2:],
-            pads=pad,
-            strides=func.stride,
-        ),
+    return onnx_helper.make_node(
+        'Conv', input_names, num_outputs,
+        kernel_shape=func.inputs[1].shape[2:],
+        pads=pad,
+        strides=func.stride,
+    ),
 
 
 def convert_Deconvolution2DFunction(func, opset_version,
                                     input_names, num_outputs, context,
                                     parameters):
-    if opset_version == 1:
-        return onnx_helper.make_node(
-            'ConvTranspose', input_names, num_outputs,
-            kernel_shape=func.inputs[1].shape[2:],
-            output_shape=(func.outh, func.outw),
-            # pads: [x1_begin, x2_begin...x1_end, x2_end,...]
-            pads=(func.ph, func.pw, func.ph, func.pw),
-            strides=(func.sy, func.sx),
-        ),
+    return onnx_helper.make_node(
+        'ConvTranspose', input_names, num_outputs,
+        kernel_shape=func.inputs[1].shape[2:],
+        output_shape=(func.outh, func.outw),
+        # pads: [x1_begin, x2_begin...x1_end, x2_end,...]
+        pads=(func.ph, func.pw, func.ph, func.pw),
+        strides=(func.sy, func.sx),
+    ),
 
 
 def convert_DeconvolutionND(func, opset_version, input_names,
@@ -75,14 +74,13 @@ def convert_DeconvolutionND(func, opset_version, input_names,
         pad.append(p)
     pad = pad * 2
 
-    if opset_version == 1:
-        return onnx_helper.make_node(
-            'ConvTranspose', input_names, num_outputs,
-            kernel_shape=func.inputs[1].shape[2:],
-            output_shape=func.outs,
-            pads=pad,
-            strides=func.stride,
-        ),
+    return onnx_helper.make_node(
+        'ConvTranspose', input_names, num_outputs,
+        kernel_shape=func.inputs[1].shape[2:],
+        output_shape=func.outs,
+        pads=pad,
+        strides=func.stride,
+    ),
 
 
 def convert_EmbedIDFunction(func, opset_version, input_names,
@@ -94,11 +92,11 @@ def convert_EmbedIDFunction(func, opset_version, input_names,
         raise ValueError(
             'Current ONNX doesn\'t support ignore_label for EmbedID.')
 
-    if opset_version == 1:
-        return onnx_helper.make_node(
-            'Gather', input_names, num_outputs, axis=0),
+    return onnx_helper.make_node(
+        'Gather', input_names, num_outputs, axis=0),
 
 
+@support((1, 6, 7))
 def convert_LinearFunction(func, opset_version, input_names,
                            num_outputs, context, parameters):
     # When the func has bias
