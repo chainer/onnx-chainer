@@ -14,8 +14,7 @@ def convert_Add(func, opset_version, input_names, num_outputs,
 
 def convert_AddConstant(func, opset_version, input_names,
                         num_outputs, context, parameters):
-    value = np.asarray([func.value], dtype=func.inputs[0].dtype)
-    value = np.broadcast_to(value, func.inputs[0].shape)
+    value = np.array(func.value, dtype=func.inputs[0].dtype)
     value_param = chainer.Parameter(value)
     parameters.append(value_param)
     input_names.append(context.get_name(value_param))
@@ -88,8 +87,7 @@ def convert_Absolute(func, opset_version, input_names,
 
 def convert_PowVarConst(func, opset_version, input_names,
                         num_outputs, context, parameters):
-    value = np.asarray([func.value], dtype=func.inputs[0].dtype)
-    value = np.broadcast_to(value, func.inputs[0].shape)
+    value = np.array(func.value, dtype=func.inputs[0].dtype)
     value_param = chainer.Parameter(value)
     parameters.append(value_param)
     input_names.append(context.get_name(value_param))
