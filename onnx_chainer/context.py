@@ -3,7 +3,8 @@ class Context(object):
     def __init__(self, model):
         self.name_list = dict()
         for name, param in model.namedparams():
-            self.name_list[str(id(param))] = name
+            replaced_name = 'param' + name.replace('/', '_')
+            self.name_list[str(id(param))] = replaced_name
 
     def get_name(self, variable):
         str_id = str(id(variable))
