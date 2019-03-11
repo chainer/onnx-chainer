@@ -73,10 +73,9 @@ class ONNXModelTest(unittest.TestCase):
             # operators, but it's hard to write down skip op list.
             if opset_version >= 9:
                 continue
-            # TODO(disktnk): `input_names` got from onnxruntime session
-            # includes only network inputs, does not include internal inputs
-            # such as weight attribute etc. so that need to collect network
-            # inputs from `onnx_model`.
+            # Export function can be add unexpected inputs. Collect inputs
+            # from ONNX model, and compare with another input list got from
+            # test runtime.
             graph_input_names = _get_graph_input_names(onnx_model)
             check_model_expect(test_path, input_names=graph_input_names)
 

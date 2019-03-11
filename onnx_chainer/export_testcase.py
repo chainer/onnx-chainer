@@ -33,12 +33,10 @@ def export_testcase(model, args, out_dir, output_grad=False, **kwargs):
 
     test_data_dir = os.path.join(out_dir, 'test_data_set_0')
     os.makedirs(test_data_dir, exist_ok=True)
-    # TODO(disktnk): consider to resolve input names smarter
-    input_names = _get_graph_input_names(onnx_model)
-    for i, var in enumerate(inputs):
+    for i, name in enumerate(inputs.keys()):
         pb_name = os.path.join(test_data_dir, 'input_{}.pb'.format(i))
-        array = chainer.cuda.to_cpu(var.array)
-        write_tensor_pb(pb_name, input_names[i], array)
+        array = chainer.cuda.to_cpu(inputs[name].array)
+        write_tensor_pb(pb_name, name, array)
 
     for i, var in enumerate(outputs):
         pb_name = os.path.join(test_data_dir, 'output_{}.pb'.format(i))
@@ -58,10 +56,3 @@ def export_testcase(model, args, out_dir, output_grad=False, **kwargs):
             pb_name = os.path.join(test_data_dir, 'gradient_{}.pb'.format(i))
             grad = chainer.cuda.to_cpu(param.grad)
             write_tensor_pb(pb_name, '', grad)
-
-
-def _get_graph_input_names(onnx_model):
-    initialized_graph_input_names = {
-        i.name for i in onnx_model.graph.initializer}
-    return [i.name for i in onnx_model.graph.input if i.name not in
-            initialized_graph_input_names]

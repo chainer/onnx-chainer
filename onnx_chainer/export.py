@@ -48,7 +48,7 @@ def convert_parameter(parameter, context):
     return numpy_helper.from_array(array, context.get_name(parameter))
 
 
-def rename_tensors(model, rename_input=True):
+def rename_tensors(model):
     names = {v.name: v.name for v in model.graph.initializer}
     op_counts = collections.defaultdict(int)
 
@@ -56,9 +56,6 @@ def rename_tensors(model, rename_input=True):
         for i, input_name in enumerate(op.input):
             if input_name not in names:
                 names[input_name] = input_name
-                if rename_input:
-                    names[input_name] = 'Input_{}'.format(op_counts['Input'])
-                    op_counts['Input'] += 1
             op.input[i] = names[input_name]
 
         op_name = '{}_{}'.format(op.op_type, op_counts[op.op_type])
@@ -79,6 +76,8 @@ def rename_tensors(model, rename_input=True):
 def rename_variable_name(context, variables, named_vars, new_names):
     # Update ``named_vars`` keys to ``new_names``
     if isinstance(variables, list):
+        if not new_names:
+            new_names = ['Input_{}'.format(i) for i in range(len(named_vars))]
         if not isinstance(new_names, list) or\
                 len(variables) != len(new_names):
             raise ValueError(
@@ -90,6 +89,9 @@ def rename_variable_name(context, variables, named_vars, new_names):
             named_vars[new_name] = var
             context.set_name(var, new_name)
     elif isinstance(variables, dict):
+        if not new_names:
+            new_names = {k: 'Input_{}'.format(i)
+                         for i, k in enumerate(variables.keys())}
         if not isinstance(new_names, dict) or\
                 len(variables) != len(new_names):
             raise ValueError(
@@ -103,7 +105,9 @@ def rename_variable_name(context, variables, named_vars, new_names):
             new_name = new_names[k]
             named_vars[new_name] = v
             context.set_name(v, new_name)
-    elif isinstance(variables, chainer):
+    elif isinstance(variables, chainer.Variable):
+        if not new_names:
+            new_names = 'Input_0'
         if isinstance(new_names, list):
             if len(new_names) != 1:
                 raise ValueError('Replacing name must be single')
@@ -316,8 +320,7 @@ def _export(model, args, filename, export_params, graph_name, save_text,
             'The \'args\' argument should be a list, tuple, dict, '
             'numpy array, or Chainer Variable. But a {} object was '
             'given.'.format(type(args)))
-    if input_names:
-        rename_variable_name(context, args, network_inputs, input_names)
+    rename_variable_name(context, args, network_inputs, input_names)
 
     initializers = []
     input_tensors = []
@@ -406,7 +409,7 @@ def _export(model, args, filename, export_params, graph_name, save_text,
 
     model.ir_version = onnx.IR_VERSION
 
-    rename_tensors(model, rename_input=(not input_names))
+    rename_tensors(model)
     try:
         checker.check_model(model)
     except onnx.checker.ValidationError as e:
@@ -430,5 +433,5 @@ def _export(model, args, filename, export_params, graph_name, save_text,
 
     if return_flat_inout:
         chainer.utils.experimental('return_flat_inout')
-        return model, flat_args, flat_outputs
+        return model, network_inputs, flat_outputs
     return model
