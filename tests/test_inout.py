@@ -31,6 +31,11 @@ class TestMultipleInputs(ONNXModelTest):
     def test_arrays(self):
         self.expect(self.model, self.ins, name=self.base_name+'_arrays')
 
+    def test_arrays_with_names(self):
+        self.expect(
+            self.model, self.ins, name=self.base_name+'_arrays_with_name',
+            input_names=['input_x', 'input_y', 'input_z'])
+
     def test_variables(self):
         ins = [chainer.Variable(i) for i in self.ins]
         self.expect(self.model, ins, name=self.base_name+'_vars')
@@ -39,6 +44,14 @@ class TestMultipleInputs(ONNXModelTest):
         arg_names = ['x', 'y', 'z']  # current exporter ignores these names
         ins = {arg_names[i]: v for i, v in enumerate(self.ins)}
         self.expect(self.model, ins, name=self.base_name+'_dicts')
+
+    def test_array_dicts_with_names(self):
+        arg_names = ['x', 'y', 'z']  # current exporter ignores these names
+        ins = {arg_names[i]: v for i, v in enumerate(self.ins)}
+        input_names = {arg_names[i]: 'input_'+arg_names[i]
+                       for i, v in enumerate(self.ins)}
+        self.expect(self.model, ins, name=self.base_name+'_dicts_with_name',
+                    input_names=input_names)
 
     def test_variable_dicts(self):
         arg_names = ['x', 'y', 'z']  # current exporter ignores these names

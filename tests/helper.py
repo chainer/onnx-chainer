@@ -22,7 +22,8 @@ class ONNXModelTest(unittest.TestCase):
         self.default_name = cls_name[len('Test'):].lower()
 
     def expect(self, model, args, name=None, skip_opset_version=None,
-               with_warning=False, train=False):
+               with_warning=False, train=False, input_names=None,
+               output_names=None):
         """Compare model output and test runtime output.
 
         Make an ONNX model from target model with args, and put output
@@ -35,6 +36,8 @@ class ONNXModelTest(unittest.TestCase):
             skip_opset_version (list): versions to skip test.
             with_warning (bool): if True, check warnings.
             train (bool): If True, output computational graph with train mode.
+            input_names (str, list or dict):
+            output_names (str, list or dict):
         """
 
         test_name = name
@@ -51,11 +54,13 @@ class ONNXModelTest(unittest.TestCase):
             if with_warning:
                 with warnings.catch_warnings(record=True) as w:
                     test_path = gen_test_data_set(
-                        model, args, dir_name, opset_version, train)
+                        model, args, dir_name, opset_version, train,
+                        input_names, output_names)
                 assert len(w) == 1
             else:
                 test_path = gen_test_data_set(
-                    model, args, dir_name, opset_version, train)
+                    model, args, dir_name, opset_version, train, input_names,
+                    output_names)
 
             onnx_model_path = os.path.join(test_path, 'model.onnx')
             assert os.path.isfile(onnx_model_path)

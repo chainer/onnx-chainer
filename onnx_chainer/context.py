@@ -14,3 +14,7 @@ class Context(object):
             new_name = 'v{}'.format(len(self.name_list))
             self.name_list[str_id] = new_name
             return new_name
+
+    def set_name(self, variable, name):
+        str_id = str(id(variable))
+        self.name_list[str_id] = name

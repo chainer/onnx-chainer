@@ -48,30 +48,71 @@ def convert_parameter(parameter, context):
     return numpy_helper.from_array(array, context.get_name(parameter))
 
 
-def rename_tensors(model):
+def rename_tensors(model, rename_input=True):
     names = {v.name: v.name for v in model.graph.initializer}
     op_counts = collections.defaultdict(int)
 
     for op in model.graph.node:
+        for i, input_name in enumerate(op.input):
+            if input_name not in names:
+                names[input_name] = input_name
+                if rename_input:
+                    names[input_name] = 'Input_{}'.format(op_counts['Input'])
+                    op_counts['Input'] += 1
+            op.input[i] = names[input_name]
+
         op_name = '{}_{}'.format(op.op_type, op_counts[op.op_type])
         op_counts[op.op_type] += 1
-
-        for i in range(len(op.input)):
-            if op.input[i] not in names:
-                names[op.input[i]] = 'Input_{}'.format(op_counts['Input'])
-                op_counts['Input'] += 1
-            op.input[i] = names[op.input[i]]
-
-        for i in range(len(op.output)):
-            if len(op.output) <= 1:
-                names[op.output[i]] = op_name
-            else:
-                names[op.output[i]] = '{}_{}'.format(op_name, i)
-            op.output[i] = names[op.output[i]]
+        if len(op.output) == 1:
+            names[op.output[0]] = op_name
+            op.output[0] = names[op.output[0]]
+        else:
+            for i, output_name in enumerate(op.output):
+                names[output_name] = '{}_{}'.format(op_name, i)
+                op.output[i] = names[output_name]
 
     for v in tuple(model.graph.input) + tuple(model.graph.output):
         if v.name in names:
             v.name = names[v.name]
+
+
+def rename_variable_name(context, variables, named_vars, new_names):
+    # Update ``named_vars`` keys to ``new_names``
+    if isinstance(variables, list):
+        if not isinstance(new_names, list) or\
+                len(variables) != len(new_names):
+            raise ValueError(
+                'Replacing name list is not match with input (or output) '
+                'variables')
+        for i, var in enumerate(variables):
+            del named_vars[context.get_name(var)]
+            new_name = new_names[i]
+            named_vars[new_name] = var
+            context.set_name(var, new_name)
+    elif isinstance(variables, dict):
+        if not isinstance(new_names, dict) or\
+                len(variables) != len(new_names):
+            raise ValueError(
+                'Replacing name dict is not match with input (or output) '
+                'variables')
+        for k, v in variables.items():
+            if k not in new_names:
+                raise ValueError(
+                    'Key of replacing name is not found in variables')
+            del named_vars[context.get_name(v)]
+            new_name = new_names[k]
+            named_vars[new_name] = v
+            context.set_name(v, new_name)
+    elif isinstance(variables, chainer):
+        if isinstance(new_names, list):
+            if len(new_names) != 1:
+                raise ValueError('Replacing name must be single')
+            new_name = new_names[0]
+        else:
+            new_name = str(new_names)
+        del named_vars[context.get_name(variables)]
+        named_vars[new_name] = variables
+        context.set_name(variables, new_name)
 
 
 class ONNXExport(chainer.FunctionHook):
@@ -145,7 +186,8 @@ class ONNXExport(chainer.FunctionHook):
 
 def export(model, args, filename=None, export_params=True,
            graph_name='Graph', save_text=False, opset_version=None,
-           train=False, return_flat_inout=False, external_converters=None,
+           input_names=None, output_names=None, train=False,
+           return_flat_inout=False, external_converters=None,
            external_opset_imports=None):
     """Export function for chainer.Chain in ONNX format.
 
@@ -174,7 +216,7 @@ def export(model, args, filename=None, export_params=True,
     >>>        external_converters=external_converters,
     >>>        external_imports=external_imports)
 
-    Returned model has ``CustomizedRelu` node.
+    Returned model has ``CustomizedRelu`` node.
 
     Args:
         model (~chainer.Chain): The model object you want to export in ONNX
@@ -196,6 +238,8 @@ def export(model, args, filename=None, export_params=True,
             or ``None`` is given, the latest opset version of the onnx module
             is used. If an integer is given, it will be ensured that all the
             operator version in the exported ONNX file is less than this value.
+        input_names (str, list or dict):
+        output_names (str, list or dict):
         train (bool): If True, output computational graph with train mode.
         return_flat_inout (bool): If set True, return ONNX model with flat
             inputs, and flat outputs.
@@ -219,13 +263,13 @@ def export(model, args, filename=None, export_params=True,
             chainer.using_config('enable_backprop', True):
         return _export(
             model, args, filename, export_params, graph_name, save_text,
-            opset_version, return_flat_inout, external_converters,
-            external_opset_imports)
+            opset_version, input_names, output_names, return_flat_inout,
+            external_converters, external_opset_imports)
 
 
 def _export(model, args, filename, export_params, graph_name, save_text,
-            opset_version, return_flat_inout, external_converters,
-            external_opset_imports):
+            opset_version, input_names, output_names, return_flat_inout,
+            external_converters, external_opset_imports):
     if opset_version is None:
         opset_version = int(onnx.defs.onnx_opset_version())
     elif opset_version < MINIMUM_OPSET_VERSION:
@@ -240,30 +284,31 @@ def _export(model, args, filename, export_params, graph_name, save_text,
         )
 
     # Forward computation
-    network_inputs = []
+    context = Context(model)
+    network_inputs = {}
     if isinstance(args, tuple):
         args = list(args)
     if isinstance(args, list):
         for i, arg in enumerate(args):
             if isinstance(arg, chainer.get_array_types()):
                 args[i] = chainer.Variable(arg)
-            network_inputs.append(args[i])
+            network_inputs[context.get_name(args[i])] = args[i]
         flat_args = args
         outputs = model(*args)
     elif isinstance(args, dict):
         for key, arg in args.items():
             if isinstance(arg, chainer.get_array_types()):
                 args[key] = chainer.Variable(arg)
-            network_inputs.append(args[key])
+            network_inputs[context.get_name(args[key])] = args[key]
         flat_args = list(args.values())
         outputs = model(**args)
     elif isinstance(args, chainer.get_array_types()):
         args = chainer.Variable(args)
-        network_inputs.append(args)
+        network_inputs[context.get_name(args)] = args
         flat_args = [args]
         outputs = model(args)
     elif isinstance(args, chainer.Variable):
-        network_inputs.append(args)
+        network_inputs[context.get_name(args)] = args
         flat_args = [args]
         outputs = model(args)
     else:
@@ -271,8 +316,8 @@ def _export(model, args, filename, export_params, graph_name, save_text,
             'The \'args\' argument should be a list, tuple, dict, '
             'numpy array, or Chainer Variable. But a {} object was '
             'given.'.format(type(args)))
-
-    context = Context(model)
+    if input_names:
+        rename_variable_name(context, args, network_inputs, input_names)
 
     initializers = []
     input_tensors = []
@@ -285,29 +330,26 @@ def _export(model, args, filename, export_params, graph_name, save_text,
         input_tensors.append(helper.make_tensor_value_info(
             name, tensor.data_type, tensor.dims))
 
-    network_input_names = set()
-    for i in network_inputs:
-        name = context.get_name(i)
-        network_input_names.add(name)
+    network_input_names = set(network_inputs.keys())
+    for name, var in network_inputs.items():
         input_tensors.append(helper.make_tensor_value_info(
-            name, NP_TYPE_TO_TENSOR_TYPE[i.dtype], i.shape))
+            name, NP_TYPE_TO_TENSOR_TYPE[var.dtype], var.shape))
 
     if external_converters:
         chainer.utils.experimental('external_converters')
         converters = dict(mapping.converters, **external_converters)
     else:
         converters = mapping.converters
+    if isinstance(outputs, (list, tuple)):
+        flat_outputs = outputs
+    elif isinstance(outputs, dict):
+        flat_outputs = list(outputs.values())
+    elif isinstance(outputs, chainer.Variable):
+        flat_outputs = [outputs]
+    else:
+        raise RuntimeError(
+            'Unexpected output type from the model: {}'.format(type(outputs)))
     with ONNXExport(context, converters, opset_version) as o:
-        if isinstance(outputs, (list, tuple)):
-            flat_outputs = outputs
-        elif isinstance(outputs, dict):
-            flat_outputs = list(outputs.values())
-        elif isinstance(outputs, chainer.Variable):
-            flat_outputs = [outputs]
-        else:
-            raise RuntimeError(
-                'Unexpected output type from the model: {}'.format(
-                    type(outputs)))
         chainer.grad(flat_outputs, list(model.params()) + flat_args)
 
     implicit_input_names = set(o.inputs.keys()) - param_names -\
@@ -364,7 +406,7 @@ def _export(model, args, filename, export_params, graph_name, save_text,
 
     model.ir_version = onnx.IR_VERSION
 
-    rename_tensors(model)
+    rename_tensors(model, rename_input=(not input_names))
     try:
         checker.check_model(model)
     except onnx.checker.ValidationError as e:
