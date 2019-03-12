@@ -8,9 +8,28 @@ from onnx_chainer.testing import input_generator
 from tests.helper import ONNXModelTest
 
 
+@testing.parameterize(
+    {'condition': 'tuple'},
+    {'condition': 'tuple_with_name', 'input_names': ['x', 'y', 'z']},
+    {'condition': 'list', 'in_type': 'list'},
+    {'condition': 'list_with_names', 'in_type': 'list',
+     'input_names': ['x', 'y', 'z']},
+    {'condition': 'var', 'in_type': 'variable'},
+    {'condition': 'var_with_names', 'in_type': 'variable',
+     'input_names': ['x', 'y', 'z']},
+    {'condition': 'varlist', 'in_type': 'variable_list'},
+    {'condition': 'varlist_with_names', 'in_type': 'variable_list',
+     'input_names': ['x', 'y', 'z']},
+    {'condition': 'dict', 'in_type': 'dict'},
+    {'condition': 'dict_with_names', 'in_type': 'dict',
+     'input_names': {'x': 'in_x', 'y': 'in_y', 'z': 'in_z'}},
+    {'condition': 'vardict', 'in_type': 'variable_dict'},
+    {'condition': 'vardict_with_names', 'in_type': 'variable_dict',
+     'input_names': {'x': 'in_x', 'y': 'in_y', 'z': 'in_z'}},
+)
 class TestMultipleInputs(ONNXModelTest):
 
-    def setUp(self):
+    def get_model(self):
 
         class Model(chainer.Chain):
 
@@ -22,42 +41,33 @@ class TestMultipleInputs(ONNXModelTest):
             def __call__(self, x, y, z):
                 return F.relu(x) + self.prelu(y) * z
 
-        self.model = Model()
-        self.ins = (input_generator.increasing(1, 5),
-                    input_generator.increasing(1, 5)*1.1,
-                    input_generator.increasing(1, 5)*1.2)
-        self.base_name = 'multiple_inputs'
+        return Model()
 
-    def test_arrays(self):
-        self.expect(self.model, self.ins, name=self.base_name+'_arrays')
+    def get_x(self, in_type=None):
+        base_x = (input_generator.increasing(1, 5),
+                  input_generator.increasing(1, 5)*1.1,
+                  input_generator.increasing(1, 5)*1.2)
+        names = ['x', 'y', 'z']
+        if in_type is None:
+            return base_x
+        elif in_type == 'list':
+            return list(base_x)
+        elif in_type == 'variable':
+            return tuple(chainer.Variable(v) for v in base_x)
+        elif in_type == 'variable_list':
+            return [chainer.Variable(v) for v in base_x]
+        elif in_type == 'dict':
+            return {names[i]: v for i, v in enumerate(base_x)}
+        elif in_type == 'variable_dict':
+            return {names[i]: chainer.Variable(v)
+                    for i, v in enumerate(base_x)}
 
-    def test_arrays_with_names(self):
-        self.expect(
-            self.model, self.ins, name=self.base_name+'_arrays_with_name',
-            input_names=['input_x', 'input_y', 'input_z'])
-
-    def test_variables(self):
-        ins = [chainer.Variable(i) for i in self.ins]
-        self.expect(self.model, ins, name=self.base_name+'_vars')
-
-    def test_array_dicts(self):
-        arg_names = ['x', 'y', 'z']  # current exporter ignores these names
-        ins = {arg_names[i]: v for i, v in enumerate(self.ins)}
-        self.expect(self.model, ins, name=self.base_name+'_dicts')
-
-    def test_array_dicts_with_names(self):
-        arg_names = ['x', 'y', 'z']  # current exporter ignores these names
-        ins = {arg_names[i]: v for i, v in enumerate(self.ins)}
-        input_names = {arg_names[i]: 'input_'+arg_names[i]
-                       for i, v in enumerate(self.ins)}
-        self.expect(self.model, ins, name=self.base_name+'_dicts_with_name',
-                    input_names=input_names)
-
-    def test_variable_dicts(self):
-        arg_names = ['x', 'y', 'z']  # current exporter ignores these names
-        ins = {arg_names[i]: chainer.Variable(v)
-               for i, v in enumerate(self.ins)}
-        self.expect(self.model, ins, name=self.base_name+'_vardicts')
+    def test_multiple_inputs(self):
+        model = self.get_model()
+        x = self.get_x(getattr(self, 'in_type', None))
+        name = 'multipleinputs_' + self.condition
+        input_names = getattr(self, 'input_names', {})
+        self.expect(model, x, name=name, input_names=input_names)
 
 
 class TestImplicitInput(ONNXModelTest):
