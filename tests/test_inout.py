@@ -155,6 +155,4 @@ class TestIntermediateOutput(ONNXModelTest):
     def test_outputs(self):
         model = self.get_model()
         x = np.ones((1, 3), dtype=np.float32)
-        # TODO(disktnk) output keys will be ['Identity_0', 'Gemm_1'], not
-        # intuitive. ONNX-Chainer should support outputs name to customize them
-        self.expect(model, x)
+        self.expect(model, x, output_names=['y', 'z'])

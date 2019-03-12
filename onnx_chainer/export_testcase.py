@@ -47,9 +47,9 @@ def export_testcase(model, args, out_dir, output_grad=False, **kwargs):
         # Perform backward computation
         if len(outputs) > 1:
             outputs = chainer.functions.identity(*outputs)
-        for out in outputs:
+        for out in outputs.values():
             out.grad = model.xp.ones_like(out.array)
-        outputs[0].backward()
+        list(outputs.values())[0].backward()
 
         for i, (name, param) in enumerate(model.namedparams()):
             pb_name = os.path.join(test_data_dir, 'gradient_{}.pb'.format(i))
