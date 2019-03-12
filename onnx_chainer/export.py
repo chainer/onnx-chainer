@@ -190,7 +190,7 @@ class ONNXExport(chainer.FunctionHook):
 def export(model, args, filename=None, export_params=True,
            graph_name='Graph', save_text=False, opset_version=None,
            input_names=None, output_names=None, train=False,
-           return_flat_inout=False, external_converters=None,
+           return_named_inout=False, external_converters=None,
            external_opset_imports=None):
     """Export function for chainer.Chain in ONNX format.
 
@@ -244,8 +244,8 @@ def export(model, args, filename=None, export_params=True,
         input_names (str, list or dict):
         output_names (str, list or dict):
         train (bool): If True, output computational graph with train mode.
-        return_flat_inout (bool): If set True, return ONNX model with flat
-            inputs, and flat outputs.
+        return_named_inout (bool): If set True, return ONNX model with named
+            inputs, and named outputs.
         external_converters (dict): Add-on converter. Convert functions
             keyed by ~chainer.FunctionNode name.
         external_opset_imports (dict): Import external opset. opset version
@@ -253,8 +253,8 @@ def export(model, args, filename=None, export_params=True,
 
     Returns:
         ~onnx.ModelProto or tuple:
-            When ``return_flat_input`` is ``False``, return ModelProto as an
-            ONNX model. Otherwise return the tuple of ModelProto, flat inputs
+            When ``return_named_inout`` is ``False``, return ModelProto as an
+            ONNX model. Otherwise return the tuple of ModelProto, named inputs
             and outputs, both inputs and outputs are list of ~chainer.Variable.
 
     """
@@ -266,12 +266,12 @@ def export(model, args, filename=None, export_params=True,
             chainer.using_config('enable_backprop', True):
         return _export(
             model, args, filename, export_params, graph_name, save_text,
-            opset_version, input_names, output_names, return_flat_inout,
+            opset_version, input_names, output_names, return_named_inout,
             external_converters, external_opset_imports)
 
 
 def _export(model, args, filename, export_params, graph_name, save_text,
-            opset_version, input_names, output_names, return_flat_inout,
+            opset_version, input_names, output_names, return_named_inout,
             external_converters, external_opset_imports):
     if opset_version is None:
         opset_version = int(onnx.defs.onnx_opset_version())
@@ -427,7 +427,7 @@ def _export(model, args, filename, export_params, graph_name, save_text,
     elif hasattr(filename, 'write'):
         filename.write(model.SerializeToString())
 
-    if return_flat_inout:
-        chainer.utils.experimental('return_flat_inout')
-        return model, network_inputs, flat_outputs
+    if return_named_inout:
+        chainer.utils.experimental('return_named_inout')
+        return model, network_inputs, network_outputs
     return model

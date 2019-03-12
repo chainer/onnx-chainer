@@ -57,6 +57,6 @@ def check_model_expect(test_path, input_names=None):
         inputs, outputs = load_test_data(
             test_data_path, rt_input_names, rt_output_names)
 
-        rt_out = sess.run(rt_output_names, inputs)
+        rt_out = sess.run(list(outputs.keys()), inputs)
         for cy, my in zip(outputs.values(), rt_out):
             np.testing.assert_allclose(cy, my, rtol=1e-5, atol=1e-5)
