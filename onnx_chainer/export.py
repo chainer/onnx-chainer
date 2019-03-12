@@ -84,7 +84,7 @@ def rename_variable_name(context, variables, named_vars, new_names, prefix):
         if not new_names:
             new_names = ['{}_{}'.format(prefix, i)
                          for i in range(len(named_vars))]
-        if not isinstance(new_names, list) or\
+        if not isinstance(new_names, (list, tuple)) or\
                 len(variables) != len(new_names):
             raise ValueError(
                 'Replacing name list is not match with input (or output) '
@@ -98,11 +98,13 @@ def rename_variable_name(context, variables, named_vars, new_names, prefix):
         if not new_names:
             new_names = {k: '{}_{}'.format(prefix, i)
                          for i, k in enumerate(variables.keys())}
-        if not isinstance(new_names, dict) or\
+        if not isinstance(new_names, (list, tuple, dict)) or\
                 len(variables) != len(new_names):
             raise ValueError(
                 'Replacing name dict is not match with input (or output) '
                 'variables')
+        if isinstance(new_names, (list, tuple)):
+            new_names = {k: v for k, v in zip(variables.keys(), new_names)}
         for k, v in variables.items():
             if k not in new_names:
                 raise ValueError(
