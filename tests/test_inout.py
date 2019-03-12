@@ -84,8 +84,14 @@ class TestImplicitInput(ONNXModelTest):
 @testing.parameterize(
     {'use_bn': True, 'out_type': 'dict', 'condition': 'bn_out_dict'},
     {'use_bn': False, 'out_type': 'dict', 'condition': 'out_dict'},
+    {'use_bn': True, 'out_type': 'dict', 'condition': 'bn_out_dict_with_name',
+     'output_names': {'tanh': 'out_tanh', 'sigmoid': 'out_sigmoid'}},
     {'use_bn': True, 'out_type': 'tuple', 'condition': 'bn_out_tuple'},
+    {'use_bn': True, 'out_type': 'tuple', 'condition': 'bn_out_tuple_with_name',
+     'output_names': ['out_tanh', 'out_sigmoid']},
     {'use_bn': True, 'out_type': 'list', 'condition': 'bn_out_list'},
+    {'use_bn': True, 'out_type': 'list', 'condition': 'bn_out_list_with_name',
+     'output_names': ['out_tanh', 'out_sigmoid']},
 )
 class TestMultipleOutput(ONNXModelTest):
 
@@ -110,8 +116,8 @@ class TestMultipleOutput(ONNXModelTest):
                 o2 = F.sigmoid(h)
                 if self._out_type == 'dict':
                     return {
-                        'Tanh_0': o1,
-                        'Sigmoid_0': o2
+                        'tanh': o1,
+                        'sigmoid': o2
                     }
                 elif self._out_type == 'tuple':
                     return o1, o2
@@ -124,7 +130,8 @@ class TestMultipleOutput(ONNXModelTest):
         model = self.get_model(use_bn=self.use_bn, out_type=self.out_type)
         x = np.zeros((1, 3, 32, 32), dtype=np.float32)
         name = 'multipleoutput_' + self.condition
-        self.expect(model, x, name=name)
+        output_names = getattr(self, 'output_names', [])
+        self.expect(model, x, name=name, output_names=output_names)
 
 
 class TestIntermediateOutput(ONNXModelTest):
