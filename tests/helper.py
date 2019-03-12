@@ -68,6 +68,21 @@ class ONNXModelTest(unittest.TestCase):
                 onnx_model = onnx.load_model(f)
             check_all_connected_from_inputs(onnx_model)
 
+            graph_input_names = _get_graph_input_names(onnx_model)
+            if input_names:
+                if isinstance(input_names, dict):
+                    expected_names = list(sorted(input_names.values()))
+                else:
+                    expected_names = list(sorted(input_names))
+                assert list(sorted(graph_input_names)) == expected_names
+            if output_names:
+                if isinstance(output_names, dict):
+                    expected_names = list(sorted(output_names.values()))
+                else:
+                    expected_names = list(sorted(output_names))
+                graph_output_names = [v.name for v in onnx_model.graph.output]
+                assert list(sorted(graph_output_names)) == expected_names
+
             # TODO(disktnk): some operators such as BatchNormalization are not
             # supported on latest onnxruntime, should skip ONLY not supported
             # operators, but it's hard to write down skip op list.
@@ -76,7 +91,6 @@ class ONNXModelTest(unittest.TestCase):
             # Export function can be add unexpected inputs. Collect inputs
             # from ONNX model, and compare with another input list got from
             # test runtime.
-            graph_input_names = _get_graph_input_names(onnx_model)
             check_model_expect(test_path, input_names=graph_input_names)
 
 
