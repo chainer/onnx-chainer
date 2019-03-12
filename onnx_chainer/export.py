@@ -48,10 +48,10 @@ def convert_parameter(parameter, context):
     return numpy_helper.from_array(array, context.get_name(parameter))
 
 
-def rename_tensors(model, rename_network_out=True):
+def rename_tensors(model, force_rename_network_out=True):
     names = {v.name: v.name for v in model.graph.initializer}
-    network_output_names = [o.name for o in model.graph.output]\
-        if rename_network_out else []
+    network_output_names = set() if force_rename_network_out else\
+        {o.name for o in model.graph.output}
     op_counts = collections.defaultdict(int)
 
     for op in model.graph.node:
@@ -78,7 +78,8 @@ def rename_tensors(model, rename_network_out=True):
             v.name = names[v.name]
 
 
-def rename_variable_name(context, variables, named_vars, new_names, prefix):
+def rename_variable_name(
+        context, variables, named_vars, new_names, prefix='Input'):
     # Update ``named_vars`` keys to ``new_names``
     if isinstance(variables, (list, tuple)):
         if not new_names:
@@ -135,8 +136,6 @@ class ONNXExport(chainer.FunctionHook):
 
         self.graph = []
         self.inputs = {}  # Input `Variable` objects keyed by string IDs
-        # Renamed string IDs keyed by their original string IDs
-        self.renamed_outputs = {}
         self.additional_parameters = []
         self.specified_opset_version = opset_version
 
@@ -321,7 +320,7 @@ def _export(model, args, filename, export_params, graph_name, save_text,
             'The \'args\' argument should be a list, tuple, dict, '
             'numpy array, or Chainer Variable. But a {} object was '
             'given.'.format(type(args)))
-    rename_variable_name(context, args, network_inputs, input_names, 'Input')
+    rename_variable_name(context, args, network_inputs, input_names)
 
     initializers = []
     input_tensors = []
@@ -334,7 +333,6 @@ def _export(model, args, filename, export_params, graph_name, save_text,
         input_tensors.append(helper.make_tensor_value_info(
             name, tensor.data_type, tensor.dims))
 
-    network_input_names = set(network_inputs.keys())
     for name, var in network_inputs.items():
         input_tensors.append(helper.make_tensor_value_info(
             name, NP_TYPE_TO_TENSOR_TYPE[var.dtype], var.shape))
@@ -355,14 +353,15 @@ def _export(model, args, filename, export_params, graph_name, save_text,
         raise RuntimeError(
             'Unexpected output type from the model: {}'.format(type(outputs)))
     network_outputs = {context.get_name(var): var for var in flat_outputs}
-    rename_variable_name(
-        context, outputs, network_outputs, output_names, 'Output')
-    # Backword computation to construct graph
+    if output_names:
+        rename_variable_name(
+            context, outputs, network_outputs, output_names)
+    # Backward computation to construct graph
     with ONNXExport(context, converters, opset_version) as o:
         chainer.grad(flat_outputs, list(model.params()) + flat_args)
 
     implicit_input_names = set(o.inputs.keys()) - param_names -\
-        network_input_names
+        set(network_inputs.keys())
     for name in implicit_input_names:
         tensor = convert_parameter(o.inputs[name], context)
         initializers.append(tensor)
@@ -407,7 +406,7 @@ def _export(model, args, filename, export_params, graph_name, save_text,
 
     model.ir_version = onnx.IR_VERSION
 
-    rename_tensors(model)
+    rename_tensors(model, force_rename_network_out=not output_names)
     try:
         checker.check_model(model)
     except onnx.checker.ValidationError as e:
