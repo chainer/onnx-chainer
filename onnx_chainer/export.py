@@ -242,8 +242,13 @@ def export(model, args, filename=None, export_params=True,
             or ``None`` is given, the latest opset version of the onnx module
             is used. If an integer is given, it will be ensured that all the
             operator version in the exported ONNX file is less than this value.
-        input_names (str, list or dict):
-        output_names (str, list or dict):
+        input_names (str, list or dict): Customize input names of the graph.
+            Number of ``input_names`` must be same as number of ``args``.
+            When set dict type, keys must be same as ``args``'s keys.
+        output_names (str, list or dict): Customize output name of the graph.
+            Number of ``output_names`` must be same as actual outputs from
+            ``model``. When set dict type, keys must be same as the key of
+            ``model`` output.
         train (bool): If True, output computational graph with train mode.
         return_named_inout (bool): If set True, return ONNX model with named
             inputs, and named outputs.
