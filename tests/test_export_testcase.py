@@ -30,14 +30,24 @@ def x():
     return np.zeros((1, 3, 28, 28), dtype=np.float32)
 
 
-def test_export_testcase(tmpdir, model, x, desable_experimental_warning):
+@pytest.mark.parametrize('in_names,out_names',
+                         [(None, None), (['x'], ['y'])])
+def test_export_testcase(
+        tmpdir, model, x, desable_experimental_warning, in_names, out_names):
     # Just check the existence of pb files
     path = tmpdir.mkdir('test_export_testcase').dirname
-    export_testcase(model, (x,), path)
+    export_testcase(model, (x,), path,
+                    input_names=in_names, output_names=out_names)
 
     assert os.path.isfile(os.path.join(path, 'model.onnx'))
-    assert os.path.isfile(os.path.join(path, 'test_data_set_0', 'input_0.pb'))
-    assert os.path.isfile(os.path.join(path, 'test_data_set_0', 'output_0.pb'))
+    input_pb_path = os.path.join(path, 'test_data_set_0', 'input_0.pb')
+    assert os.path.isfile(input_pb_path)
+    input_tensor = onnx.load_tensor(input_pb_path)
+    assert input_tensor.name == (in_names[0] if in_names else 'Input_0')
+    output_pb_path = os.path.join(path, 'test_data_set_0', 'output_0.pb')
+    assert os.path.isfile(output_pb_path)
+    output_tensor = onnx.load_tensor(output_pb_path)
+    assert output_tensor.name == (out_names[0] if out_names else 'Gemm_1')
 
 
 def test_output_grad(tmpdir, model, x, desable_experimental_warning):
