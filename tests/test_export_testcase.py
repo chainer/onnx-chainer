@@ -67,10 +67,8 @@ def test_output_grad(tmpdir, model, x, desable_experimental_warning):
         tensor_filename = os.path.join(
             path, 'test_data_set_0', 'gradient_{}.pb'.format(i))
         assert os.path.isfile(tensor_filename)
-        with open(tensor_filename, 'rb') as f:
-            tensor = onnx.TensorProto()
-            tensor.ParseFromString(f.read())
-            assert tensor.name.startswith('param_')
-            assert tensor.name in initializer_names
+        tensor = onnx.load_tensor(tensor_filename)
+        assert tensor.name.startswith('param_')
+        assert tensor.name in initializer_names
     assert not os.path.isfile(
         os.path.join(path, 'test_data_set_0', 'gradient_10.pb'))
