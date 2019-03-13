@@ -1,10 +1,13 @@
+from onnx_chainer import onnx_helper
+
+
 class Context(object):
 
     def __init__(self, model):
         self.name_list = dict()
         for name, param in model.namedparams():
-            replaced_name = 'param' + name.replace('/', '_')
-            self.name_list[str(id(param))] = replaced_name
+            onnx_name = onnx_helper.cleanse_param_name(name)
+            self.name_list[str(id(param))] = onnx_name
 
     def get_name(self, variable):
         str_id = str(id(variable))
