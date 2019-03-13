@@ -54,4 +54,5 @@ def export_testcase(model, args, out_dir, output_grad=False, **kwargs):
         for i, (name, param) in enumerate(model.namedparams()):
             pb_name = os.path.join(test_data_dir, 'gradient_{}.pb'.format(i))
             grad = chainer.cuda.to_cpu(param.grad)
-            write_tensor_pb(pb_name, '', grad)
+            name = 'param' + name.replace('/', '_')
+            write_tensor_pb(pb_name, name, grad)

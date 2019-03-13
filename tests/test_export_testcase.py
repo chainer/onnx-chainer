@@ -4,6 +4,7 @@ import chainer
 import chainer.functions as F
 import chainer.links as L
 import numpy as np
+import onnx
 import pytest
 
 from onnx_chainer import export_testcase
@@ -43,13 +44,23 @@ def test_output_grad(tmpdir, model, x, desable_experimental_warning):
     path = tmpdir.mkdir('test_export_testcase_with_grad').dirname
     export_testcase(model, (x,), path, output_grad=True, train=True)
 
-    assert os.path.isfile(os.path.join(path, 'model.onnx'))
+    model_filename = os.path.join(path, 'model.onnx')
+    assert os.path.isfile(model_filename)
     assert os.path.isfile(os.path.join(path, 'test_data_set_0', 'input_0.pb'))
     assert os.path.isfile(os.path.join(path, 'test_data_set_0', 'output_0.pb'))
 
+    onnx_model = onnx.load(model_filename)
+    initializer_names = {i.name for i in onnx_model.graph.initializer}
+
     # 10 gradient files should be there
     for i in range(10):
-        assert os.path.isfile(
-            os.path.join(path, 'test_data_set_0', 'gradient_{}.pb'.format(i)))
+        tensor_filename = os.path.join(
+            path, 'test_data_set_0', 'gradient_{}.pb'.format(i))
+        assert os.path.isfile(tensor_filename)
+        with open(tensor_filename, 'rb') as f:
+            tensor = onnx.TensorProto()
+            tensor.ParseFromString(f.read())
+            assert tensor.name.startswith('param_')
+            assert tensor.name in initializer_names
     assert not os.path.isfile(
         os.path.join(path, 'test_data_set_0', 'gradient_10.pb'))
