@@ -62,16 +62,14 @@ def rename_tensors(model, force_rename_network_out=True):
 
         op_name = '{}_{}'.format(op.op_type, op_counts[op.op_type])
         op_counts[op.op_type] += 1
-        if len(op.output) == 1:
-            if op.output[0] not in network_output_names:
-                names[op.output[0]] = op_name
-                op.output[0] = names[op.output[0]]
-        else:
-            for i, output_name in enumerate(op.output):
-                if output_name in network_output_names:
-                    continue
+        for i, output_name in enumerate(op.output):
+            if output_name in network_output_names:
+                continue
+            if len(op.output) == 1:
+                names[output_name] = op_name
+            else:
                 names[output_name] = '{}_{}'.format(op_name, i)
-                op.output[i] = names[output_name]
+            op.output[i] = names[output_name]
 
     for v in tuple(model.graph.input) + tuple(model.graph.output):
         if v.name in names:
@@ -82,7 +80,7 @@ def rename_variable_name(
         context, variables, named_vars, new_names, prefix='Input'):
     # Update ``named_vars`` keys to ``new_names``
     if isinstance(variables, (list, tuple)):
-        if not new_names:
+        if new_names is None:
             new_names = ['{}_{}'.format(prefix, i)
                          for i in range(len(named_vars))]
         if not isinstance(new_names, (list, tuple)) or\
@@ -96,7 +94,7 @@ def rename_variable_name(
             named_vars[new_name] = var
             context.set_name(var, new_name)
     elif isinstance(variables, dict):
-        if not new_names:
+        if new_names is None:
             new_names = {k: '{}_{}'.format(prefix, i)
                          for i, k in enumerate(variables.keys())}
         if not isinstance(new_names, (list, tuple, dict)) or\
@@ -117,12 +115,16 @@ def rename_variable_name(
     elif isinstance(variables, chainer.Variable):
         if not new_names:
             new_names = prefix + '_0'
-        if isinstance(new_names, list):
+        if isinstance(new_names, (list, tuple)):
             if len(new_names) != 1:
                 raise ValueError('Replacing name must be single')
             new_name = new_names[0]
+        elif isinstance(new_names, str):
+            new_name = new_names
         else:
-            new_name = str(new_names)
+            raise ValueError(
+                'Type {} is not supported for single variable'.format(
+                    type(new_name)))
         del named_vars[context.get_name(variables)]
         named_vars[new_name] = variables
         context.set_name(variables, new_name)

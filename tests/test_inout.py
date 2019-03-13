@@ -68,7 +68,7 @@ class TestMultipleInputs(ONNXModelTest):
         model = self.get_model()
         x = self.get_x(getattr(self, 'in_type', None))
         name = 'multipleinputs_' + self.condition
-        input_names = getattr(self, 'input_names', {})
+        input_names = getattr(self, 'input_names', None)
         self.expect(model, x, name=name, input_names=input_names)
 
 
@@ -146,7 +146,7 @@ class TestMultipleOutput(ONNXModelTest):
         model = self.get_model(use_bn=self.use_bn, out_type=self.out_type)
         x = np.zeros((1, 3, 32, 32), dtype=np.float32)
         name = 'multipleoutput_' + self.condition
-        output_names = getattr(self, 'output_names', [])
+        output_names = getattr(self, 'output_names', None)
         self.expect(model, x, name=name, output_names=output_names)
 
 
