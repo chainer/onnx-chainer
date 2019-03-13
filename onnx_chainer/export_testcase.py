@@ -29,39 +29,29 @@ def export_testcase(model, args, out_dir, output_grad=False, **kwargs):
     model.cleargrads()
     onnx_model, inputs, outputs = export(
         model, args, filename=os.path.join(out_dir, 'model.onnx'),
-        return_flat_inout=True, **kwargs)
+        return_named_inout=True, **kwargs)
 
     test_data_dir = os.path.join(out_dir, 'test_data_set_0')
     os.makedirs(test_data_dir, exist_ok=True)
-    # TODO(disktnk): consider to resolve input names smarter
-    input_names = _get_graph_input_names(onnx_model)
-    for i, var in enumerate(inputs):
+    for i, (name, var) in enumerate(inputs.items()):
         pb_name = os.path.join(test_data_dir, 'input_{}.pb'.format(i))
         array = chainer.cuda.to_cpu(var.array)
-        write_tensor_pb(pb_name, input_names[i], array)
+        write_tensor_pb(pb_name, name, array)
 
-    for i, var in enumerate(outputs):
+    for i, (name, var) in enumerate(outputs.items()):
         pb_name = os.path.join(test_data_dir, 'output_{}.pb'.format(i))
         array = chainer.cuda.to_cpu(var.array)
-        # TODO(disktnk): set customized output name
-        write_tensor_pb(pb_name, '', array)
+        write_tensor_pb(pb_name, name, array)
 
     if output_grad:
         # Perform backward computation
         if len(outputs) > 1:
             outputs = chainer.functions.identity(*outputs)
-        for out in outputs:
+        for out in outputs.values():
             out.grad = model.xp.ones_like(out.array)
-        outputs[0].backward()
+        list(outputs.values())[0].backward()
 
         for i, (name, param) in enumerate(model.namedparams()):
             pb_name = os.path.join(test_data_dir, 'gradient_{}.pb'.format(i))
             grad = chainer.cuda.to_cpu(param.grad)
             write_tensor_pb(pb_name, '', grad)
-
-
-def _get_graph_input_names(onnx_model):
-    initialized_graph_input_names = {
-        i.name for i in onnx_model.graph.initializer}
-    return [i.name for i in onnx_model.graph.input if i.name not in
-            initialized_graph_input_names]
