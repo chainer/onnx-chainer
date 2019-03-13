@@ -48,7 +48,7 @@ def convert_parameter(parameter, context):
     return numpy_helper.from_array(array, context.get_name(parameter))
 
 
-def rename_tensors(model, force_rename_network_out=True):
+def rename_tensors(model, force_rename_network_out=True, network_outputs=None):
     names = {v.name: v.name for v in model.graph.initializer}
     network_output_names = set() if force_rename_network_out else\
         {o.name for o in model.graph.output}
@@ -70,6 +70,10 @@ def rename_tensors(model, force_rename_network_out=True):
             else:
                 names[output_name] = '{}_{}'.format(op_name, i)
             op.output[i] = names[output_name]
+            if output_name in network_outputs:
+                var = network_outputs[output_name]
+                del network_outputs[output_name]
+                network_outputs[names[output_name]] = var
 
     for v in tuple(model.graph.input) + tuple(model.graph.output):
         if v.name in names:
@@ -413,7 +417,9 @@ def _export(model, args, filename, export_params, graph_name, save_text,
 
     model.ir_version = onnx.IR_VERSION
 
-    rename_tensors(model, force_rename_network_out=not output_names)
+    rename_tensors(
+        model, force_rename_network_out=not output_names,
+        network_outputs=network_outputs)
     try:
         checker.check_model(model)
     except onnx.checker.ValidationError as e:
