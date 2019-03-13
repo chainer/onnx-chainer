@@ -102,3 +102,17 @@ def write_tensor_pb(filename, name, value):
     with open(filename, 'wb') as f:
         t = onnx.numpy_helper.from_array(value, name)
         f.write(t.SerializeToString())
+
+
+def cleanse_param_name(name):
+    """Converts Chainer parameter names to ONNX names.
+
+    Note ONNX identifiers must be a valid C identifier.
+
+    Args:
+      name (str): A Chainer parameter name (e.g., /l/W).
+
+    Returns
+      A valid ONNX name (e.g., param_l_W).
+    """
+    return 'param' + name.replace('/', '_')

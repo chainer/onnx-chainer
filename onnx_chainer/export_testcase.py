@@ -3,6 +3,7 @@ import os
 import chainer
 
 from onnx_chainer.export import export
+from onnx_chainer.onnx_helper import cleanse_param_name
 from onnx_chainer.onnx_helper import write_tensor_pb
 
 
@@ -54,4 +55,5 @@ def export_testcase(model, args, out_dir, output_grad=False, **kwargs):
         for i, (name, param) in enumerate(model.namedparams()):
             pb_name = os.path.join(test_data_dir, 'gradient_{}.pb'.format(i))
             grad = chainer.cuda.to_cpu(param.grad)
-            write_tensor_pb(pb_name, '', grad)
+            onnx_name = cleanse_param_name(name)
+            write_tensor_pb(pb_name, onnx_name, grad)
