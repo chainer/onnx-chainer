@@ -48,38 +48,6 @@ def convert_parameter(parameter, context):
     return numpy_helper.from_array(array, context.get_name(parameter))
 
 
-def rename_tensors(model, force_rename_network_out=True, network_outputs=None):
-    names = {v.name: v.name for v in model.graph.initializer}
-    network_output_names = set() if force_rename_network_out else\
-        {o.name for o in model.graph.output}
-    op_counts = collections.defaultdict(int)
-
-    for op in model.graph.node:
-        for i, input_name in enumerate(op.input):
-            if input_name not in names:
-                names[input_name] = input_name
-            op.input[i] = names[input_name]
-
-        op_name = '{}_{}'.format(op.op_type, op_counts[op.op_type])
-        op_counts[op.op_type] += 1
-        for i, output_name in enumerate(op.output):
-            if output_name in network_output_names:
-                continue
-            if len(op.output) == 1:
-                names[output_name] = op_name
-            else:
-                names[output_name] = '{}_{}'.format(op_name, i)
-            op.output[i] = names[output_name]
-            if output_name in network_outputs:
-                var = network_outputs[output_name]
-                del network_outputs[output_name]
-                network_outputs[names[output_name]] = var
-
-    for v in tuple(model.graph.input) + tuple(model.graph.output):
-        if v.name in names:
-            v.name = names[v.name]
-
-
 def rename_variable_name(
         context, variables, named_vars, new_names, prefix='Input'):
     # Update ``named_vars`` keys to ``new_names``
@@ -136,7 +104,9 @@ def rename_variable_name(
 
 class ONNXExport(chainer.FunctionHook):
 
-    def __init__(self, context, converters, opset_version=None):
+    def __init__(
+            self, context, converters, opset_version, is_output_renamed,
+            network_outputs):
         self.context = context
         self.converters = converters
 
@@ -144,6 +114,9 @@ class ONNXExport(chainer.FunctionHook):
         self.inputs = {}  # Input `Variable` objects keyed by string IDs
         self.additional_parameters = []
         self.specified_opset_version = opset_version
+        self.node_doc_prefix = 'Chainer FunctionNode: '
+        self.is_output_renamed = is_output_renamed
+        self.network_outputs = network_outputs
 
     def create_node(
             self, func_name, func, input_names, output_names, parameters):
@@ -191,7 +164,38 @@ class ONNXExport(chainer.FunctionHook):
         nodes = self.create_node(
             func_name, function, input_names, output_names,
             self.additional_parameters)
+        for n in nodes:
+            n.doc_string = self.node_doc_prefix + func_name
         self.graph.extend(nodes)
+
+    def deleted(self, function=None):
+        func_name_counts = collections.defaultdict(int)
+        self.graph.reverse()  # The graph must be topologically sorted
+        names = {}
+        for node in self.graph:
+            org_func_name = node.doc_string[len(self.node_doc_prefix):]
+            node_name = '{}_{}'.format(
+                org_func_name, func_name_counts[org_func_name])
+            func_name_counts[org_func_name] += 1
+            node.name = node_name
+
+            for i, input_name in enumerate(node.input):
+                if input_name not in names:
+                    names[input_name] = input_name
+                node.input[i] = names[input_name]
+
+            for i, output_name in enumerate(node.output):
+                if self.is_output_renamed:
+                    continue
+                elif len(node.output) == 1:
+                    names[output_name] = node_name
+                else:
+                    names[output_name] = '{}_{}'.format(node_name, i)
+                node.output[i] = names[output_name]
+                if output_name in self.network_outputs:
+                    var = self.network_outputs[output_name]
+                    del self.network_outputs[output_name]
+                    self.network_outputs[names[output_name]] = var
 
 
 def export(model, args, filename=None, export_params=True,
@@ -365,10 +369,11 @@ def _export(model, args, filename, export_params, graph_name, save_text,
             'Unexpected output type from the model: {}'.format(type(outputs)))
     network_outputs = {context.get_name(var): var for var in flat_outputs}
     if output_names:
-        rename_variable_name(
-            context, outputs, network_outputs, output_names)
+        rename_variable_name(context, outputs, network_outputs, output_names)
     # Backward computation to construct graph
-    with ONNXExport(context, converters, opset_version) as o:
+    with ONNXExport(
+            context, converters, opset_version, (output_names is not None),
+            network_outputs) as o:
         chainer.grad(flat_outputs, list(model.params()) + flat_args)
 
     implicit_input_names = set(o.inputs.keys()) - param_names -\
@@ -387,9 +392,6 @@ def _export(model, args, filename, export_params, graph_name, save_text,
             input_tensors.append(helper.make_tensor_value_info(
                 context.get_name(param), tensor.data_type, tensor.dims))
 
-    # The graph must be topologically sorted
-    graph = reversed(o.graph)
-
     # Convert output tensors
     output_tensors = []
     for name, var in network_outputs.items():
@@ -400,7 +402,7 @@ def _export(model, args, filename, export_params, graph_name, save_text,
         initializers = []
 
     onnx_graph = helper.make_graph(
-        graph, graph_name, input_tensors, output_tensors,
+        o.graph, graph_name, input_tensors, output_tensors,
         initializer=initializers)
 
     opset_imports = [helper.make_operatorsetid('', opset_version)]
@@ -417,9 +419,6 @@ def _export(model, args, filename, export_params, graph_name, save_text,
 
     model.ir_version = onnx.IR_VERSION
 
-    rename_tensors(
-        model, force_rename_network_out=not output_names,
-        network_outputs=network_outputs)
     try:
         checker.check_model(model)
     except onnx.checker.ValidationError as e:
