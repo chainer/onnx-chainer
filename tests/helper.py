@@ -20,9 +20,15 @@ class ONNXModelTest(unittest.TestCase):
         cls_name = request.cls.__name__
         self.default_name = cls_name[len('Test'):].lower()
         self.check_out_values = None
-        if request.config.getoption('value-check-runtime') == 'onnxruntime':
+        selected_runtime = request.config.getoption('value-check-runtime')
+        if selected_runtime == 'onnxruntime':
             from onnx_chainer.testing.test_onnxruntime import check_model_expect  # NOQA
             self.check_out_values = check_model_expect
+        elif selected_runtime == 'mxnet':
+            from onnx_chainer.testing.test_mxnet import check_model_expect
+            self.check_out_values = check_model_expect
+        else:
+            self.check_out_values = None
 
     def expect(self, model, args, name=None, skip_opset_version=None,
                with_warning=False, train=False, input_names=None,

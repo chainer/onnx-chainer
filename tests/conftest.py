@@ -6,7 +6,7 @@ def pytest_addoption(parser):
     parser.addoption(
         '--value-check-runtime',
         dest='value-check-runtime', default='onnxruntime',
-        choices=['skip', 'onnxruntime'], help='select test runtime')
+        choices=['skip', 'onnxruntime', 'mxnet'], help='select test runtime')
 
 
 @pytest.fixture(scope='function')
