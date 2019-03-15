@@ -179,10 +179,10 @@ class ONNXExport(chainer.FunctionHook):
         When renaming an output name, another node can reference the same value
         as input, so the input name must be renamed at once. So this renaming
         process should be run after all functions are converted and this
-        `deleted` function is called when function hook is done, means
-        completed functions converting.
+        `deleted` function is called when function hook is done, which means
+        all functions are converted.
 
-        If input/output name is given by externally, these given names take
+        If input/output names are given externally, these given names take
         priority over named by this process.
         """
         func_name_counts = collections.defaultdict(int)
