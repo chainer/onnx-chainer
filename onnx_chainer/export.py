@@ -174,6 +174,17 @@ class ONNXExport(chainer.FunctionHook):
         self.converted_nodes[temp_node_name] = nodes
 
     def deleted(self, function=None):
+        """Rename output names.
+
+        When renaming an output name, another node can reference the same value
+        as input, so the input name must be renamed at once. So this renaming
+        process should be run after all functions are converted and this
+        `deleted` function is called when function hook is done, means
+        completed functions converting.
+
+        If input/output name is given by externally, these given names take
+        priority over named by this process.
+        """
         func_name_counts = collections.defaultdict(int)
         names = {}
         for temp_func_name, nodes in reversed(self.converted_nodes.items()):
