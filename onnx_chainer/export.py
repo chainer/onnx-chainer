@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import collections
+from collections import OrderedDict
 import warnings
 
 import chainer
@@ -111,10 +112,12 @@ class ONNXExport(chainer.FunctionHook):
         self.converters = converters
 
         self.graph = []
+        # Converter nodes keyed by "number:func_name"
+        self.converted_nodes = OrderedDict()
+        self.func_name_counts = collections.defaultdict(int)
         self.inputs = {}  # Input `Variable` objects keyed by string IDs
         self.additional_parameters = []
         self.specified_opset_version = opset_version
-        self.node_doc_prefix = 'Chainer FunctionNode: '
         self.is_output_renamed = is_output_renamed
         self.network_outputs = network_outputs
 
@@ -137,6 +140,10 @@ class ONNXExport(chainer.FunctionHook):
         if isinstance(function, chainer.function.FunctionAdapter):
             function = function.function
         func_name = function.__class__.__name__
+        temp_node_name = '{}:{}'.format(
+            self.func_name_counts[func_name], func_name)
+        self.func_name_counts[func_name] += 1
+
         input_names = []
         for i in function.inputs:
             # 'i' is a VariableNode, so check if it has a Variable/Parameter
@@ -164,38 +171,41 @@ class ONNXExport(chainer.FunctionHook):
         nodes = self.create_node(
             func_name, function, input_names, output_names,
             self.additional_parameters)
-        for n in nodes:
-            n.doc_string = self.node_doc_prefix + func_name
-        self.graph.extend(nodes)
+        self.converted_nodes[temp_node_name] = nodes
 
     def deleted(self, function=None):
         func_name_counts = collections.defaultdict(int)
-        self.graph.reverse()  # The graph must be topologically sorted
         names = {}
-        for node in self.graph:
-            org_func_name = node.doc_string[len(self.node_doc_prefix):]
-            node_name = '{}_{}'.format(
-                org_func_name, func_name_counts[org_func_name])
-            func_name_counts[org_func_name] += 1
-            node.name = node_name
-
-            for i, input_name in enumerate(node.input):
-                if input_name not in names:
-                    names[input_name] = input_name
-                node.input[i] = names[input_name]
-
-            for i, output_name in enumerate(node.output):
-                if self.is_output_renamed:
-                    continue
-                elif len(node.output) == 1:
-                    names[output_name] = node_name
+        for temp_func_name, nodes in reversed(self.converted_nodes.items()):
+            func_name = temp_func_name[temp_func_name.index(':')+1:]
+            base_node_name = '{}_{}'.format(
+                func_name, func_name_counts[func_name])
+            func_name_counts[func_name] += 1
+            for num, node in enumerate(reversed(nodes)):
+                if len(nodes) > 1 and num != len(nodes)-1:
+                    node_name = '{}_tmp_{}'.format(base_node_name, num)
                 else:
-                    names[output_name] = '{}_{}'.format(node_name, i)
-                node.output[i] = names[output_name]
-                if output_name in self.network_outputs:
-                    var = self.network_outputs[output_name]
-                    del self.network_outputs[output_name]
-                    self.network_outputs[names[output_name]] = var
+                    node_name = base_node_name
+                node.name = node_name
+
+                for i, input_name in enumerate(node.input):
+                    if input_name not in names:
+                        names[input_name] = input_name
+                    node.input[i] = names[input_name]
+
+                for i, output_name in enumerate(node.output):
+                    if self.is_output_renamed:
+                        continue
+                    elif len(node.output) == 1:
+                        names[output_name] = node_name
+                    else:
+                        names[output_name] = '{}_{}'.format(node_name, i)
+                    node.output[i] = names[output_name]
+                    if output_name in self.network_outputs:
+                        var = self.network_outputs[output_name]
+                        del self.network_outputs[output_name]
+                        self.network_outputs[names[output_name]] = var
+                self.graph.append(node)
 
 
 def export(model, args, filename=None, export_params=True,
