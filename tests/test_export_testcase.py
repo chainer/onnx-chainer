@@ -47,7 +47,8 @@ def test_export_testcase(
     output_pb_path = os.path.join(path, 'test_data_set_0', 'output_0.pb')
     assert os.path.isfile(output_pb_path)
     output_tensor = onnx.load_tensor(output_pb_path)
-    assert output_tensor.name == (out_names[0] if out_names else 'Gemm_1')
+    assert output_tensor.name == (
+        out_names[0] if out_names else 'LinearFunction_1')
 
 
 def test_output_grad(tmpdir, model, x, desable_experimental_warning):
