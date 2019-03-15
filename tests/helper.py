@@ -7,7 +7,6 @@ import pytest
 
 import onnx_chainer
 from onnx_chainer.testing.get_test_data_set import gen_test_data_set
-from onnx_chainer.testing.test_onnxruntime import check_model_expect
 
 
 class ONNXModelTest(unittest.TestCase):
@@ -20,6 +19,16 @@ class ONNXModelTest(unittest.TestCase):
     def set_name(self, request):
         cls_name = request.cls.__name__
         self.default_name = cls_name[len('Test'):].lower()
+        self.check_out_values = None
+        selected_runtime = request.config.getoption('value-check-runtime')
+        if selected_runtime == 'onnxruntime':
+            from onnx_chainer.testing.test_onnxruntime import check_model_expect  # NOQA
+            self.check_out_values = check_model_expect
+        elif selected_runtime == 'mxnet':
+            from onnx_chainer.testing.test_mxnet import check_model_expect
+            self.check_out_values = check_model_expect
+        else:
+            self.check_out_values = None
 
     def expect(self, model, args, name=None, skip_opset_version=None,
                with_warning=False, train=False, input_names=None,
@@ -93,7 +102,8 @@ class ONNXModelTest(unittest.TestCase):
             # Export function can be add unexpected inputs. Collect inputs
             # from ONNX model, and compare with another input list got from
             # test runtime.
-            check_model_expect(test_path, input_names=graph_input_names)
+            if self.check_out_values is not None:
+                self.check_out_values(test_path, input_names=graph_input_names)
 
 
 def check_all_connected_from_inputs(onnx_model):

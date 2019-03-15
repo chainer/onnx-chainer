@@ -4,9 +4,8 @@ import warnings
 
 import chainer
 import numpy as np
-import onnx
 
-import onnx_chainer
+from onnx_chainer.testing.test_onnxruntime import load_test_data
 
 try:
     import mxnet
@@ -19,75 +18,39 @@ except ImportError:
     MXNET_AVAILABLE = False
 
 
-def check_compatibility(model, x, fn, out_keys=None, opset_version=None):
-    if opset_version is None:
-        opset_version = onnx.defs.onnx_opset_version()
+def check_model_expect(test_path, input_names=None):
     if not MXNET_AVAILABLE:
-        raise ImportError('check_compatibility requires MXNet.')
+        raise ImportError('MXNet is not found on checking module.')
 
-    chainer.config.train = False
+    model_path = os.path.join(test_path, 'model.onnx')
+    sym, arg, aux = mxnet.contrib.onnx.import_model(model_path)
 
-    # Forward computation
-    if isinstance(x, (list, tuple)):
-        for i in x:
-            assert isinstance(i, (np.ndarray, chainer.Variable))
-        chainer_out = model(*x)
-    elif isinstance(x, np.ndarray):
-        chainer_out = model(chainer.Variable(x))
-    elif isinstance(x, chainer.Variable):
-        chainer_out = model(x)
-    else:
-        raise ValueError(
-            'The \'x\' argument should be a list or tuple of numpy.ndarray or '
-            'chainer.Variable, or simply numpy.ndarray or chainer.Variable '
-            'itself. But a {} object was given.'.format(type(x)))
+    mx_input_names = [graph_input for graph_input in sym.list_inputs()
+                      if graph_input not in arg and graph_input not in aux]
+    if input_names is not None:
+        assert list(sorted(input_names)) == list(sorted(mx_input_names))
 
-    if isinstance(chainer_out, (list, tuple)):
-        chainer_out = [y.array for y in chainer_out]
-    elif isinstance(chainer_out, dict):
-        chainer_outs = [chainer_out[k] for k in out_keys]
-        chainer_out = tuple(out.array if isinstance(out, chainer.Variable) else
-                            out for out in chainer_outs)
-    elif isinstance(chainer_out, chainer.Variable):
-        chainer_out = (chainer_out.array,)
-    else:
-        raise ValueError('Unknown output type: {}'.format(type(chainer_out)))
+    test_data_sets = sorted([
+        p for p in os.listdir(test_path) if p.startswith('test_data_set_')])
+    for test_data in test_data_sets:
+        test_data_path = os.path.join(test_path, test_data)
+        assert os.path.isdir(test_data_path)
+        inputs, outputs = load_test_data(
+            test_data_path, mx_input_names, sym.list_outputs())
 
-    onnx_chainer.export(model, x, fn, opset_version=opset_version)
-
-    sym, arg, aux = mxnet.contrib.onnx.import_model(fn)
-
-    data_names = [graph_input for graph_input in sym.list_inputs()
-                  if graph_input not in arg and graph_input not in aux]
-    if len(data_names) > 1:
-        data_shapes = [(n, x_.shape) for n, x_ in zip(data_names, x)]
-    else:
-        data_shapes = [(data_names[0], x.shape)]
-
-    mod = mxnet.mod.Module(
-        symbol=sym, data_names=data_names, context=mxnet.cpu(),
-        label_names=None)
-    mod.bind(
-        for_training=False, data_shapes=data_shapes,
-        label_shapes=None)
-    mod.set_params(
-        arg_params=arg, aux_params=aux, allow_missing=True,
-        allow_extra=True)
-
-    Batch = collections.namedtuple('Batch', ['data'])
-    if isinstance(x, (list, tuple)):
-        x = [mxnet.nd.array(x_.array) if isinstance(
-            x_, chainer.Variable) else mxnet.nd.array(x_) for x_ in x]
-    elif isinstance(x, chainer.Variable):
-        x = [mxnet.nd.array(x.array)]
-    elif isinstance(x, np.ndarray):
-        x = [mxnet.nd.array(x)]
-
-    mod.forward(Batch(x))
-    mxnet_outs = mod.get_outputs()
-    mxnet_out = [y.asnumpy() for y in mxnet_outs]
-
-    for cy, my in zip(chainer_out, mxnet_out):
-        np.testing.assert_almost_equal(cy, my, decimal=5)
-
-    os.remove(fn)
+        data_shapes = [(name, array.shape) for name, array in inputs.items()]
+        mod = mxnet.mod.Module(
+            symbol=sym, data_names=mx_input_names, context=mxnet.cpu(),
+            label_names=None)
+        mod.bind(
+            for_training=chainer.config.train,
+            data_shapes=data_shapes, label_shapes=None)
+        mod.set_params(
+            arg_params=arg, aux_params=aux, allow_missing=True,
+            allow_extra=True)
+        Batch = collections.namedtuple('Batch', ['data'])
+        mx_input = [mxnet.nd.array(array) for array in inputs.values()]
+        mod.forward(Batch(mx_input))
+        mx_outputs = [y.asnumpy() for y in mod.get_outputs()]
+        for cy, my in zip(outputs.values(), mx_outputs):
+            np.testing.assert_allclose(cy, my, rtol=1e-5, atol=1e-5)

@@ -36,7 +36,7 @@ def load_test_data(data_dir, input_names, output_names):
 
 def check_model_expect(test_path, input_names=None):
     if not ONNXRUNTIME_AVAILABLE:
-        raise ImportError('check_output requires onnxruntime.')
+        raise ImportError('ONNX Runtime is not found on checking module.')
 
     model_path = os.path.join(test_path, 'model.onnx')
     with open(model_path, 'rb') as f:
