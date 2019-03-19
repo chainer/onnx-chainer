@@ -147,7 +147,7 @@ def convert_MatMul(func, opset_version, input_names,
         func.inputs[0].shape[-1] if func.transa else func.inputs[0].shape[-2],
         func.inputs[1].shape[-2] if func.transb else func.inputs[1].shape[-1]
     )
-    bias_tensor = np.zeros(bias_shape, dtype=np.float32)
+    bias_tensor = np.zeros(bias_shape, dtype=func.inputs[0].dtype)
     bias_param = chainer.Parameter(bias_tensor)
     parameters.append(bias_param)
     input_names.append(context.get_name(bias_param))
