@@ -18,11 +18,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libffi-dev && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
-RUN curl -o cmake.tar.gz -LO https://github.com/Kitware/CMake/releases/download/v3.12.4/cmake-3.12.4-Linux-x86_64.tar.gz && \
-    mkdir -p /usr/local/cmake && tar zxf cmake.tar.gz -C /usr/local/cmake --strip-components 1 && \
-    rm cmake.tar.gz
-ENV PATH /usr/local/cmake/bin:$PATH
-
 WORKDIR /root
 
 # Install pyenv
