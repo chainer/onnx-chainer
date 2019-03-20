@@ -30,20 +30,16 @@ notifications:
   email: false
 
 before_install:
-  - pip install autopep8 hacking
-  - pip install -U pytest pytest-cov
-  - pip install onnx==1.3.0 onnxruntime==0.2.1
   - pip install $CHAINER_INSTALL chainer
-  - pip install chainercv
+  - pip install -U -e .[travis]
 
 script:
   - flake8
   - autopep8 -r . --dif --exit-code
-  - pip install -e .
   - CHAINER_TEST_GPU_LIMIT=0 pytest -x -s -vvvs tests/ --cov onnx_chainer
 
 after_success:
-  - if [[ $ONNX_CHAINER_DEPLOY_JOB == 1 ]]; then pip install codecov && codecov; fi
+  - if [[ $ONNX_CHAINER_DEPLOY_JOB == 1 ]]; then codecov; fi
 
 deploy:
   - provider: pypi
