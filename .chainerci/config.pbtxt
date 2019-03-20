@@ -1,0 +1,45 @@
+configs {
+  key: "onnxchainer.chainer-stable"
+  value {
+    requirement {
+      cpu: 4
+      memory: 8
+      gpu: 1
+    }
+    time_limit {
+      seconds: 600
+    }
+    command: ".chainerci/run_test.sh"
+    environment_variables {
+      key: "PYTHON_VER"
+      value: "36"
+    }
+    environment_variables {
+      key: "CHAINER_INSTALL"
+      value: ""
+    }
+  }
+}
+
+configs {
+  key: "onnxchainer.chainer-pre"
+  value {
+    requirement {
+      cpu: 4
+      memory: 8
+      gpu: 1
+    }
+    time_limit {
+      seconds: 600
+    }
+    command: ".chainerci/run_test.sh"
+    environment_variables {
+      key: "PYTHON_VER"
+      value: "36"
+    }
+    environment_variables {
+      key: "CHAINER_INSTALL"
+      value: "--pre"
+    }
+  }
+}

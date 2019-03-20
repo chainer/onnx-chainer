@@ -1,5 +1,61 @@
 from setuptools import setup
 
+
+requirements = {
+    'install': [
+        'chainer>=5.0.0',
+        'onnx>=1.4.0',
+    ],
+    'stylecheck': [
+        'autopep8',
+        'hacking',
+    ],
+    'test': [
+        'pytest',
+        'chainercv>=0.11.0',
+    ],
+    'test-cpu': [
+        '-r test',
+        'onnxruntime==0.2.1',
+    ],
+    'test-gpu': [
+        '-r test',
+        # 'cupy',  # installed 'cupy-cudaXX' before
+        # onnxruntime-gpu is better but prebuild version requires CUDA9.1
+        # CUDA9.1 is not supported latest cuDNN, so decided to use CPU version
+        'onnxruntime==0.2.1',
+    ],
+    'travis': [
+        '-r stylecheck',
+        '-r test-cpu',
+        'pytest-cov',
+        'codecov',
+    ],
+    'chainerci': [
+        '-r test-gpu',
+        'pytest-cov',
+    ]
+}
+
+
+def reduce_requirements(key):
+    # Resolve recursive requirements notation (-r)
+    reqs = requirements[key]
+    resolved_reqs = []
+    for req in reqs:
+        if req.startswith('-r'):
+            depend_key = req[2:].lstrip()
+            reduce_requirements(depend_key)
+            resolved_reqs += requirements[depend_key]
+        else:
+            resolved_reqs.append(req)
+    requirements[key] = resolved_reqs
+
+
+for k in requirements.keys():
+    reduce_requirements(k)
+
+
 setup(
     name='onnx-chainer',
     packages=[
@@ -15,15 +71,8 @@ setup(
     author_email='shunta@preferred.jp',
     url='https://github.com/chainer/onnx-chainer',
     keywords='ONNX Chainer model converter deep learning',
-    install_requires=[
-        'chainer>=3.2.0',
-        'onnx>=1.4.0'
-    ],
-    tests_require=[
-        'chainer>=3.2.0',
-        'onnx>=1.4.0',
-        'onnxruntime==0.2.1',
-        'numpy',
-    ],
+    install_requires=requirements['install'],
+    tests_require=requirements['test'],
+    extras_require={k: v for k, v in requirements.items() if k != 'install'},
     license='MIT License',
 )
