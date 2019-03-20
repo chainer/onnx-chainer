@@ -9,7 +9,7 @@ configs {
     time_limit {
       seconds: 600
     }
-    command: ".chainerci/run_test.sh"
+    command: "sh .chainerci/run_test.sh"
     environment_variables {
       key: "PYTHON_VER"
       value: "36"
@@ -32,7 +32,7 @@ configs {
     time_limit {
       seconds: 600
     }
-    command: ".chainerci/run_test.sh"
+    command: "sh .chainerci/run_test.sh"
     environment_variables {
       key: "PYTHON_VER"
       value: "36"
