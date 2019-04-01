@@ -94,11 +94,6 @@ class ONNXModelTest(unittest.TestCase):
                 graph_output_names = [v.name for v in onnx_model.graph.output]
                 assert list(sorted(graph_output_names)) == expected_names
 
-            # TODO(disktnk): some operators such as BatchNormalization are not
-            # supported on latest onnxruntime, should skip ONLY not supported
-            # operators, but it's hard to write down skip op list.
-            if opset_version >= 9:
-                continue
             # Export function can be add unexpected inputs. Collect inputs
             # from ONNX model, and compare with another input list got from
             # test runtime.
