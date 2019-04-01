@@ -3,6 +3,7 @@ configs {
   value {
     requirement {
       cpu: 4
+      disk: 10
       memory: 8
       gpu: 1
     }
@@ -26,6 +27,7 @@ configs {
   value {
     requirement {
       cpu: 4
+      disk: 10
       memory: 8
       gpu: 1
     }
