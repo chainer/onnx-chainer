@@ -184,3 +184,15 @@ class TestConcat(ONNXModelTest):
 
     def test_output(self):
         self.expect(self.model, (self.x1, self.x2))
+
+
+class TestWhere(ONNXModelTest):
+
+    def test_output(self):
+        model = chainer.Sequential(
+            F.where
+        )
+        cond = np.array([[1, 0, 0], [0, 1, 0]], dtype=np.bool)
+        x = input_generator.increasing(2, 3)
+        y = np.zeros((2, 3), np.float32)
+        self.expect(model, (cond, x, y), skip_opset_version=[7, 8])
