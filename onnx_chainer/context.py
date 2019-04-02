@@ -4,7 +4,7 @@ from onnx_chainer import onnx_helper
 
 
 class Context(object):
-    """context of converter
+    """Context of converter
 
     This context shares names during exporting.
 
