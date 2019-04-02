@@ -20,26 +20,21 @@ class Context(object):
     def __init__(self, model):
         self.name_list = dict()
         for name, param in model.namedparams():
-            assert isinstance(param, chainer.Parameter)
             onnx_name = onnx_helper.cleanse_param_name(name)
-            self.name_list[str(id(param))] = onnx_name
-            self.name_list[str(id(param.array))] = onnx_name
+            self.set_name(param, onnx_name)
 
     def get_name(self, variable):
-        str_id = str(id(variable))
+        str_id = id(variable)
         if str_id in self.name_list:
             return self.name_list[str_id]
         else:
             new_name = 'v{}'.format(len(self.name_list))
-            self.name_list[str_id] = new_name
-            if isinstance(variable, (chainer.Variable, chainer.Parameter)):
-                array_id = str(id(variable.array))
-                self.name_list[array_id] = new_name
+            self.set_name(variable, new_name)
             return new_name
 
     def set_name(self, variable, name):
-        str_id = str(id(variable))
+        str_id = id(variable)
         self.name_list[str_id] = name
         if isinstance(variable, (chainer.Variable, chainer.Parameter)):
-            array_id = str(id(variable.array))
+            array_id = id(variable.array)
             self.name_list[array_id] = name
