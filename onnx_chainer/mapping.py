@@ -30,6 +30,7 @@ _supported_function_node_set = {
     'Squeeze',
     'Tile',
     'Transpose',
+    'Where',
 
     # Connection
     'Convolution2DFunction',

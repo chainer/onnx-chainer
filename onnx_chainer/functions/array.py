@@ -309,3 +309,10 @@ def convert_ExpandDims(func, opset_version, input_names,
 
     return onnx_helper.make_node(
         'Unsqueeze', input_names, num_outputs, axes=[axis]),
+
+
+@support((9,))
+def convert_Where(func, opset_version, input_names, num_outputs, context,
+                  parameters):
+    input_names.insert(0, context.get_name(func.condition))
+    return onnx_helper.make_node('Where', input_names, num_outputs),
