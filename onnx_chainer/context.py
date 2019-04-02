@@ -8,7 +8,7 @@ class Context(object):
 
     This context shares names during exporting.
 
-    Arguments:
+    Attributes:
         name_list (dict): list of being exported as ONNX node name keyed by
             instance ID. When the target variable is ``chainer.Variable`` or
             ``chainer.Parameter``, instance ID of ``ndarray`` held by the
