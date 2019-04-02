@@ -11,9 +11,9 @@ class Context(object):
     Arguments:
         name_list (dict): list of being exported as ONNX node name keyed by
             instance ID. When the target variable is ``chainer.Variable`` or
-            ``chainer.Parameter``, instance ID of data array held by the
-            variable is also put as key, because some functions has data array
-            instead of variable.
+            ``chainer.Parameter``, instance ID of ``ndarray`` held by the
+            variable is also put as key, because some functions like
+            ``F.where`` internally unwrap variable.
 
     """
 
