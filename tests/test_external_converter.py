@@ -13,7 +13,7 @@ from onnx_chainer.testing.test_onnxruntime import check_model_expect
 
 
 def test_export_external_converters_overwrite(tmpdir):
-    path = tmpdir.mkdir('test_export_external_converters_overwrite').dirname
+    path = tmpdir.realpath()
 
     model = chainer.Sequential(chainer.functions.sigmoid)
     x = input_generator.positive_increasing(2, 5)
@@ -36,7 +36,7 @@ def test_export_external_converters_overwrite(tmpdir):
 
 @pytest.mark.parametrize('domain,version', [(None, 0), ('domain', 0)])
 def test_export_external_converters_custom_op(tmpdir, domain, version):
-    path = tmpdir.mkdir('test_export_external_converters_custom_op').dirname
+    path = tmpdir.realpath()
 
     class Dummy(chainer.FunctionNode):
 
