@@ -3,7 +3,9 @@ import chainer.functions as F
 import chainer.links as L
 from chainer import testing
 import numpy as np
+import unittest
 
+from onnx_chainer import export
 from onnx_chainer.testing import input_generator
 from tests.helper import ONNXModelTest
 
@@ -171,3 +173,42 @@ class TestIntermediateOutput(ONNXModelTest):
         model = self.get_model()
         x = np.ones((1, 3), dtype=np.float32)
         self.expect(model, x, output_names=['y', 'z'])
+
+
+@testing.parameterize(
+    {'out_kind': 'var'},
+    {'out_kind': 'array'},
+    {'out_kind': 'array_in_tuple'},
+    {'out_kind': 'list_in_tuple'},
+)
+class TestOutputTypeCheck(unittest.TestCase):
+    def test_output_type_check(self):
+        class Model(chainer.Chain):
+            def __init__(self, out_kind):
+                super().__init__()
+                self.out_kind = out_kind
+
+            def __call__(self, x):
+                if self.out_kind == 'array':
+                    return x.array
+                elif self.out_kind == 'array_in_tuple':
+                    return x, x.array
+                elif self.out_kind == 'list_in_tuple':
+                    return ([x]),
+                else:
+                    assert self.out_kind == 'var'
+                    return x
+
+        model = Model(self.out_kind)
+        x = np.ones((1, 3, 4, 5), dtype=np.float32)
+
+        if self.out_kind == 'var':
+            export(model, (x,))  # should be no error
+        elif self.out_kind == 'array':
+            with self.assertRaises(RuntimeError) as e:
+                export(model, (x,))
+            assert 'Unexpected output type'.find(e.exception.args[0])
+        else:
+            with self.assertRaises(ValueError) as e:
+                export(model, (x,))
+            assert 'must be Chainer Variable'.find(e.exception.args[0])
