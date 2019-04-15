@@ -79,7 +79,7 @@ def addon_converters():
 
 
 def test_fallback_without_replace(tmpdir, model):
-    path = tmpdir.realpath()
+    path = str(tmpdir)
 
     x1 = input_generator.increasing(3, 4)
     x2 = input_generator.increasing(4, 5)
@@ -97,7 +97,7 @@ def test_fallback_without_replace(tmpdir, model):
 
 
 def test_replace_func(tmpdir, model, addon_converters):
-    path = tmpdir.realpath()
+    path = str(tmpdir)
 
     x1 = input_generator.increasing(3, 4)
     x2 = input_generator.increasing(4, 5)
@@ -124,7 +124,7 @@ def test_replace_func(tmpdir, model, addon_converters):
 
 
 def test_replace_func_dec(tmpdir, model_dec, addon_converters):
-    path = tmpdir.realpath()
+    path = str(tmpdir)
 
     x1 = input_generator.increasing(3, 4)
     x2 = input_generator.increasing(4, 5)
@@ -143,7 +143,7 @@ def test_replace_func_dec(tmpdir, model_dec, addon_converters):
 
 @unittest.skip('Need to use customized FasterRCNNVGG16 model')
 def test_faster_rcnn(tmpdir):
-    path = tmpdir.realpath()
+    path = str(tmpdir)
 
     from chainercv.links import FasterRCNNVGG16
     model = FasterRCNNVGG16(
@@ -175,7 +175,7 @@ def test_faster_rcnn(tmpdir):
 
 @unittest.skip('Need to use customized FasterRCNNFPNResNet50 model')
 def test_fpn(tmpdir):
-    path = tmpdir.realpath()
+    path = str(tmpdir)
 
     from chainercv.links import FasterRCNNFPNResNet50
     model = FasterRCNNFPNResNet50(
