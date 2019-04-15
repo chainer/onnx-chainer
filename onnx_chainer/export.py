@@ -159,13 +159,16 @@ class ONNXExport(chainer.FunctionHook):
         # Variable of the network
         output_names = []
         for o in function.outputs:
-            var = o().get_variable_or_none()
-            if var is not None:  # If the output is kept
-                output_name = self.context.get_name(var)
-                if output_name in self.inputs:
-                    del self.inputs[output_name]
+            if o() is None:
+                output_name = self.context.get_name(o)
             else:
-                output_name = self.context.get_name(o())
+                var = o().get_variable_or_none()
+                if var is not None:  # If the output is kept
+                    output_name = self.context.get_name(var)
+                    if output_name in self.inputs:
+                        del self.inputs[output_name]
+                else:
+                    output_name = self.context.get_name(o())
             output_names.append(output_name)
 
         nodes = self.create_node(
