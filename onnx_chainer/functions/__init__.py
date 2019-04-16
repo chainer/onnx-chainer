@@ -24,6 +24,7 @@ from onnx_chainer.functions.array import convert_Squeeze  # NOQA
 from onnx_chainer.functions.array import convert_Tile  # NOQA
 from onnx_chainer.functions.array import convert_Transpose  # NOQA
 from onnx_chainer.functions.array import convert_Where  # NOQA
+from onnx_chainer.functions.array import convert_ResizeImages  # NOQA
 
 from onnx_chainer.functions.connection import convert_Convolution2DFunction  # NOQA
 from onnx_chainer.functions.connection import convert_ConvolutionND  # NOQA

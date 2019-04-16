@@ -31,6 +31,7 @@ _supported_function_node_set = {
     'Tile',
     'Transpose',
     'Where',
+    'ResizeImages',
 
     # Connection
     'Convolution2DFunction',
@@ -86,6 +87,7 @@ _supported_function_node_set = {
 
     # Loss
     'SoftmaxCrossEntropy',
+
 }
 
 _converters = None

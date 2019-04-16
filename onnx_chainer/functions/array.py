@@ -316,3 +316,35 @@ def convert_Where(func, opset_version, input_names, num_outputs, context,
                   parameters):
     input_names.insert(0, context.get_name(func.condition))
     return onnx_helper.make_node('Where', input_names, num_outputs),
+
+
+# NOTE(syoyo): `Upsampling` is deprecated in ONNX opset 10.
+# Use `Reshape` for opset 10
+@support((7, 9))
+def convert_ResizeImages(func, opset_version, input_names, num_outputs,
+                        context, parameters):
+    outsize = (func.out_H, func.out_W)
+
+    h, w = func.inputs[0].shape[2:]
+
+    # Compute scaling factor.
+    # NOTE(syoyo): Despite of its name, `Upsample` onnx op will downsample
+    # images when scale value is less than 1.0
+    scales = [1.0, 1.0, float(outsize[0]) / float(h), float(outsize[1]) / float(w)]
+
+    if (scales[2] < 1.0e-8) and (scales[3] < 1.0e-8):
+        raise ValueError(
+            'scaling factor is too small or zero. scales for h = {}, scales for w = {}'.format(scales[2], scales[3]))
+
+
+    # resize_images in Chainer only supports bilinear interpolation
+    mode = 'bilinear'
+    if opset_version == 7:
+        return onnx_helper.make_node('Upsample', input_names, num_outputs,
+                                     scales=scales, mode=mode)
+    if opset_version == 9:
+        scales = np.array(scales, dtype=np.float32)
+        scales_param = chainer.Parameter(scales)
+        parameters.append(scales_param)
+        input_names.append(context.get_name(scales_param))
+        return onnx_helper.make_node('Upsample', input_names, num_outputs, mode=mode)
