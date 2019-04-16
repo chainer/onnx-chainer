@@ -341,10 +341,10 @@ def convert_ResizeImages(func, opset_version, input_names, num_outputs,
     mode = 'bilinear'
     if opset_version == 7:
         return onnx_helper.make_node('Upsample', input_names, num_outputs,
-                                     scales=scales, mode=mode)
+                                     scales=scales, mode=mode),
     if opset_version == 9:
         scales = np.array(scales, dtype=np.float32)
         scales_param = chainer.Parameter(scales)
         parameters.append(scales_param)
         input_names.append(context.get_name(scales_param))
-        return onnx_helper.make_node('Upsample', input_names, num_outputs, mode=mode)
+        return onnx_helper.make_node('Upsample', input_names, num_outputs, mode=mode),
