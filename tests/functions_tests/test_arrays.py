@@ -140,6 +140,11 @@ from tests.helper import ONNXModelTest
     {'ops': 'expand_dims', 'input_shape': (3,),
      'input_argname': 'x', 'args': {'axis': -2},
      'name': 'expand_dims_minus2'},
+
+    # resize_images
+    {'ops': 'resize_images', 'input_shape': (1, 3, 6, 6),
+     'input_argname': 'x',
+     'args': {'output_shape': (8, 8)}},
 )
 class TestArrayOperators(ONNXModelTest):
 
