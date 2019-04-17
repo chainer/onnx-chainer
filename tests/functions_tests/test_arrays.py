@@ -140,12 +140,6 @@ from tests.helper import ONNXModelTest
     {'ops': 'expand_dims', 'input_shape': (3,),
      'input_argname': 'x', 'args': {'axis': -2},
      'name': 'expand_dims_minus2'},
-
-    # resize_images
-    # TODO(syoyo): Write a dedicated tester for resize_images. Add test for other scales 
-    {'ops': 'resize_images', 'input_shape': (1, 3, 6, 6),
-     'input_argname': 'x',
-     'args': {'output_shape': (6, 6)}}, # scales = (1.0, 1.0)
 )
 class TestArrayOperators(ONNXModelTest):
 
@@ -171,13 +165,7 @@ class TestArrayOperators(ONNXModelTest):
         if hasattr(self, 'name'):
             name = self.name
 
-        # TODO(hamaji): onnxruntime does not support Upsample-9 yet.
-        # https://github.com/chainer/onnx-chainer/issues/111
-        skip_opset_version = []
-        if name == 'resize_images':
-            skip_opset_version.append(9)
-        self.expect(self.model, self.x, name=name,
-                    skip_opset_version=skip_opset_version)
+        self.expect(self.model, self.x, name=name)
 
 
 class TestConcat(ONNXModelTest):
@@ -209,3 +197,38 @@ class TestWhere(ONNXModelTest):
         x = input_generator.increasing(2, 3)
         y = np.zeros((2, 3), np.float32)
         self.expect(model, (cond, x, y), skip_opset_version=[7, 8])
+
+class TestResizeImages(ONNXModelTest):
+
+    def setUp(self):
+
+        class Model(chainer.Chain):
+
+            def __init__(self, ops, args, input_argname):
+                super(Model, self).__init__()
+                self.ops = ops
+                self.args = args
+                self.input_argname = input_argname
+
+            def __call__(self, x):
+                self.args[self.input_argname] = x
+                return self.ops(**self.args)
+
+        args = {'output_shape' : (4, 4)}
+        self.model = Model(F.resize_images, args, 'x')
+
+        # (batch, channel, height, width)
+        #self.x = input_generator.increasing(1, 1, 2, 2)
+        self.x = np.array([[[[64, 32], [64, 32]]]], np.float32)
+
+    def test_output(self):
+
+        # FIXME(syoyo): Currently the test will fail due to different behavior
+        # of bilinear interpolation between Chainer and onnxruntime.
+        # Expected bevhavior would be [64, 54, 40, 32].
+        # (cv2.resize and tensorflow master(r1.14 or r2.0) after this fix: https://github.com/tensorflow/tensorflow/issues/6720)
+        # Currently Chainer will give [64, ], while onnxruntime gives [64, 48, 32, 32](same result with tensorflow r1.13 or older with `align_corners=True)
+
+        # TODO(hamaji): onnxruntime does not support Upsample-9 yet.
+        # https://github.com/chainer/onnx-chainer/issues/111
+        self.expect(self.model, self.x, name='resize_images', skip_opset_version=[9])

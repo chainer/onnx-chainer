@@ -338,7 +338,7 @@ def convert_ResizeImages(func, opset_version, input_names, num_outputs,
 
 
     # resize_images in Chainer only supports bilinear interpolation
-    mode = 'bilinear'
+    mode = 'linear' # Actually this will be mapped to 'bilinear' in onnxruntime
     if opset_version == 7:
         return onnx_helper.make_node('Upsample', input_names, num_outputs,
                                      scales=scales, mode=mode),
