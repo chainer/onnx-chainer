@@ -1,6 +1,7 @@
 import chainer
 import numpy as np
 from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
+import warnings # for print warnings on `resize_images`
 
 from onnx_chainer.functions.opset_version import support
 from onnx_chainer import onnx_helper
@@ -323,6 +324,15 @@ def convert_Where(func, opset_version, input_names, num_outputs, context,
 @support((7, 9))
 def convert_ResizeImages(func, opset_version, input_names, num_outputs,
                         context, parameters):
+
+    warnings.warn(
+        '`resize_images` is mapped to `Upsampling` ONNX op with bilinear '
+        'interpolation. '
+        'Behavior of bilinear interpolation differs from each implementation. '
+        'See the issue https://github.com/chainer/onnx-chainer/issues/147 '
+        'for details.',
+        UserWarning)
+
     outsize = (func.out_H, func.out_W)
 
     h, w = func.inputs[0].shape[2:]
