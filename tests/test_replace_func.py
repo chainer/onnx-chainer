@@ -9,8 +9,8 @@ import pytest
 
 from onnx_chainer import export_testcase
 from onnx_chainer import onnx_helper
-from onnx_chainer.replace_func import fallback
-from onnx_chainer.replace_func import overwrap
+from onnx_chainer.replace_func import as_funcnode
+from onnx_chainer.replace_func import fake_as_funcnode
 from onnx_chainer.testing import input_generator
 
 
@@ -45,11 +45,11 @@ def model_dec():
             self.fn1 = self.square
             self.fn2 = self.matmul
 
-        @overwrap('X')
+        @as_funcnode('X')
         def square(self, x):
             return x.array ** 2
 
-        @overwrap('Y', attributes=['b'])
+        @as_funcnode('Y', attributes=['b'])
         def matmul(self, x1, x2, b):
             if isinstance(x1, chainer.Variable):
                 x1 = x1.array
@@ -79,7 +79,7 @@ def addon_converters():
     }
 
 
-def test_fallback_without_replace(tmpdir, model):
+def test_fake_as_funcnode_without_replace(tmpdir, model):
     path = str(tmpdir)
 
     x1 = input_generator.increasing(3, 4)
@@ -97,7 +97,7 @@ def test_fallback_without_replace(tmpdir, model):
     assert len(node_names) == 0
 
 
-def test_replace_func(tmpdir, model, addon_converters):
+def test_fake_as_funcnode(tmpdir, model, addon_converters):
     path = str(tmpdir)
 
     x1 = input_generator.increasing(3, 4)
@@ -109,8 +109,8 @@ def test_replace_func(tmpdir, model, addon_converters):
         # if call `model.fn2` directly, cause recursive loop
         return fn2(x1.array, x2, b)
 
-    model.fn1 = fallback(model.fn1, 'X')
-    model.fn2 = fallback(dummy_fn2, 'Y', attributes=[(2, 'b')])
+    model.fn1 = fake_as_funcnode(model.fn1, 'X')
+    model.fn2 = fake_as_funcnode(dummy_fn2, 'Y', attributes=[(2, 'b')])
 
     with warnings.catch_warnings(record=True):
         export_testcase(
@@ -124,7 +124,7 @@ def test_replace_func(tmpdir, model, addon_converters):
     assert node_names == {'X_0', 'Y_0', 'Sigmoid_0'}
 
 
-def test_replace_func_dec(tmpdir, model_dec, addon_converters):
+def test_as_funcnode(tmpdir, model_dec, addon_converters):
     path = str(tmpdir)
 
     x1 = input_generator.increasing(3, 4)
@@ -162,7 +162,8 @@ def test_faster_rcnn(tmpdir):
         batch_index = i * xp.ones((len(roi),), dtype=np.int32)
         return roi, batch_index
 
-    model.rpn.proposal_layer = fallback(dummy_rpn_pl, 'ProposalCreator')
+    model.rpn.proposal_layer = fake_as_funcnode(
+        dummy_rpn_pl, 'ProposalCreator')
 
     def custom_converter_pl(params):
         return onnx_helper.make_node(
@@ -197,8 +198,8 @@ def test_fpn(tmpdir):
         rois, roi_indices = org_head_dist(rois.array, roi_indices.array)
         return tuple(rois) + tuple(roi_indices)
 
-    model.rpn.decode = fallback(dummy_rpn_decode, 'FPN_RPN_Decode')
-    model.head.distribute = fallback(
+    model.rpn.decode = fake_as_funcnode(dummy_rpn_decode, 'FPN_RPN_Decode')
+    model.head.distribute = fake_as_funcnode(
         dummy_head_distribute, 'FPN_Head_Distribute')
 
     def custom_converter_roi_ave_align_2d(params):

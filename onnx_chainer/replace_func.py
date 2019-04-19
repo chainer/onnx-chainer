@@ -40,11 +40,12 @@ class WrappedFunctionNode(chainer.FunctionNode):
         return ret
 
 
-def fallback(alt_func, name, attributes=None):
-    """Fallback the target function
+def fake_as_funcnode(alt_func, name, attributes=None):
+    """The target function fakes FunctionNode
 
     The target function is replaced to the alternative function to connect
-    variable node. ``alt_func`` must satisfy the following restrictions.
+    variable node by acting function node. ``alt_func`` must satisfy the
+    following restrictions.
 
     1. Inputs includes one or more ``chainer.Variable`` to trace variables.
     2. Output consists nothing but ``ndarray`` or ``chainer.Variable``
@@ -87,11 +88,12 @@ def fallback(alt_func, name, attributes=None):
     return _wrapper
 
 
-def overwrap(name, attributes=None):
-    """Overwrap the target function
+def as_funcnode(name, attributes=None):
+    """The target function fakes FunctionNode
 
-    The target function is overwrapped to connect variable node.
-    Expected to use as decorator. More detail, see ``fallback`` documentation.
+    The target function is overwrapped to connect variable node by acting
+    function node. Expected to be used as decorator. More detail, see
+    ``fake_as_funcnode`` documentation.
 
     Arguments:
         name (str): function name. This name is used for what ONNX operator
@@ -100,7 +102,7 @@ def overwrap(name, attributes=None):
             ``tuple`` as ``(index of args, name)`` or key name of ``kwargs``.
     """
     def _wrapper(fn):
-        return fallback(fn, name, attributes=attributes)
+        return fake_as_funcnode(fn, name, attributes=attributes)
 
     return _wrapper
 
