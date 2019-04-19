@@ -24,7 +24,7 @@ class WrappedFunctionNode(chainer.FunctionNode):
         return dummy_results
 
     def backward(self, indexes, gys):
-        xp = chainer.backend.get_array_module(gys[0])
+        xp = chainer.backend.get_array_module(self.xs[0])
         ret = tuple(chainer.Variable(xp.zeros_like(x)) for x in self.xs)
         return ret
 
