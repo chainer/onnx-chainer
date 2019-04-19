@@ -4,8 +4,8 @@ import unittest
 import warnings
 
 import chainer
-import onnx
 import numpy as np
+import onnx
 import pytest
 
 import onnx_chainer
