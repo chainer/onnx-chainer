@@ -123,4 +123,4 @@ def shape(x):
     def get_shape(x):
         xp = chainer.backend.get_array_module(x)
         return xp.array(list(x.shape))
-    return _Shape('Shape', get_shape, (x,), {}).apply((x,))
+    return _Shape('Shape', get_shape, (x,), {}).apply((x,))[0]
