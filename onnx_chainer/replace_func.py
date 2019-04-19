@@ -3,11 +3,22 @@ import chainer
 
 class WrappedFunctionNode(chainer.FunctionNode):
 
-    def __init__(self, name, func, args, kwargs):
+    def __init__(self, name, func, args, kwargs, attributes=None):
         self.user_name = name
         self.func = func
         self.args = args
         self.kwargs = kwargs
+
+        if attributes is not None:
+            self.set_attributes(attributes)
+
+    def set_attributes(self, attributes):
+        for p in attributes:
+            if isinstance(p, tuple):
+                assert isinstance(p[0], int)
+                setattr(self, p[1], self.args[p[0]])
+            elif isinstance(p, str):
+                setattr(self, p, self.kwargs.get(p, None))
 
     def forward(self, xs):
         self.xs = xs
@@ -29,7 +40,7 @@ class WrappedFunctionNode(chainer.FunctionNode):
         return ret
 
 
-def fallback(alt_func, name):
+def fallback(alt_func, name, attributes=None):
     """Fallback the target function
 
     The target function is replaced to the alternative function to connect
@@ -47,6 +58,8 @@ def fallback(alt_func, name):
             the above documentation.
         name (str): function name. This name is used for what ONNX operator
             to be assigned.
+        attributes (list): to set as function param. the list should be
+            ``tuple`` as ``(index of args, name)`` or key name of ``kwargs``.
 
     Returns:
         func: wrapped function, called on exporting.
@@ -64,7 +77,8 @@ def fallback(alt_func, name):
                 inputs.append(arg)
             elif isinstance(arg, (tuple, list)):
                 inputs.extend([a for a in arg if _isvar(a)])
-        wrapped = WrappedFunctionNode(name, alt_func, args, kwargs)
+        wrapped = WrappedFunctionNode(
+            name, alt_func, args, kwargs, attributes=attributes)
         ret = wrapped.apply(inputs)
         if len(ret) > 1:
             return ret
@@ -73,7 +87,7 @@ def fallback(alt_func, name):
     return _wrapper
 
 
-def overwrap(name):
+def overwrap(name, attributes=None):
     """Overwrap the target function
 
     The target function is overwrapped to connect variable node.
@@ -82,9 +96,11 @@ def overwrap(name):
     Arguments:
         name (str): function name. This name is used for what ONNX operator
             to be assigned.
+        attributes (list): to set as function param. the list should be
+            ``tuple`` as ``(index of args, name)`` or key name of ``kwargs``.
     """
     def _wrapper(fn):
-        return fallback(fn, name)
+        return fallback(fn, name, attributes=attributes)
 
     return _wrapper
 

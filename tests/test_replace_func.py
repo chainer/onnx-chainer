@@ -29,9 +29,9 @@ def model():
         def matmul(self, x1, x2, b):
             return x1@x2.array + b
 
-        def __call__(self, x1, x2, b=0.1):
+        def __call__(self, x1, x2):
             h = self.fn1(x1)
-            h2 = self.fn2(h, x2, b=b)
+            h2 = self.fn2(h, x2, 0.1)
             return F.sigmoid(h2)
     return Model()
 
@@ -49,15 +49,15 @@ def model_dec():
         def square(self, x):
             return x.array ** 2
 
-        @overwrap('Y')
+        @overwrap('Y', attributes=['b'])
         def matmul(self, x1, x2, b):
             if isinstance(x1, chainer.Variable):
                 x1 = x1.array
             return x1@x2.array + b
 
-        def __call__(self, x1, x2, b=0.1):
+        def __call__(self, x1, x2):
             h = self.fn1(x1)
-            h2 = self.fn2(h, x2, b=b)
+            h2 = self.fn2(h, x2, b=0.1)
             return F.sigmoid(h2)
     return Model()
 
@@ -70,7 +70,8 @@ def addon_converters():
 
     def custom_converter_y(params):
         return onnx_helper.make_node(
-            'Custom_Y', params.input_names, len(params.output_names)),
+            'Custom_Y', params.input_names, len(params.output_names),
+            b=params.func.b),
 
     return {
         'X': custom_converter_x,
@@ -103,13 +104,13 @@ def test_replace_func(tmpdir, model, addon_converters):
     x2 = input_generator.increasing(4, 5)
     fn2 = model.fn2
 
-    def dummy_fn2(x1, x2, b=0.1):
+    def dummy_fn2(x1, x2, b):
         # wrapped `model.fn1` returns chainer.Variable, so need to care
         # if call `model.fn2` directly, cause recursive loop
         return fn2(x1.array, x2, b)
 
     model.fn1 = fallback(model.fn1, 'X')
-    model.fn2 = fallback(dummy_fn2, 'Y')
+    model.fn2 = fallback(dummy_fn2, 'Y', attributes=[(2, 'b')])
 
     with warnings.catch_warnings(record=True):
         export_testcase(
