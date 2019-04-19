@@ -9,9 +9,11 @@ import pytest
 
 from onnx_chainer import export_testcase
 from onnx_chainer import onnx_helper
+import onnx_chainer.replace_func as FX
 from onnx_chainer.replace_func import as_funcnode
 from onnx_chainer.replace_func import fake_as_funcnode
 from onnx_chainer.testing import input_generator
+from tests.helper import ONNXModelTest
 
 
 @pytest.fixture(scope='function')
@@ -225,3 +227,13 @@ def test_fpn(tmpdir):
 
     with warnings.catch_warnings(record=True):
         export_testcase(model, x, path, external_converters=addon_converters)
+
+
+class TestShape(ONNXModelTest):
+
+    def test_output(self):
+        model = chainer.Sequential(
+            FX.shape
+        )
+        x = input_generator.increasing(2, 3)
+        self.expect(model, x)

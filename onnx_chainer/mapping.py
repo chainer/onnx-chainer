@@ -86,6 +86,9 @@ _supported_function_node_set = {
 
     # Loss
     'SoftmaxCrossEntropy',
+
+    # ONNX-Chainer
+    'Shape',
 }
 
 _converters = None

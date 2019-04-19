@@ -110,3 +110,17 @@ def as_funcnode(name, attributes=None):
 def _isvar(array):
     # alias for type checking
     return isinstance(array, chainer.Variable)
+
+
+class _Shape(WrappedFunctionNode):
+
+    def __init__(self, *args, **kwargs):
+        super(_Shape, self).__init__(*args, **kwargs)
+
+
+def shape(x):
+    # Don't beleave backward values.
+    def get_shape(x):
+        xp = chainer.backend.get_array_module(x)
+        return xp.array(list(x.shape))
+    return _Shape('Shape', get_shape, (x,), {}).apply((x,))
