@@ -325,7 +325,7 @@ def _export(model, args, filename, export_params, graph_name, save_text,
 
     # Forward computation
     context = Context(model)
-    network_inputs = {}
+    network_inputs = OrderedDict()
     if isinstance(args, tuple):
         args = list(args)
     if isinstance(args, list):
