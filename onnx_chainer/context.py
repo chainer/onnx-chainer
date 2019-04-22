@@ -9,11 +9,11 @@ class Context(object):
     This context shares names during exporting.
 
     Attributes:
-        name_list (dict): list of being exported as ONNX node name keyed by
-            instance ID. When the target variable is ``chainer.Variable`` or
-            ``chainer.Parameter``, instance ID of ``ndarray`` held by the
-            variable is also put as key, because some functions like
-            ``F.where`` internally unwrap variable.
+        name_list (dict): list of being exported as ONNX node name with pinned
+            or not, keyed by instance ID. When the target variable is
+            ``chainer.Variable`` or ``chainer.Parameter``, instance ID of
+            ``ndarray`` held by the variable is also put as key, because some
+            functions like ``F.where`` internally unwrap variable.
 
     """
 
@@ -26,15 +26,31 @@ class Context(object):
     def get_name(self, variable):
         str_id = id(variable)
         if str_id in self.name_list:
-            return self.name_list[str_id]
+            return self.name_list[str_id][0]
         else:
             new_name = 'v{}'.format(len(self.name_list))
             self.set_name(variable, new_name)
             return new_name
 
-    def set_name(self, variable, name):
+    def set_name(self, variable, name, pinned=False):
+        """Set ONNX node name
+
+        Arguments:
+            variable (var): target variable
+            name (str): name to be exported as ONNX node name
+            pinned (bool): if don't want to change the name on subsequent
+                process, set ``True``. Enable to check the target variable
+                is pinned or not by using ``is_pinned``.
+        """
+
         str_id = id(variable)
-        self.name_list[str_id] = name
+        self.name_list[str_id] = (name, pinned)
         if isinstance(variable, (chainer.Variable, chainer.Parameter)):
             array_id = id(variable.array)
-            self.name_list[array_id] = name
+            self.name_list[array_id] = (name, pinned)
+
+    def is_pinned(self, variable):
+        str_id = id(variable)
+        if str_id not in self.name_list:
+            return False
+        return self.name_list[str_id][1]

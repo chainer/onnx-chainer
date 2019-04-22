@@ -65,7 +65,7 @@ def rename_variable_name(
             del named_vars[context.get_name(var)]
             new_name = new_names[i]
             named_vars[new_name] = var
-            context.set_name(var, new_name)
+            context.set_name(var, new_name, pinned=True)
     elif isinstance(variables, dict):
         if new_names is None:
             new_names = {k: '{}_{}'.format(prefix, i)
@@ -84,7 +84,7 @@ def rename_variable_name(
             del named_vars[context.get_name(v)]
             new_name = new_names[k]
             named_vars[new_name] = v
-            context.set_name(v, new_name)
+            context.set_name(v, new_name, pinned=True)
     elif isinstance(variables, chainer.Variable):
         if not new_names:
             new_names = prefix + '_0'
@@ -100,14 +100,13 @@ def rename_variable_name(
                     type(new_name)))
         del named_vars[context.get_name(variables)]
         named_vars[new_name] = variables
-        context.set_name(variables, new_name)
+        context.set_name(variables, new_name, pinned=True)
 
 
 class ONNXExport(chainer.FunctionHook):
 
     def __init__(
-            self, context, converters, opset_version, is_output_renamed,
-            network_outputs):
+            self, context, converters, opset_version, network_outputs):
         self.context = context
         self.converters = converters
 
@@ -118,7 +117,6 @@ class ONNXExport(chainer.FunctionHook):
         self.inputs = {}  # Input `Variable` objects keyed by string IDs
         self.additional_parameters = []
         self.specified_opset_version = opset_version
-        self.is_output_renamed = is_output_renamed
         self.network_outputs = network_outputs
 
     def create_node(
@@ -205,15 +203,17 @@ class ONNXExport(chainer.FunctionHook):
                     node.input[i] = names[input_name]
 
                 for i, output_name in enumerate(node.output):
-                    if self.is_output_renamed:
-                        continue
-                    elif len(node.output) == 1:
+                    var = None
+                    if output_name in self.network_outputs:
+                        var = self.network_outputs[output_name]
+                        if self.context.is_pinned(var):
+                            continue
+                    if len(node.output) == 1:
                         names[output_name] = node_name
                     else:
                         names[output_name] = '{}_{}'.format(node_name, i)
                     node.output[i] = names[output_name]
-                    if output_name in self.network_outputs:
-                        var = self.network_outputs[output_name]
+                    if var is not None:
                         del self.network_outputs[output_name]
                         self.network_outputs[names[output_name]] = var
                 self.graph.append(node)
@@ -394,9 +394,7 @@ def _export(model, args, filename, export_params, graph_name, save_text,
     if output_names:
         rename_variable_name(context, outputs, network_outputs, output_names)
     # Backward computation to construct graph
-    with ONNXExport(
-            context, converters, opset_version, (output_names is not None),
-            network_outputs) as o:
+    with ONNXExport(context, converters, opset_version, network_outputs) as o:
         chainer.grad(flat_outputs, list(model.params()) + flat_args)
 
     implicit_input_names = set(o.inputs.keys()) - param_names -\
