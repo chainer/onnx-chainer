@@ -120,6 +120,7 @@ class ONNXModelTest(unittest.TestCase):
             assert len(input_data) == len(flat_args)
             for i, arg in enumerate(flat_args):
                 array = arg.array if isinstance(arg, chainer.Variable) else arg
+                array = chainer.cuda.to_cpu(array)
                 np.testing.assert_allclose(
                     array, input_data[i], rtol=1e-5, atol=1e-5)
 
