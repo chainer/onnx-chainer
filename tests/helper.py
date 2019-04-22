@@ -1,12 +1,25 @@
+import glob
 import os
 import unittest
 import warnings
 
+import chainer
+import numpy as np
 import onnx
 import pytest
 
 import onnx_chainer
 from onnx_chainer.testing.get_test_data_set import gen_test_data_set
+
+
+def load_input_data(data_dir):
+    input_data = []
+    for pb in sorted(glob.glob(os.path.join(
+            data_dir, 'test_data_set_0', 'input_*.pb'))):
+        tensor = onnx.load_tensor(pb)
+        ndarray = onnx.numpy_helper.to_array(tensor)
+        input_data.append(ndarray)
+    return input_data
 
 
 class ONNXModelTest(unittest.TestCase):
@@ -93,6 +106,23 @@ class ONNXModelTest(unittest.TestCase):
                     expected_names = list(sorted(output_names))
                 graph_output_names = [v.name for v in onnx_model.graph.output]
                 assert list(sorted(graph_output_names)) == expected_names
+
+            # Input data is generaged by `network_inputs` dict, this can
+            # introduce unexpected conversions. Check values of input PB with
+            # test args.
+            if isinstance(args, (tuple, list)):
+                flat_args = args
+            elif isinstance(args, dict):
+                flat_args = args.values()
+            else:
+                flat_args = [args]
+            input_data = load_input_data(test_path)
+            assert len(input_data) == len(flat_args)
+            for i, arg in enumerate(flat_args):
+                array = arg.array if isinstance(arg, chainer.Variable) else arg
+                array = chainer.cuda.to_cpu(array)
+                np.testing.assert_allclose(
+                    array, input_data[i], rtol=1e-5, atol=1e-5)
 
             # Export function can be add unexpected inputs. Collect inputs
             # from ONNX model, and compare with another input list got from
