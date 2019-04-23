@@ -38,12 +38,12 @@ class Context(object):
         Arguments:
             variable (var): target variable
             name (str): name to be exported as ONNX node name
-            pinned (bool): if don't want to change the name on subsequent
-                process, set ``True``. Enable to check the target variable
-                is pinned or not by using ``is_pinned``.
+            pinned (bool): if ``True``, the name will not be overwritten in
+                subsequence process.
         """
 
         str_id = id(variable)
+        assert str_id not in self.name_list or not self.name_list[str_id][1]
         self.name_list[str_id] = (name, pinned)
         if isinstance(variable, (chainer.Variable, chainer.Parameter)):
             array_id = id(variable.array)
