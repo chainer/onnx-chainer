@@ -30,6 +30,9 @@ from tests.helper import ONNXModelTest
      'in_type': np.float32,
      'args': [3, 3, 4, 3, 1, 0],
      'kwargs': {}, 'name': 'ConvolutionND_ndim3'},
+    {'link': L.ConvolutionND, 'in_shape': (1, 6, 5, 5, 5),
+     'in_type': np.float32, 'args': [3, 6, 4, 3, 1, 0],
+     'kwargs': {'groups': 2}, 'name': 'ConvolutionND_group2'},
 
     # DilatedConvolution2D
     {'link': L.DilatedConvolution2D, 'in_shape': (1, 3, 5, 5),
@@ -46,6 +49,18 @@ from tests.helper import ONNXModelTest
     {'link': L.Deconvolution2D, 'in_shape': (1, 3, 5, 5),
      'in_type': np.float32, 'args': [None, 3, 4, 2, 0, True],
      'kwargs': {}, 'name': 'Deconvolution2D_bias'},
+    {'link': L.Deconvolution2D, 'in_shape': (1, 4, 5, 5),
+     'in_type': np.float32, 'args': [None, 6, 2, 2, 0, True],
+     'kwargs': {'groups': 2}, 'name': 'Deconvolution2D_group3'},
+
+    # DeconvolutionND
+    # NOTE(disktnk): ONNX runtime accepts only 4-dimensional input X
+    {'link': L.DeconvolutionND, 'in_shape': (1, 3, 5, 5),
+     'in_type': np.float32, 'args': [2, 3, 3, 2, 2, 0, True],
+     'kwargs': {}, 'name': 'DeconvolutionND'},
+    {'link': L.DeconvolutionND, 'in_shape': (1, 6, 5, 5),
+     'in_type': np.float32, 'args': [2, 6, 4, 2, 2, 0, True],
+     'kwargs': {'groups': 2}, 'name': 'DeconvolutionND_group3'},
 
     # EmbedID
     {'link': L.EmbedID, 'in_shape': (1, 10), 'in_type': np.int,
