@@ -12,7 +12,7 @@ from onnx_chainer.testing.get_test_data_set import gen_test_data_set
 class ONNXModelTest(unittest.TestCase):
 
     @pytest.fixture(autouse=True)
-    def set_config(self, desable_experimental_warning):
+    def set_config(self, disable_experimental_warning):
         pass
 
     @pytest.fixture(autouse=True, scope='function')
