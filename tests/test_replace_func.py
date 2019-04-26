@@ -3,89 +3,34 @@ import warnings
 
 import chainer
 import chainer.functions as F
+from chainer import testing
 import onnx
-import pytest
 
 from onnx_chainer import export_testcase
-from onnx_chainer import onnx_helper
 from onnx_chainer.replace_func import as_funcnode
 from onnx_chainer.replace_func import fake_as_funcnode
 from onnx_chainer.testing import input_generator
+from tests.helper import ONNXModelTest
 
 
-@pytest.fixture(scope='function')
-def model():
-    # this model, variable node is cut on fn1 and fn2
-    class Model(chainer.Chain):
-        def __init__(self):
-            super().__init__()
-            self.fn1 = self.square
-            self.fn2 = self.matmul
-
-        def square(self, x):
-            return x.array ** 2
-
-        def matmul(self, x1, x2, b):
-            return x1@x2.array + b
-
-        def __call__(self, x1, x2):
-            h = self.fn1(x1)
-            h2 = self.fn2(h, x2, 0.1)
-            return F.sigmoid(h2)
-    return Model()
-
-
-@pytest.fixture(scope='function')
-def model_dec():
-    # similar to model(), decorated
-    class Model(chainer.Chain):
-        def __init__(self):
-            super().__init__()
-            self.fn1 = self.square
-            self.fn2 = self.matmul
-
-        @as_funcnode('X')
-        def square(self, x):
-            return x.array ** 2
-
-        @as_funcnode('Y', attributes=['b'])
-        def matmul(self, x1, x2, b):
-            if isinstance(x1, chainer.Variable):
-                x1 = x1.array
-            return x1@x2.array + b
-
-        def __call__(self, x1, x2):
-            h = self.fn1(x1)
-            h2 = self.fn2(h, x2, b=0.1)
-            return F.sigmoid(h2)
-    return Model()
-
-
-@pytest.fixture(scope='function')
-def addon_converters():
-    def custom_converter_x(params):
-        return onnx_helper.make_node(
-            'Custom_X', params.input_names, len(params.output_names)),
-
-    def custom_converter_y(params):
-        return onnx_helper.make_node(
-            'Custom_Y', params.input_names, len(params.output_names),
-            b=params.func.b),
-
-    return {
-        'X': custom_converter_x,
-        'Y': custom_converter_y,
-    }
-
-
-def test_fake_as_funcnode_without_replace(tmpdir, model):
+def test_fake_as_funcnode_without_replace(tmpdir):
     path = str(tmpdir)
 
-    x1 = input_generator.increasing(3, 4)
-    x2 = input_generator.increasing(4, 5)
+    class Model(chainer.Chain):
+        def _init__(self):
+            super().__init__()
+
+        def add(self, xs, value=0.01):
+            return xs.array + value
+
+        def __call__(self, xs):
+            return F.sigmoid(self.add(xs))
+
+    model = Model()
+    x = input_generator.increasing(3, 4)
 
     with warnings.catch_warnings(record=True):
-        export_testcase(model, (x1, x2), path)
+        export_testcase(model, x, path)
 
     model_filepath = os.path.join(path, 'model.onnx')
     assert os.path.isfile(model_filepath)
@@ -96,46 +41,86 @@ def test_fake_as_funcnode_without_replace(tmpdir, model):
     assert len(node_names) == 0
 
 
-def test_fake_as_funcnode(tmpdir, model, addon_converters):
-    path = str(tmpdir)
+@testing.parameterize(
+    {'func_kind': 'list', 'in_shape': (2, 3, 4), 'op_type': 'Add'},
+    {'func_kind': 'list_kwargs', 'in_shape': (2, 3, 4), 'op_type': 'Add'},
+    {'func_kind': 'var_with_dec', 'in_shape': (3, 4),
+     'op_type': 'AddConstant'},
+    {'func_kind': 'var_kwargs', 'in_shape': (3, 4), 'op_type': 'AddConstant'},
+    {'func_kind': 'var', 'in_shape': (3, 4), 'op_type': 'AddConstant'},
+)
+class TestReplaceFunc(ONNXModelTest):
 
-    x1 = input_generator.increasing(3, 4)
-    x2 = input_generator.increasing(4, 5)
-    fn2 = model.fn2
+    def get_model(self, target_func, input_converter=None):
+        class Model(chainer.Chain):
+            def __init__(self, target_func, input_converter=None):
+                super().__init__()
+                self.input_converter = input_converter
+                self.fn = target_func
 
-    def dummy_fn2(x1, x2, b):
-        # wrapped `model.fn1` returns chainer.Variable, so need to care
-        # if call `model.fn2` directly, cause recursive loop
-        return fn2(x1.array, x2, b)
+            def __call__(self, xs):
+                if self.input_converter is not None:
+                    args, kwargs = self.input_converter(xs)
+                h = self.fn(*args, **kwargs)
+                return F.sigmoid(h)
 
-    model.fn1 = fake_as_funcnode(model.fn1, 'X')
-    model.fn2 = fake_as_funcnode(dummy_fn2, 'Y', attributes=[(2, 'b')])
+        return Model(target_func, input_converter)
 
-    with warnings.catch_warnings(record=True):
-        export_testcase(
-            model, (x1, x2), path, external_converters=addon_converters)
+    def test_output(self):
+        attr = None
+        is_dec = False
+        if self.func_kind == 'list':
+            def input_converter(xs):
+                return ([xs[0], xs[1]],), {}
 
-    model_filepath = os.path.join(path, 'model.onnx')
-    assert os.path.isfile(model_filepath)
+            def target_func(xs):
+                return xs[0].array + xs[1].array
 
-    onnx_model = onnx.load(model_filepath)
-    node_names = {n.name for n in onnx_model.graph.node}
-    assert node_names == {'X_0', 'Y_0', 'Sigmoid_0'}
+        elif self.func_kind == 'list_kwargs':
+            def input_converter(xs):
+                return (), {'xs': [xs[0], xs[1]]}
 
+            def target_func(xs=None):
+                assert xs is not None
+                return xs[0].array + xs[1].array
 
-def test_as_funcnode(tmpdir, model_dec, addon_converters):
-    path = str(tmpdir)
+        elif self.func_kind == 'var_with_dec':
+            def input_converter(xs):
+                return (xs,), {}
 
-    x1 = input_generator.increasing(3, 4)
-    x2 = input_generator.increasing(4, 5)
+            @as_funcnode('AddConstant', attributes=['value'])
+            def target_func(x, value=0.01):
+                return x.array + value
 
-    with warnings.catch_warnings(record=True):
-        export_testcase(
-            model_dec, (x1, x2), path, external_converters=addon_converters)
+            is_dec = True
 
-    model_filepath = os.path.join(path, 'model.onnx')
-    assert os.path.isfile(model_filepath)
+        elif self.func_kind == 'var_kwargs':
+            def input_converter(xs):
+                return (), {'x': xs, 'value': 0.02}
 
-    onnx_model = onnx.load(model_filepath)
-    node_names = {n.name for n in onnx_model.graph.node}
-    assert node_names == {'X_0', 'Y_0', 'Sigmoid_0'}
+            def target_func(x=None, value=0.01):
+                assert x is not None
+                return x.array + value
+
+            attr = ['value']
+
+        else:
+            assert self.func_kind == 'var'
+
+            def input_converter(xs):
+                return (xs, 0.01), {}
+
+            def target_func(x, value):
+                return x.array + value
+
+            attr = [(1, 'value')]
+
+        model = self.get_model(target_func, input_converter)
+        x = input_generator.increasing(*self.in_shape)
+
+        if not is_dec:
+            model.fn = fake_as_funcnode(
+                model.fn, self.op_type, attributes=attr)
+
+        name = 'replace_func_' + self.func_kind
+        self.expect(model, x, name=name)
