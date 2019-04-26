@@ -52,7 +52,7 @@ def fake_as_funcnode(alt_func, name, attributes=None):
 
     Even if ``alt_func`` returns ``ndarray``, the value forced to be converted
     to ``chainer.Variable``. A caller of the target function have to care
-    both cases, return ``ndarray`` and ``chainer.Variable``.
+    both cases, returning ``ndarray`` and ``chainer.Variable``.
 
     Arguments:
         alt_func (func): actual called function. There are some constrains, see
@@ -110,17 +110,3 @@ def as_funcnode(name, attributes=None):
 def _isvar(array):
     # alias for type checking
     return isinstance(array, chainer.Variable)
-
-
-class _Shape(WrappedFunctionNode):
-
-    def __init__(self, *args, **kwargs):
-        super(_Shape, self).__init__(*args, **kwargs)
-
-
-def shape(x):
-    # Don't beleave backward values.
-    def get_shape(x):
-        xp = chainer.backend.get_array_module(x)
-        return xp.array(list(x.shape))
-    return _Shape('Shape', get_shape, (x,), {}).apply((x,))[0]

@@ -1,5 +1,4 @@
 import os
-import unittest
 import warnings
 
 import chainer
@@ -9,11 +8,9 @@ import pytest
 
 from onnx_chainer import export_testcase
 from onnx_chainer import onnx_helper
-import onnx_chainer.replace_func as FX
 from onnx_chainer.replace_func import as_funcnode
 from onnx_chainer.replace_func import fake_as_funcnode
 from onnx_chainer.testing import input_generator
-from tests.helper import ONNXModelTest
 
 
 @pytest.fixture(scope='function')
@@ -142,98 +139,3 @@ def test_as_funcnode(tmpdir, model_dec, addon_converters):
     onnx_model = onnx.load(model_filepath)
     node_names = {n.name for n in onnx_model.graph.node}
     assert node_names == {'X_0', 'Y_0', 'Sigmoid_0'}
-
-
-@unittest.skip('Need to use customized FasterRCNNVGG16 model')
-def test_faster_rcnn(tmpdir):
-    path = str(tmpdir)
-
-    from chainercv.links import FasterRCNNVGG16
-    model = FasterRCNNVGG16(
-        n_fg_class=12,
-        pretrained_model=None)
-    x = input_generator.increasing(1, 3, 244, 244)
-    rpn_pl = model.rpn.proposal_layer
-
-    import chainer.backend
-    import numpy as np
-
-    def dummy_rpn_pl(i, rpn, *args, **kwargs):
-        xp = chainer.backend.get_array_module(rpn)
-        roi = rpn_pl(rpn.array, *args, **kwargs)
-        batch_index = i * xp.ones((len(roi),), dtype=np.int32)
-        return roi, batch_index
-
-    model.rpn.proposal_layer = fake_as_funcnode(
-        dummy_rpn_pl, 'ProposalCreator')
-
-    def custom_converter_pl(params):
-        return onnx_helper.make_node(
-            'ChainerRPNProposalCreator', params.input_names,
-            len(params.output_names)),
-    addon_converters = {'ProposalCreator': custom_converter_pl}
-
-    with warnings.catch_warnings(record=True):
-        export_testcase(model, x, path, external_converters=addon_converters)
-
-
-@unittest.skip('Need to use customized FasterRCNNFPNResNet50 model')
-def test_fpn(tmpdir):
-    path = str(tmpdir)
-
-    from chainercv.links import FasterRCNNFPNResNet50
-    model = FasterRCNNFPNResNet50(
-        n_fg_class=80,
-        pretrained_model='coco')
-    x = input_generator.increasing(1, 3, 1024, 1024)
-
-    org_rpn_decode = model.rpn.decode
-    org_head_dist = model.head.distribute
-
-    def dummy_rpn_decode(hs, locs, confs, in_shape):
-        anchors = model.rpn.anchors(h.shape[2:] for h in hs)
-        rois, roi_indices = org_rpn_decode(locs, confs, anchors, in_shape)
-        return rois, roi_indices
-
-    def dummy_head_distribute(rois, roi_indices):
-        # if call `model.head.distribute` directly, cause recursive loop
-        rois, roi_indices = org_head_dist(rois.array, roi_indices.array)
-        return tuple(rois) + tuple(roi_indices)
-
-    model.rpn.decode = fake_as_funcnode(dummy_rpn_decode, 'FPN_RPN_Decode')
-    model.head.distribute = fake_as_funcnode(
-        dummy_head_distribute, 'FPN_Head_Distribute')
-
-    def custom_converter_roi_ave_align_2d(params):
-        return onnx_helper.make_node(
-            'ChainerROIAverageAlign2D', params.input_names,
-            len(params.output_names)),
-
-    def custom_converter_rpn_decode(params):
-        return onnx_helper.make_node(
-            'ChainerRPNDecode', params.input_names,
-            len(params.output_names)),
-
-    def custom_converter_fpn_head_distribute(params):
-        return onnx_helper.make_node(
-            'ChainerFPNHeadDistribute', params.input_names,
-            len(params.output_names)),
-
-    addon_converters = {
-        'ROIAverageAlign2D': custom_converter_roi_ave_align_2d,
-        'FPN_RPN_Decode': custom_converter_rpn_decode,
-        'FPN_Head_Distribute': custom_converter_fpn_head_distribute,
-    }
-
-    with warnings.catch_warnings(record=True):
-        export_testcase(model, x, path, external_converters=addon_converters)
-
-
-class TestShape(ONNXModelTest):
-
-    def test_output(self):
-        model = chainer.Sequential(
-            FX.shape
-        )
-        x = input_generator.increasing(2, 3)
-        self.expect(model, x)
