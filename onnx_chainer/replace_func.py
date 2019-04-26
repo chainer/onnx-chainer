@@ -1,3 +1,6 @@
+import inspect
+from inspect import Parameter
+
 import chainer
 
 
@@ -78,8 +81,17 @@ def fake_as_funcnode(alt_func, name, attributes=None):
                 inputs.append(arg)
             elif isinstance(arg, (tuple, list)):
                 inputs.extend([a for a in arg if _isvar(a)])
+
+        arg_spec = inspect.signature(alt_func)
+        merged_kwargs = {}
+        for v_name, param in arg_spec.parameters.items():
+            if param.default is Parameter.empty:
+                continue
+            merged_kwargs[v_name] = param.default
+        merged_kwargs.update(kwargs)
+
         wrapped = WrappedFunctionNode(
-            name, alt_func, args, kwargs, attributes=attributes)
+            name, alt_func, args, merged_kwargs, attributes=attributes)
         ret = wrapped.apply(inputs)
         if len(ret) > 1:
             return ret
