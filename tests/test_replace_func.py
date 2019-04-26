@@ -5,8 +5,10 @@ import chainer
 import chainer.functions as F
 from chainer import testing
 import onnx
+import pytest
 
 from onnx_chainer import export_testcase
+from onnx_chainer import onnx_helper
 from onnx_chainer.replace_func import as_funcnode
 from onnx_chainer.replace_func import fake_as_funcnode
 from onnx_chainer.testing import input_generator
@@ -124,3 +126,50 @@ class TestReplaceFunc(ONNXModelTest):
 
         name = 'replace_func_' + self.func_kind
         self.expect(model, x, name=name)
+
+
+@pytest.mark.parametrize('return_type', ['list', 'dict'])
+def test_replace_func_collection_return(tmpdir, return_type):
+    path = str(tmpdir)
+
+    class Model(chainer.Chain):
+        def __init__(self, return_type):
+            super().__init__()
+            self.return_type = return_type
+
+        def tiled_array(self, xs, n=5):
+            if self.return_type == 'list':
+                return [xs.array * i for i in range(1, 1+n)]
+            else:
+                self.return_type == 'dict'
+                return {str(i): xs.array * i for i in range(1, 1+n)}
+
+        def __call__(self, xs):
+            return self.tiled_array(xs)
+
+    model = Model(return_type)
+    x = input_generator.increasing(1, 5)
+
+    model.tiled_array = fake_as_funcnode(
+        model.tiled_array, 'xTiledArray', attributes=['n'])
+
+    def tiled_array_converter(params):
+        return onnx_helper.make_node(
+            'xTiledArray', params.input_names, len(params.output_names)),
+
+    addon_converters = {'xTiledArray': tiled_array_converter}
+
+    with warnings.catch_warnings(record=True):
+        export_testcase(model, x, path, external_converters=addon_converters)
+
+    model_filepath = os.path.join(path, 'model.onnx')
+    assert os.path.isfile(model_filepath)
+
+    onnx_model = onnx.load(model_filepath)
+    node_names = [n.name for n in onnx_model.graph.node]
+    assert len(node_names) == 1
+    assert node_names[0] == 'xTiledArray_0'
+    output_names = [n.name for n in onnx_model.graph.output]
+    assert len(output_names) == 5
+    for i, name in enumerate(output_names):
+        assert name == 'xTiledArray_0_{:d}'.format(i)
