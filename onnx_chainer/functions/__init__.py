@@ -18,7 +18,6 @@ from onnx_chainer.functions.array import convert_ExpandDims  # NOQA
 from onnx_chainer.functions.array import convert_GetItem  # NOQA
 from onnx_chainer.functions.array import convert_Pad  # NOQA
 from onnx_chainer.functions.array import convert_Reshape  # NOQA
-from onnx_chainer.functions.array import convert_Shape  # NOQA
 from onnx_chainer.functions.array import convert_Space2Depth  # NOQA
 from onnx_chainer.functions.array import convert_SplitAxis  # NOQA
 from onnx_chainer.functions.array import convert_Squeeze  # NOQA
