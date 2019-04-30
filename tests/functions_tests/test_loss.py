@@ -1,6 +1,7 @@
 import chainer
 from chainer import testing
 import numpy as np
+import unittest
 
 from tests.helper import ONNXModelTest
 
@@ -8,11 +9,10 @@ from tests.helper import ONNXModelTest
 @testing.parameterize(
     {'in_shape': (3, 5), 'name': 'softmax_cross_entropy'},
 )
+@unittest.skipUnless(
+    int(chainer.__version__.split('.')[0]) >= 6,
+    "SoftmaxCorssEntropy is supported from Chainer v6")
 class TestSoftmaxCrossEntropy(ONNXModelTest):
-
-    # Currently, the test for SoftmaxCrossEntropy is disabled since onnxruntime
-    # does not support OneHot node. After OneHot node becomes available, we may
-    # be able to use this test code.
 
     def setUp(self):
 
@@ -29,6 +29,8 @@ class TestSoftmaxCrossEntropy(ONNXModelTest):
                                    high=self.in_shape[1]).astype(np.int32)
 
     def test_output(self):
+        # Currently, onnxruntime does not support OneHot node,
+        # so skip output value check
         self.check_out_values = None
         self.expect(self.model, [self.x, self.t], name=self.name,
                     skip_opset_version=[7, 8])
