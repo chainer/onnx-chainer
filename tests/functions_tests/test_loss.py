@@ -1,7 +1,8 @@
+import unittest
+
 import chainer
 from chainer import testing
 import numpy as np
-import unittest
 
 from tests.helper import ONNXModelTest
 
