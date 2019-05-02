@@ -198,6 +198,7 @@ class TestWhere(ONNXModelTest):
         y = np.zeros((2, 3), np.float32)
         self.expect(model, (cond, x, y), skip_opset_version=[7, 8])
 
+
 class TestResizeImages(ONNXModelTest):
 
     def setUp(self):
@@ -218,7 +219,7 @@ class TestResizeImages(ONNXModelTest):
         self.x = np.array([[[[64, 32], [64, 32]]]], np.float32)
 
         # 2x upsampling
-        args = {'output_shape' : (4, 4)}
+        args = {'output_shape': (4, 4)}
         self.model = Model(F.resize_images, args, 'x')
 
     def test_output(self):
@@ -231,12 +232,13 @@ class TestResizeImages(ONNXModelTest):
         # while onnxruntime gives [64, 48, 32, 32]
         # (same result with tensorflow r1.13.1 with `align_corners=False`)
         #
-        # However, the correct bevhavior will be [64, 54, 40, 32].
+        # However, the correct behavior will be [64, 54, 40, 32].
         # (cv2.resize and tensorflow master(r1.14 or r2.0) after this fix:
         #  https://github.com/tensorflow/tensorflow/issues/6720)
 
-        self.check_out_values = None # Skip output value check
+        self.check_out_values = None  # Skip output value check
 
         # TODO(hamaji): onnxruntime does not support Upsample-9 yet.
         # https://github.com/chainer/onnx-chainer/issues/111
-        self.expect(self.model, self.x, name='resize_images', skip_opset_version=[9])
+        self.expect(self.model, self.x, name='resize_images',
+                    skip_opset_version=[9])
