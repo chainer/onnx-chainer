@@ -136,7 +136,7 @@ def check_all_connected_from_inputs(onnx_model):
     # Nodes which are not connected from the network inputs.
     orphan_nodes = []
     for node in onnx_model.graph.node:
-        if node.op_type == 'Constant':
+        if not node.input:
             for output_name in node.output:
                 edge_names.add(output_name)
             continue
