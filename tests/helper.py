@@ -25,7 +25,7 @@ def load_input_data(data_dir):
 class ONNXModelTest(unittest.TestCase):
 
     @pytest.fixture(autouse=True)
-    def set_config(self, desable_experimental_warning):
+    def set_config(self, disable_experimental_warning):
         pass
 
     @pytest.fixture(autouse=True, scope='function')

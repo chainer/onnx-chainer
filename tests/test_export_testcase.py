@@ -33,7 +33,7 @@ def x():
 @pytest.mark.parametrize('in_names,out_names',
                          [(None, None), (['x'], ['y'])])
 def test_export_testcase(
-        tmpdir, model, x, desable_experimental_warning, in_names, out_names):
+        tmpdir, model, x, disable_experimental_warning, in_names, out_names):
     # Just check the existence of pb files
     path = str(tmpdir)
     export_testcase(model, (x,), path,
@@ -51,7 +51,7 @@ def test_export_testcase(
         out_names[0] if out_names else 'LinearFunction_1')
 
 
-def test_output_grad(tmpdir, model, x, desable_experimental_warning):
+def test_output_grad(tmpdir, model, x, disable_experimental_warning):
     path = str(tmpdir)
     export_testcase(model, (x,), path, output_grad=True, train=True)
 
