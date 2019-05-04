@@ -53,16 +53,15 @@ def test_fake_as_funcnode_without_replace(tmpdir):
 )
 class TestReplaceFunc(ONNXModelTest):
 
-    def get_model(self, target_func, input_converter=None):
+    def get_model(self, target_func, input_converter):
         class Model(chainer.Chain):
-            def __init__(self, target_func, input_converter=None):
+            def __init__(self, target_func, input_converter):
                 super().__init__()
                 self.input_converter = input_converter
                 self.fn = target_func
 
             def __call__(self, xs):
-                if self.input_converter is not None:
-                    args, kwargs = self.input_converter(xs)
+                args, kwargs = self.input_converter(xs)
                 h = self.fn(*args, **kwargs)
                 return F.sigmoid(h)
 
