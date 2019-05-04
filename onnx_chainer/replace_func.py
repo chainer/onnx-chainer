@@ -57,6 +57,11 @@ def fake_as_funcnode(alt_func, name, attributes=None):
     to ``chainer.Variable``. A caller of the target function have to care
     both cases, returning ``ndarray`` and ``chainer.Variable``.
 
+    When ``alt_func`` returns ``list`` of variable, the wrapped function will
+    also returns multiple variables as ``tuple``. However ``dict`` cannot
+    be return, the wrapped function breaks down the returned values as
+    ``tuple`` of values, keys will be ignored.
+
     Arguments:
         alt_func (func): actual called function. There are some constrains, see
             the above documentation.
