@@ -12,7 +12,7 @@ from tests.helper import ONNXModelTest
 )
 @unittest.skipUnless(
     int(chainer.__version__.split('.')[0]) >= 6,
-    "SoftmaxCorssEntropy is supported from Chainer v6")
+    "SoftmaxCrossEntropy is supported from Chainer v6")
 class TestSoftmaxCrossEntropy(ONNXModelTest):
 
     def setUp(self):
