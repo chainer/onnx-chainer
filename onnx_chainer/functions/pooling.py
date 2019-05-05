@@ -181,7 +181,6 @@ def convert_Unpooling2D(func, opset_version, input_names, num_outputs,
     if pad != [0, 0]:
         raise RuntimeError('ONNX-chainer does not support `pad!=0` '
                            'for Unpooling2D')
-
     # This one would require an extra 1x1 MaxPool.
     if stride != ksize:
         raise RuntimeError('ONNX-chainer does not support `stride!=ksize` '
