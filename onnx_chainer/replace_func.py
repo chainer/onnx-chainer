@@ -125,6 +125,7 @@ def fake_as_funcnode(alt_func, name, attributes=None):
             return ret
         return ret[0]
 
+    chainer.utils.experimental('as_funcnode')
     return _wrapper
 
 

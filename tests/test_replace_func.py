@@ -149,8 +149,9 @@ def test_replace_func_collection_return(tmpdir, return_type):
     model = Model(return_type)
     x = input_generator.increasing(1, 5)
 
-    model.tiled_array = fake_as_funcnode(
-        model.tiled_array, 'xTiledArray', attributes=['n'])
+    with warnings.catch_warnings(record=True):
+        model.tiled_array = fake_as_funcnode(
+            model.tiled_array, 'xTiledArray', attributes=['n'])
 
     def tiled_array_converter(params):
         return onnx_helper.make_node(
