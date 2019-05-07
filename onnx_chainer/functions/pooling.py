@@ -183,8 +183,9 @@ def convert_Unpooling2D(func, opset_version, input_names, num_outputs,
                            'for Unpooling2D')
     # This one would require an extra 1x1 MaxPool.
     if stride != ksize:
-        raise RuntimeError('ONNX-chainer does not support `stride!=1` '
-                           'for Unpooling2D')
+        raise RuntimeError('ONNX-chainer does not support `stride!=ksize` '
+                           'for Unpooling2D: stride={} ksize={}'.format(
+                               stride, ksize))
     scales = [1.0, 1.0, float(func.kh), float(func.kw)]
     if opset_version == 7:
         return onnx_helper.make_node('Upsample', input_names, num_outputs,
