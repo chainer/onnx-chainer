@@ -5,6 +5,15 @@ import chainer
 
 
 class WrappedFunctionNode(chainer.FunctionNode):
+    """Wrap the target function and operate as ``FunctionNode``
+
+    Arguments:
+        name (str): name of the function node
+        func (func): the target function
+        args (str): args for the function
+        kwargs (str): kwargs for the function
+        attributes (list): parameters to be set node's attributes
+    """
 
     def __init__(self, name, func, args, kwargs, attributes=None):
         self.user_name = name
@@ -62,7 +71,14 @@ def fake_as_funcnode(alt_func, name, attributes=None):
     be return, the wrapped function breaks down the returned values as
     ``tuple`` of values, keys will be ignored.
 
-    Arguments:
+    Example::
+
+       >>> model.func = fake_as_funcnode(model.func, 'CustomNode')
+
+    Then ``model.func`` will be operated as a function node named "CustomNode".
+    See tests/test_replace_func.py more details.
+
+    Args:
         alt_func (func): actual called function. There are some constrains, see
             the above documentation.
         name (str): function name. This name is used for what ONNX operator
@@ -112,7 +128,17 @@ def as_funcnode(name, attributes=None):
     function node. Expected to be used as decorator. More detail, see
     ``fake_as_funcnode`` documentation.
 
-    Arguments:
+    Example::
+
+       >>> class Model(chainer.Chain):
+       >>>     @as_funcnode('CustomNode')
+       >>>     def func(self, *args, **kwargs):
+       >>>         pass
+
+    Then ``model.func`` will be operated as a function node named "CustomNode".
+    See tests/test_replace_func.py more details.
+
+    Args:
         name (str): function name. This name is used for what ONNX operator
             to be assigned.
         attributes (list): to set as function param. the list should be
