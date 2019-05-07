@@ -36,13 +36,11 @@ class WrappedFunctionNode(chainer.FunctionNode):
         self.xs = xs
         results = self.func(*self.args, **self.kwargs)
         if isinstance(results, (tuple, list)):
-            dummy_results = tuple(
-                ret.array if _isvar(ret) else ret for ret in results)
+            dummy_results = tuple(_unwrap_var(ret) for ret in results)
         elif isinstance(results, dict):
-            dummy_results = tuple(
-                ret.array if _isvar(ret) else ret for ret in results.values())
+            dummy_results = tuple(_unwrap_var(ret) for ret in results.values())
         else:
-            dummy_results = results.array if _isvar(results) else results
+            dummy_results = _unwrap_var(results)
             dummy_results = dummy_results,
         return dummy_results
 
@@ -148,6 +146,10 @@ def as_funcnode(name, attributes=None):
         return fake_as_funcnode(fn, name, attributes=attributes)
 
     return _wrapper
+
+
+def _unwrap_var(var):
+    return var.array if _isvar(var) else var
 
 
 def _isvar(array):
