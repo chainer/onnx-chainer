@@ -93,17 +93,8 @@ def fake_as_funcnode(alt_func, name, attributes=None):
     """
 
     def _wrapper(*args, **kwargs):
-        inputs = []
-        for arg in args:
-            if _isvar(arg):
-                inputs.append(arg)
-            elif isinstance(arg, (tuple, list)):
-                inputs.extend([a for a in arg if _isvar(a)])
-        for arg in kwargs.values():
-            if _isvar(arg):
-                inputs.append(arg)
-            elif isinstance(arg, (tuple, list)):
-                inputs.extend([a for a in arg if _isvar(a)])
+        inputs = list(filter(_is_var, _flatten(args)))
+        inputs.extend(list(filter(_is_var, _flatten(list(kwargs.values())))))
         if not inputs:
             raise ValueError(
                 'arguments of the function wrapped by \'as_funcnode\' '
@@ -111,15 +102,17 @@ def fake_as_funcnode(alt_func, name, attributes=None):
                 '{}'.format(name))
 
         arg_spec = inspect.signature(alt_func)
-        merged_kwargs = {}
-        for v_name, param in arg_spec.parameters.items():
-            if param.default is Parameter.empty:
+        bound = arg_spec.bind(*args, **kwargs)
+        bound.apply_defaults()
+        # default values are set on `bound.arguments`, but cannot get them
+        # from `bound.kwargs`
+        for i, (k, v) in enumerate(bound.arguments.items()):
+            if i < len(args):
                 continue
-            merged_kwargs[v_name] = param.default
-        merged_kwargs.update(kwargs)
+            kwargs[k] = v
 
         wrapped = WrappedFunctionNode(
-            name, alt_func, args, merged_kwargs, attributes=attributes)
+            name, alt_func, args, kwargs, attributes=attributes)
         ret = wrapped.apply(inputs)
         if len(ret) > 1:
             return ret
@@ -159,9 +152,26 @@ def as_funcnode(name, attributes=None):
 
 
 def _unwrap_var(var):
-    return var.array if _isvar(var) else var
+    return var.array if _is_var(var) else var
 
 
-def _isvar(array):
+def _is_var(array):
     # alias for type checking
     return isinstance(array, chainer.Variable)
+
+
+def _is_array(v):
+    return not isinstance(v, (list, tuple))
+
+
+def _flatten(xs):
+    if _is_array(xs):
+        return [xs]
+
+    o = []
+    for x in xs:
+        if _is_array(x):
+            o.append(x)
+        else:
+            o.extend(_flatten(x))
+    return o
