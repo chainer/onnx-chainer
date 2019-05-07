@@ -42,6 +42,10 @@ class WrappedFunctionNode(chainer.FunctionNode):
         else:
             dummy_results = _unwrap_var(results)
             dummy_results = dummy_results,
+        if not chainer.is_arrays_compatible(dummy_results):
+            raise ValueError(
+                'returned values from the function wrapped by \'as_funcnode\' '
+                'must consist only array, function name: {}'.format(self.name))
         return dummy_results
 
     def backward(self, indexes, gys):
@@ -100,6 +104,11 @@ def fake_as_funcnode(alt_func, name, attributes=None):
                 inputs.append(arg)
             elif isinstance(arg, (tuple, list)):
                 inputs.extend([a for a in arg if _isvar(a)])
+        if not inputs:
+            raise ValueError(
+                'arguments of the function wrapped by \'as_funcnode\' '
+                'must include at least one chainer.Variable, function name: '
+                '{}'.format(name))
 
         arg_spec = inspect.signature(alt_func)
         merged_kwargs = {}
