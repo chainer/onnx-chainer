@@ -46,7 +46,7 @@ def test_fake_as_funcnode_without_replace(tmpdir):
 @testing.parameterize(
     {'func_kind': 'list', 'in_shape': (2, 3, 4), 'op_type': 'Add'},
     {'func_kind': 'list_kwargs', 'in_shape': (2, 3, 4), 'op_type': 'Add'},
-    {'func_kind': 'var_with_dec', 'in_shape': (3, 4),
+    {'func_kind': 'var_with_deco', 'in_shape': (3, 4),
      'op_type': 'AddConstant'},
     {'func_kind': 'var_kwargs', 'in_shape': (3, 4), 'op_type': 'AddConstant'},
     {'func_kind': 'var', 'in_shape': (3, 4), 'op_type': 'AddConstant'},
@@ -69,7 +69,7 @@ class TestReplaceFunc(ONNXModelTest):
 
     def test_output(self):
         attr = None
-        is_dec = False
+        is_deco = False
         if self.func_kind == 'list':
             def input_converter(xs):
                 return ([xs[0], xs[1]],), {}
@@ -85,7 +85,7 @@ class TestReplaceFunc(ONNXModelTest):
                 assert xs is not None
                 return xs[0].array + xs[1].array
 
-        elif self.func_kind == 'var_with_dec':
+        elif self.func_kind == 'var_with_deco':
             def input_converter(xs):
                 return (xs,), {}
 
@@ -93,7 +93,7 @@ class TestReplaceFunc(ONNXModelTest):
             def target_func(x, value=0.01):
                 return x.array + value
 
-            is_dec = True
+            is_deco = True
 
         elif self.func_kind == 'var_kwargs':
             def input_converter(xs):
@@ -119,7 +119,7 @@ class TestReplaceFunc(ONNXModelTest):
         model = self.get_model(target_func, input_converter)
         x = input_generator.increasing(*self.in_shape)
 
-        if not is_dec:
+        if not is_deco:
             model.fn = fake_as_funcnode(
                 model.fn, self.op_type, attributes=attr)
 
@@ -140,7 +140,7 @@ def test_replace_func_collection_return(tmpdir, return_type):
             if self.return_type == 'list':
                 return [xs.array * i for i in range(1, 1+n)]
             else:
-                self.return_type == 'dict'
+                assert self.return_type == 'dict'
                 return {str(i): xs.array * i for i in range(1, 1+n)}
 
         def __call__(self, xs):
