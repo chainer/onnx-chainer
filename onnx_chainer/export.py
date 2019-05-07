@@ -143,11 +143,13 @@ class ONNXExport(chainer.FunctionHook):
         self.func_name_counts[func_name] += 1
 
         input_names = []
-        for i in function.inputs:
-            # 'i' is a VariableNode, so check if it has a Variable/Parameter
-            var = i.get_variable_or_none()
+        for input_ref in function.inputs:
+            # 'input_ref' is a VariableNode,
+            # so check if it has a Variable/Parameter
+            var = input_ref.get_variable_or_none()
             if var is None:  # No reference to Variable/Parameter
-                input_name = self.context.get_name(i)  # Use VariableNode as is
+                # Use VariableNode as is
+                input_name = self.context.get_name(input_ref)
             else:  # It is a parameter inside a Link or network input
                 input_name = self.context.get_name(var)
                 self.inputs[input_name] = var
@@ -156,17 +158,17 @@ class ONNXExport(chainer.FunctionHook):
         # This is to get corresponding VariableNode id from the output
         # Variable of the network
         output_names = []
-        for o in function.outputs:
-            if o() is None:
-                output_name = self.context.get_name(o)
+        for output_ref in function.outputs:
+            if output_ref() is None:
+                output_name = self.context.get_name(output_ref)
             else:
-                var = o().get_variable_or_none()
+                var = output_ref().get_variable_or_none()
                 if var is not None:  # If the output is kept
                     output_name = self.context.get_name(var)
                     if output_name in self.inputs:
                         del self.inputs[output_name]
                 else:
-                    output_name = self.context.get_name(o())
+                    output_name = self.context.get_name(output_ref())
             output_names.append(output_name)
 
         nodes = self.create_node(
