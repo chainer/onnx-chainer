@@ -35,7 +35,7 @@ def x():
 def test_export_testcase(
         tmpdir, model, x, disable_experimental_warning, in_names, out_names):
     # Just check the existence of pb files
-    path = tmpdir.mkdir('test_export_testcase').dirname
+    path = str(tmpdir)
     export_testcase(model, (x,), path,
                     input_names=in_names, output_names=out_names)
 
@@ -52,7 +52,7 @@ def test_export_testcase(
 
 
 def test_output_grad(tmpdir, model, x, disable_experimental_warning):
-    path = tmpdir.mkdir('test_export_testcase_with_grad').dirname
+    path = str(tmpdir)
     export_testcase(model, (x,), path, output_grad=True, train=True)
 
     model_filename = os.path.join(path, 'model.onnx')

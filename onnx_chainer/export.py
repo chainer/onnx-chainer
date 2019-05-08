@@ -137,17 +137,20 @@ class ONNXExport(chainer.FunctionHook):
     def backward_postprocess(self, function, in_data, out_grad):
         if isinstance(function, chainer.function.FunctionAdapter):
             function = function.function
-        func_name = function.__class__.__name__
+        func_name = getattr(
+            function, 'custom_function_node_name', function.__class__.__name__)
         temp_node_name = '{}:{}'.format(
             self.func_name_counts[func_name], func_name)
         self.func_name_counts[func_name] += 1
 
         input_names = []
-        for i in function.inputs:
-            # 'i' is a VariableNode, so check if it has a Variable/Parameter
-            var = i.get_variable_or_none()
+        for input_var in function.inputs:
+            # 'input_var' is a VariableNode,
+            # so check if it has a Variable/Parameter
+            var = input_var.get_variable_or_none()
             if var is None:  # No reference to Variable/Parameter
-                input_name = self.context.get_name(i)  # Use VariableNode as is
+                # Use VariableNode as is
+                input_name = self.context.get_name(input_var)
             else:  # It is a parameter inside a Link or network input
                 input_name = self.context.get_name(var)
                 self.inputs[input_name] = var
@@ -156,14 +159,17 @@ class ONNXExport(chainer.FunctionHook):
         # This is to get corresponding VariableNode id from the output
         # Variable of the network
         output_names = []
-        for o in function.outputs:
-            var = o().get_variable_or_none()
-            if var is not None:  # If the output is kept
-                output_name = self.context.get_name(var)
-                if output_name in self.inputs:
-                    del self.inputs[output_name]
+        for output_ref in function.outputs:
+            if output_ref() is None:
+                output_name = self.context.get_name(output_ref)
             else:
-                output_name = self.context.get_name(o())
+                var = output_ref().get_variable_or_none()
+                if var is not None:  # If the output is kept
+                    output_name = self.context.get_name(var)
+                    if output_name in self.inputs:
+                        del self.inputs[output_name]
+                else:
+                    output_name = self.context.get_name(output_ref())
             output_names.append(output_name)
 
         nodes = self.create_node(
@@ -390,7 +396,8 @@ def _export(model, args, filename, export_params, graph_name, save_text,
             'Unexpected output type from the model: {}'.format(type(outputs)))
     if not all([isinstance(o, chainer.Variable) for o in flat_outputs]):
         raise ValueError('The all \'outputs\' must be Chainer Variable')
-    network_outputs = {context.get_name(var): var for var in flat_outputs}
+    network_outputs = OrderedDict(
+        [(context.get_name(var), var) for var in flat_outputs])
     if output_names:
         rename_variable_name(context, outputs, network_outputs, output_names)
     # Backward computation to construct graph
