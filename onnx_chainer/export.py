@@ -137,7 +137,8 @@ class ONNXExport(chainer.FunctionHook):
     def backward_postprocess(self, function, in_data, out_grad):
         if isinstance(function, chainer.function.FunctionAdapter):
             function = function.function
-        func_name = getattr(function, 'user_name', function.__class__.__name__)
+        func_name = getattr(
+            function, 'custom_function_node_name', function.__class__.__name__)
         temp_node_name = '{}:{}'.format(
             self.func_name_counts[func_name], func_name)
         self.func_name_counts[func_name] += 1

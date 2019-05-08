@@ -15,7 +15,7 @@ class WrappedFunctionNode(chainer.FunctionNode):
     """
 
     def __init__(self, name, func, args, kwargs, attributes=None):
-        self.user_name = name
+        self.custom_function_node_name = name
         self.func = func
         self.args = args
         self.kwargs = kwargs
