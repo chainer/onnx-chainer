@@ -143,13 +143,13 @@ class ONNXExport(chainer.FunctionHook):
         self.func_name_counts[func_name] += 1
 
         input_names = []
-        for input_ref in function.inputs:
-            # 'input_ref' is a VariableNode,
+        for input_var in function.inputs:
+            # 'input_var' is a VariableNode,
             # so check if it has a Variable/Parameter
-            var = input_ref.get_variable_or_none()
+            var = input_var.get_variable_or_none()
             if var is None:  # No reference to Variable/Parameter
                 # Use VariableNode as is
-                input_name = self.context.get_name(input_ref)
+                input_name = self.context.get_name(input_var)
             else:  # It is a parameter inside a Link or network input
                 input_name = self.context.get_name(var)
                 self.inputs[input_name] = var

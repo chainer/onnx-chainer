@@ -9,8 +9,8 @@ class WrappedFunctionNode(chainer.FunctionNode):
     Arguments:
         name (str): name of the function node
         func (func): the target function
-        args (str): args for the function
-        kwargs (str): kwargs for the function
+        args (list): args for the function
+        kwargs (dict): kwargs for the function
         attributes (list): parameters to be set node's attributes
     """
 
@@ -69,7 +69,7 @@ def fake_as_funcnode(alt_func, name, rename_attributes=None):
     function attributes. Attribute names are set ``argN`` (N is index
     number) or keyword on default.
 
-    Example::
+    Example:
 
        >>> def func(x, a, b, c=1, d=2): pass
        >>> # x is variable
@@ -163,7 +163,7 @@ def as_funcnode(name, rename_attributes=None):
     function node. Expected to be used as decorator. More detail, see
     ``fake_as_funcnode`` documentation.
 
-    Example::
+    Example:
 
        >>> @as_funcnode(
        ...     'CustomNode', rename_attributes=[(1, 'value'), ('c': 'y')])
