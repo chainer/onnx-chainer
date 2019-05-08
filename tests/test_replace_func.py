@@ -4,6 +4,7 @@ import warnings
 import chainer
 import chainer.functions as F
 from chainer import testing
+import numpy as np
 import onnx
 import pytest
 
@@ -41,6 +42,41 @@ def test_fake_as_funcnode_without_replace(tmpdir):
     node_names = {n.name for n in onnx_model.graph.node}
     # no node is generated
     assert len(node_names) == 0
+
+
+class TestReplaceNumpyFullToConstantOfShape(ONNXModelTest):
+    # This test case is a real-world example, to handle np.full
+    def test_output(self):
+        class Model(chainer.Chain):
+            def __init__(self, value):
+                super().__init__()
+                self.value = value
+
+            @as_funcnode('NumpyFull')
+            def full(self, xs, value=0):
+                # not support `def full(self, xs_shape, value=0)`
+                # wrapped function node cannot handle shape directly yet.
+                return np.full(xs.array.shape, value, dtype=np.float32)
+
+            def __call__(self, xs):
+                return F.sigmoid(self.full(xs, value=self.value))
+
+        model = Model(value=5)
+        x = input_generator.increasing(2, 3, 4)
+
+        def numpy_full_converter(params):
+            gb = onnx_helper.GraphBuilder()
+            output = gb.op('Shape', params.input_names)
+            value = onnx.helper.make_tensor(
+                'value', onnx.TensorProto.FLOAT, [1], [params.func.value])
+            gb.op('ConstantOfShape', [output], value=value)
+            return gb.nodes()
+
+        addon_converters = {'NumpyFull': numpy_full_converter}
+
+        self.expect(
+            model, x, skip_opset_version=[7, 8],
+            external_converters=addon_converters)
 
 
 @testing.parameterize(
