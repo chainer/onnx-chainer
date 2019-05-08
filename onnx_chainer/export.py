@@ -1,6 +1,5 @@
 from __future__ import print_function
 
-import collections
 from collections import OrderedDict
 import warnings
 
@@ -9,9 +8,8 @@ import onnx
 from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 
 from onnx_chainer.context import Context
-from onnx_chainer.functions.converter import FunctionConverterParams
+from onnx_chainer.graph import Graph
 from onnx_chainer import mapping
-from onnx_chainer import onnx_helper
 
 try:
     from onnx import checker
@@ -101,128 +99,6 @@ def rename_variable_name(
         del named_vars[context.get_name(variables)]
         named_vars[new_name] = variables
         context.set_name(variables, new_name, pinned=True)
-
-
-class ONNXExport(chainer.FunctionHook):
-
-    def __init__(
-            self, context, converters, opset_version, network_outputs):
-        self.context = context
-        self.converters = converters
-
-        self.graph = []
-        # Converter nodes keyed by "number:func_name"
-        self.converted_nodes = OrderedDict()
-        self.func_name_counts = collections.defaultdict(int)
-        self.inputs = {}  # Input `Variable` objects keyed by string IDs
-        self.additional_parameters = []
-        self.specified_opset_version = opset_version
-        self.network_outputs = network_outputs
-
-    def create_node(
-            self, func_name, func, input_names, output_names, parameters):
-        onnx_helper.set_func_name(func_name)
-        converter = self.converters.get(func_name, None)
-        if converter is None:
-            raise ValueError('{} is not supported'.format(func_name))
-        params = FunctionConverterParams(
-            func, self.specified_opset_version, input_names, output_names,
-            self.context, parameters)
-        nodes = converter(params)
-        nodes = list(reversed(nodes))
-        assert len(nodes[0].output) == len(output_names)
-        nodes[0].output[:] = output_names
-        return nodes
-
-    def backward_postprocess(self, function, in_data, out_grad):
-        if isinstance(function, chainer.function.FunctionAdapter):
-            function = function.function
-        func_name = getattr(
-            function, 'custom_function_node_name', function.__class__.__name__)
-        temp_node_name = '{}:{}'.format(
-            self.func_name_counts[func_name], func_name)
-        self.func_name_counts[func_name] += 1
-
-        input_names = []
-        for input_var in function.inputs:
-            # 'input_var' is a VariableNode,
-            # so check if it has a Variable/Parameter
-            var = input_var.get_variable_or_none()
-            if var is None:  # No reference to Variable/Parameter
-                # Use VariableNode as is
-                input_name = self.context.get_name(input_var)
-            else:  # It is a parameter inside a Link or network input
-                input_name = self.context.get_name(var)
-                self.inputs[input_name] = var
-            input_names.append(input_name)
-
-        # This is to get corresponding VariableNode id from the output
-        # Variable of the network
-        output_names = []
-        for output_ref in function.outputs:
-            if output_ref() is None:
-                output_name = self.context.get_name(output_ref)
-            else:
-                var = output_ref().get_variable_or_none()
-                if var is not None:  # If the output is kept
-                    output_name = self.context.get_name(var)
-                    if output_name in self.inputs:
-                        del self.inputs[output_name]
-                else:
-                    output_name = self.context.get_name(output_ref())
-            output_names.append(output_name)
-
-        nodes = self.create_node(
-            func_name, function, input_names, output_names,
-            self.additional_parameters)
-        self.converted_nodes[temp_node_name] = nodes
-
-    def deleted(self, function=None):
-        """Rename output names.
-
-        When renaming an output name, another node can reference the same value
-        as input, so the input name must be renamed at once. So this renaming
-        process should be run after all functions are converted and this
-        `deleted` function is called when function hook is done, which means
-        all functions are converted.
-
-        If input/output names are given externally, these given names take
-        priority over named by this process.
-        """
-        func_name_counts = collections.defaultdict(int)
-        names = {}
-        for temp_func_name, nodes in reversed(self.converted_nodes.items()):
-            func_name = temp_func_name[temp_func_name.index(':')+1:]
-            base_node_name = '{}_{}'.format(
-                func_name, func_name_counts[func_name])
-            func_name_counts[func_name] += 1
-            for num, node in enumerate(reversed(nodes)):
-                if len(nodes) > 1 and num != len(nodes)-1:
-                    node_name = '{}_tmp_{}'.format(base_node_name, num)
-                else:
-                    node_name = base_node_name
-                node.name = node_name
-
-                for i, input_name in enumerate(node.input):
-                    if input_name not in names:
-                        names[input_name] = input_name
-                    node.input[i] = names[input_name]
-
-                for i, output_name in enumerate(node.output):
-                    var = None
-                    if output_name in self.network_outputs:
-                        var = self.network_outputs[output_name]
-                        if self.context.is_pinned(var):
-                            continue
-                    if len(node.output) == 1:
-                        names[output_name] = node_name
-                    else:
-                        names[output_name] = '{}_{}'.format(node_name, i)
-                    node.output[i] = names[output_name]
-                    if var is not None:
-                        del self.network_outputs[output_name]
-                        self.network_outputs[names[output_name]] = var
-                self.graph.append(node)
 
 
 def export(model, args, filename=None, export_params=True,
@@ -339,23 +215,19 @@ def _export(model, args, filename, export_params, graph_name, save_text,
             if isinstance(arg, chainer.get_array_types()):
                 args[i] = chainer.Variable(arg)
             network_inputs[context.get_name(args[i])] = args[i]
-        flat_args = args
         outputs = model(*args)
     elif isinstance(args, dict):
         for key, arg in args.items():
             if isinstance(arg, chainer.get_array_types()):
                 args[key] = chainer.Variable(arg)
             network_inputs[context.get_name(args[key])] = args[key]
-        flat_args = list(args.values())
         outputs = model(**args)
     elif isinstance(args, chainer.get_array_types()):
         args = chainer.Variable(args)
         network_inputs[context.get_name(args)] = args
-        flat_args = [args]
         outputs = model(args)
     elif isinstance(args, chainer.Variable):
         network_inputs[context.get_name(args)] = args
-        flat_args = [args]
         outputs = model(args)
     else:
         raise ValueError(
@@ -400,9 +272,9 @@ def _export(model, args, filename, export_params, graph_name, save_text,
         [(context.get_name(var), var) for var in flat_outputs])
     if output_names:
         rename_variable_name(context, outputs, network_outputs, output_names)
-    # Backward computation to construct graph
-    with ONNXExport(context, converters, opset_version, network_outputs) as o:
-        chainer.grad(flat_outputs, list(model.params()) + flat_args)
+
+    o = Graph(context, converters, opset_version, network_outputs)
+    o.to_onnx_graph()
 
     implicit_input_names = set(o.inputs.keys()) - param_names -\
         set(network_inputs.keys())
