@@ -66,7 +66,8 @@ def fake_as_funcnode(alt_func, name, rename_attributes=None):
     ``tuple`` of values, keys will be ignored.
 
     Arguments of ``alt_func`` except for ``chainer.Variable`` are set as
-    function attributes.
+    function attributes. Attribute names are set ``argN`` (N is index
+    number) or keyword on default.
 
     Example::
 
@@ -167,10 +168,6 @@ def as_funcnode(name, rename_attributes=None):
        >>> @as_funcnode(
        ...     'CustomNode', rename_attributes=[(1, 'value'), ('c': 'y')])
        >>> def func(x, a, b, c=1, d=2): pass
-
-    Then ``func`` will be operated as a function node named "CustomNode", and
-    ``'value'``, ``'b'``, ``'y'``, ``'d'`` are set as function's attributes.
-    See tests/test_replace_func.py more details.
 
     Args:
         name (str): function name. This name is used for what ONNX operator
