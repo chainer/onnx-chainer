@@ -89,9 +89,9 @@ class TestReplaceFunc(ONNXModelTest):
             def input_converter(xs):
                 return (xs,), {}
 
-            @as_funcnode('AddConstant', attributes=['value'])
-            def target_func(x, value=0.01):
-                return x.array + value
+            @as_funcnode('AddConstant', rename_attributes=[('b', 'value')])
+            def target_func(x, b=0.01):
+                return x.array + b
 
             is_deco = True
 
@@ -102,8 +102,6 @@ class TestReplaceFunc(ONNXModelTest):
             def target_func(x=None, value=0.01):
                 assert x is not None
                 return x.array + value
-
-            attr = ['value']
 
         else:
             assert self.func_kind == 'var'
@@ -121,7 +119,7 @@ class TestReplaceFunc(ONNXModelTest):
 
         if not is_deco:
             model.fn = fake_as_funcnode(
-                model.fn, self.op_type, attributes=attr)
+                model.fn, self.op_type, rename_attributes=attr)
 
         name = 'replace_func_' + self.func_kind
         self.expect(model, x, name=name)
@@ -150,8 +148,7 @@ def test_replace_func_collection_return(tmpdir, return_type):
     x = input_generator.increasing(1, 5)
 
     with warnings.catch_warnings(record=True):
-        model.tiled_array = fake_as_funcnode(
-            model.tiled_array, 'xTiledArray', attributes=['n'])
+        model.tiled_array = fake_as_funcnode(model.tiled_array, 'xTiledArray')
 
     def tiled_array_converter(params):
         return onnx_helper.make_node(

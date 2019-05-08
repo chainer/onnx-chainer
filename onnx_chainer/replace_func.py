@@ -1,5 +1,4 @@
 import inspect
-from inspect import Parameter
 
 import chainer
 
@@ -22,15 +21,8 @@ class WrappedFunctionNode(chainer.FunctionNode):
         self.kwargs = kwargs
 
         if attributes is not None:
-            self.set_attributes(attributes)
-
-    def set_attributes(self, attributes):
-        for p in attributes:
-            if isinstance(p, tuple):
-                assert isinstance(p[0], int)
-                setattr(self, p[1], self.args[p[0]])
-            elif isinstance(p, str):
-                setattr(self, p, self.kwargs.get(p, None))
+            for k, v in attributes.items():
+                setattr(self, k, v)
 
     def forward(self, xs):
         self.xs = xs
@@ -54,7 +46,7 @@ class WrappedFunctionNode(chainer.FunctionNode):
         return ret
 
 
-def fake_as_funcnode(alt_func, name, attributes=None):
+def fake_as_funcnode(alt_func, name, rename_attributes=None):
     """The target function fakes FunctionNode
 
     The target function is replaced to the alternative function to connect
@@ -73,11 +65,19 @@ def fake_as_funcnode(alt_func, name, attributes=None):
     be return, the wrapped function breaks down the returned values as
     ``tuple`` of values, keys will be ignored.
 
+    Arguments of ``alt_func`` except for ``chainer.Variable`` are set as
+    function attributes.
+
     Example::
 
-       >>> model.func = fake_as_funcnode(model.func, 'CustomNode')
+       >>> def func(x, a, b, c=1, d=2): pass
+       >>> # x is variable
+       >>> func = fake_as_funcnode(
+       ...     func, 'CustomNode',
+       ...     rename_attributes=[(1, 'value'), ('c': 'y')])
 
-    Then ``model.func`` will be operated as a function node named "CustomNode".
+    Then ``func`` will be operated as a function node named "CustomNode", and
+    ``'value'``, ``'b'``, ``'y'``, ``'d'`` are set as function's attributes.
     See tests/test_replace_func.py more details.
 
     Args:
@@ -85,22 +85,22 @@ def fake_as_funcnode(alt_func, name, attributes=None):
             the above documentation.
         name (str): function name. This name is used for what ONNX operator
             to be assigned.
-        attributes (list): to set as function param. the list should be
-            ``tuple`` as ``(index of args, name)`` or key name of ``kwargs``.
+        rename_attributes (list or tuple): rename attribute name, set list
+            of ``tuple(index_of_args, new_name)`` or
+            ``tuple(kwargs_name, new_name)``
 
     Returns:
         func: wrapped function, called on exporting.
     """
 
     def _wrapper(*args, **kwargs):
-        inputs = list(filter(_is_var, _flatten(args)))
-        inputs.extend(list(filter(_is_var, _flatten(list(kwargs.values())))))
-        if not inputs:
-            raise ValueError(
-                'arguments of the function wrapped by \'as_funcnode\' '
-                'must include at least one chainer.Variable, function name: '
-                '{}'.format(name))
+        inputs = []
+        attributes = {}
+        rename_attr_dict = {}
+        if rename_attributes is not None:
+            rename_attr_dict = {attr[0]: attr[1] for attr in rename_attributes}
 
+        # resolve default value for kwargs
         arg_spec = inspect.signature(alt_func)
         bound = arg_spec.bind(*args, **kwargs)
         bound.apply_defaults()
@@ -110,6 +110,39 @@ def fake_as_funcnode(alt_func, name, attributes=None):
             if i < len(args):
                 continue
             kwargs[k] = v
+
+        def set_attr(key, value):
+            default_name = key if isinstance(key, str) else 'arg{}'.format(key)
+            attributes[rename_attr_dict.get(key, default_name)] = value
+
+        def expand_args(args_iter):
+            for i, a in args_iter:
+                if _is_var(a):
+                    inputs.append(a)
+                elif isinstance(a, (tuple, list)):
+                    # all elements are variable -> add flatten them to inputs
+                    # all elements are not variable -> add them to attributes
+                    # mixed variable and other type value -> error
+                    flatten_arg = _flatten(a)
+                    var_or_not = map(_is_var, flatten_arg)
+                    if all(var_or_not):
+                        inputs.extend(flatten_arg)
+                    elif not any(var_or_not):
+                        set_attr(i, a)
+                    else:
+                        raise ValueError(
+                            'arguments mixed variable and other type are not '
+                            'supported')
+                else:
+                    set_attr(i, a)
+
+        expand_args(enumerate(args))
+        expand_args(kwargs.items())
+        if not inputs:
+            raise ValueError(
+                'arguments of the function wrapped by \'as_funcnode\' '
+                'must include at least one chainer.Variable, function name: '
+                '{}'.format(name))
 
         wrapped = WrappedFunctionNode(
             name, alt_func, args, kwargs, attributes=attributes)
@@ -122,7 +155,7 @@ def fake_as_funcnode(alt_func, name, attributes=None):
     return _wrapper
 
 
-def as_funcnode(name, attributes=None):
+def as_funcnode(name, rename_attributes=None):
     """The target function fakes FunctionNode
 
     The target function is overwrapped to connect variable node by acting
@@ -131,22 +164,23 @@ def as_funcnode(name, attributes=None):
 
     Example::
 
-       >>> class Model(chainer.Chain):
-       >>>     @as_funcnode('CustomNode')
-       >>>     def func(self, *args, **kwargs):
-       >>>         pass
+       >>> @as_funcnode(
+       ...     'CustomNode', rename_attributes=[(1, 'value'), ('c': 'y')])
+       >>> def func(x, a, b, c=1, d=2): pass
 
-    Then ``model.func`` will be operated as a function node named "CustomNode".
+    Then ``func`` will be operated as a function node named "CustomNode", and
+    ``'value'``, ``'b'``, ``'y'``, ``'d'`` are set as function's attributes.
     See tests/test_replace_func.py more details.
 
     Args:
         name (str): function name. This name is used for what ONNX operator
             to be assigned.
-        attributes (list): to set as function param. the list should be
-            ``tuple`` as ``(index of args, name)`` or key name of ``kwargs``.
+        rename_attributes (list or tuple): rename attribute name, set list
+            of ``tuple(index_of_args, new_name)`` or
+            ``tuple(kwargs_name, new_name)``
     """
     def _wrapper(fn):
-        return fake_as_funcnode(fn, name, attributes=attributes)
+        return fake_as_funcnode(fn, name, rename_attributes=rename_attributes)
 
     return _wrapper
 
