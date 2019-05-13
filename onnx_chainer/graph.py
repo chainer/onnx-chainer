@@ -9,8 +9,8 @@ from onnx_chainer import onnx_helper
 
 
 class Node(object):
-    def __init__(self, node, no=None):
-        self.no = no
+    def __init__(self, node, order=None):
+        self.order = order
         self.node = node
         self.in_edges = []
         self.out_edges = []
@@ -110,12 +110,12 @@ class Graph(object):
                     for n in node.out_edges:
                         visit(n)
                 sorted_nodes.insert(0, node)
-        for node in sorted(nodes, key=lambda n: n.no):
+        for node in sorted(nodes, key=lambda n: n.order):
             visit(node)
-        for no, node in enumerate(sorted_nodes):
-            node.no = no
+        for order, node in enumerate(sorted_nodes):
+            node.order = order
 
-        return sorted(nodes, key=lambda n: n.no)
+        return sorted(nodes, key=lambda n: n.order)
 
     def create_node(
             self, func_name, func, input_names, output_names, parameters):
