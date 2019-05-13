@@ -44,7 +44,7 @@ class ONNXModelTest(unittest.TestCase):
             self.check_out_values = None
 
     def expect(self, model, args, name=None, skip_opset_version=None,
-               with_warning=False, **kwargs):
+               skip_outvalue_version=None, with_warning=False, **kwargs):
         """Compare model output and test runtime output.
 
         Make an ONNX model from target model with args, and put output
@@ -55,6 +55,7 @@ class ONNXModelTest(unittest.TestCase):
             args (list or dict): Arguments of the target model.
             name (str): name of test. Set class name on default.
             skip_opset_version (list): Versions to skip test.
+            skip_outvalue_version (list): Versions to skip output value check.
             with_warning (bool): If True, check warnings.
             **kwargs (dict): keyward arguments for ``onnx_chainer.export``.
         """
@@ -118,6 +119,10 @@ class ONNXModelTest(unittest.TestCase):
                 array = chainer.cuda.to_cpu(array)
                 np.testing.assert_allclose(
                     array, input_data[i], rtol=1e-5, atol=1e-5)
+
+            if skip_outvalue_version is not None and\
+                    opset_version in skip_outvalue_version:
+                continue
 
             # Export function can be add unexpected inputs. Collect inputs
             # from ONNX model, and compare with another input list got from
