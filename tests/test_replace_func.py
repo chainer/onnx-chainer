@@ -8,6 +8,7 @@ import numpy as np
 import onnx
 import pytest
 
+from onnx_chainer import export
 from onnx_chainer import export_testcase
 from onnx_chainer import onnx_helper
 from onnx_chainer.replace_func import as_funcnode
@@ -16,8 +17,7 @@ from onnx_chainer.testing import input_generator
 from tests.helper import ONNXModelTest
 
 
-def test_fake_as_funcnode_without_replace(tmpdir):
-    path = str(tmpdir)
+def test_fake_as_funcnode_without_replace():
 
     class Model(chainer.Chain):
         def _init__(self):
@@ -32,16 +32,8 @@ def test_fake_as_funcnode_without_replace(tmpdir):
     model = Model()
     x = input_generator.increasing(3, 4)
 
-    with warnings.catch_warnings(record=True):
-        export_testcase(model, x, path)
-
-    model_filepath = os.path.join(path, 'model.onnx')
-    assert os.path.isfile(model_filepath)
-
-    onnx_model = onnx.load(model_filepath)
-    node_names = {n.name for n in onnx_model.graph.node}
-    # no node is generated
-    assert len(node_names) == 0
+    with pytest.raises(onnx.checker.ValidationError):
+        export(model, x)
 
 
 class TestReplaceNumpyFullToConstantOfShape(ONNXModelTest):
