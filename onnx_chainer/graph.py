@@ -8,26 +8,6 @@ from onnx_chainer.functions.converter import FunctionConverterParams
 from onnx_chainer import onnx_helper
 
 
-class Node(object):
-    def __init__(self, node, order=None):
-        self.order = order
-        self.node = node
-        self.in_edges = []
-        self.out_edges = []
-
-    def __hash__(self):
-        return id(self.node).__hash__()
-
-    def __eq__(self, r):
-        return self.node is r.node
-
-    def add_in_edge(self, from_node):
-        self.in_edges.append(from_node)
-
-    def add_out_edge(self, to_node):
-        self.out_edges.append(to_node)
-
-
 class Graph(object):
 
     def __init__(
@@ -44,78 +24,48 @@ class Graph(object):
         self.specified_opset_version = opset_version
         self.network_outputs = network_outputs
 
-        self.chainer_graph = self._build_computational_graph(
+        self.function_nodes = self._build_computational_graph(
             network_outputs.values())
 
     def _build_computational_graph(self, outputs):
         cands = []
         seen_edges = set()
-        nodes = set()
+        function_nodes = []
         push_count = [0]
 
         def add_cand(cand):
             heapq.heappush(cands, (-cand.rank, push_count[0], cand))
             push_count[0] += 1
 
-        converted_nodes = {}
-        created_order = [0]
-
-        def create_node(node):
-            node_id = id(node)
-            if node_id in converted_nodes:
-                return converted_nodes[node_id]
-            else:
-                converted_nodes[node_id] = Node(node, created_order[0])
-                created_order[0] += 1
-                return converted_nodes[node_id]
-
         for o in outputs:
             if isinstance(o, chainer.Variable):
                 o = o.node
             add_cand(o)
-            o_node = create_node(o)
-            nodes.add(o_node)
 
         while cands:
             _, _, cand = heapq.heappop(cands)
-            if isinstance(cand, chainer.variable.VariableNode):
-                creator = cand.creator_node
-                if creator is not None and (creator, cand) not in seen_edges:
-                    add_cand(creator)
-                    seen_edges.add((creator, cand))
-                    creator_node = create_node(creator)
-                    cand_node = create_node(cand)
-                    cand_node.add_in_edge(creator_node)
-                    creator_node.add_out_edge(cand_node)
-                    nodes.add(creator_node)
-            elif isinstance(cand, chainer.FunctionNode):
-                for input_ in cand.inputs:
-                    if input_ is not cand and (input_, cand) not in seen_edges:
-                        add_cand(input_)
-                        seen_edges.add((input_, cand))
-                        input_node = create_node(input_)
-                        cand_node = create_node(cand)
-                        cand_node.add_in_edge(input_node)
-                        input_node.add_out_edge(cand_node)
-                        nodes.add(input_node)
+            if not isinstance(cand, chainer.variable.VariableNode):
+                raise NotImplementedError(
+                    'ONNX-Chainer does not support node type {}'.format(
+                        type(cand)))
+            creator = cand.creator_node
+            if creator is None:
+                continue
+            if (creator, cand) in seen_edges:
+                continue
+            assert isinstance(creator, chainer.FunctionNode)
+            seen_edges.add((creator, cand))
+            function_nodes.append(creator)
 
-        # topological sorting
-        visited = set()
-        sorted_nodes = []
+            for input_ in creator.inputs:
+                if input_ is creator:
+                    continue
+                if (input_, creator) in seen_edges:
+                    continue
+                add_cand(input_)
+                seen_edges.add((input_, creator))
 
-        def visit(node):
-            if node not in visited:
-                visited.add(node)
-                if node.out_edges is not None:
-                    for n in node.out_edges:
-                        visit(n)
-                sorted_nodes.insert(0, node)
-        for node in sorted(nodes, key=lambda n: n.order):
-            visit(node)
-        for order, node in enumerate(sorted_nodes):
-            node.order = order
-
-        return sorted(nodes, key=lambda n: n.order)
+        return reversed(function_nodes)
 
     def create_node(
             self, func_name, func, input_names, output_names, parameters):
@@ -221,8 +171,6 @@ class Graph(object):
                 self.graph.append(node)
 
     def to_onnx_graph(self):
-        for node in self.chainer_graph:
-            if isinstance(node.node, chainer.variable.VariableNode):
-                continue
-            self.convert_to_onnx_node(node.node)
+        for node in self.function_nodes:
+            self.convert_to_onnx_node(node)
         self.after_rename()
