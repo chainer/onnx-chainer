@@ -30,7 +30,7 @@ class Graph(object):
     def _build_computational_graph(self, outputs):
         cands = []
         seen_edges = set()
-        function_nodes = []
+        function_nodes = OrderedDict()
         push_count = [0]
 
         def add_cand(cand):
@@ -54,8 +54,11 @@ class Graph(object):
             if (creator, cand) in seen_edges:
                 continue
             assert isinstance(creator, chainer.FunctionNode)
+            creator_id = id(creator)
+            if creator_id in function_nodes:
+                continue
             seen_edges.add((creator, cand))
-            function_nodes.append(creator)
+            function_nodes[creator_id] = creator
 
             for input_ in creator.inputs:
                 if input_ is creator:
@@ -65,7 +68,7 @@ class Graph(object):
                 add_cand(input_)
                 seen_edges.add((input_, creator))
 
-        return reversed(function_nodes)
+        return reversed(function_nodes.values())
 
     def create_node(
             self, func_name, func, input_names, output_names, parameters):
