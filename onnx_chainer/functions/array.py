@@ -336,7 +336,7 @@ def convert_Repeat(func, opset_version, input_names, num_outputs, context,
         inputs = [gb.op('Reshape', input_names)]
         scales = [float(repeats[0])]
     else:
-        scales = [1.0 for _ in range(func.inputs[0].data.ndim)]
+        scales = [1.0] * func.inputs[0].data.ndim
         scales[axis] = float(repeats[0])
 
     if opset_version == 7:

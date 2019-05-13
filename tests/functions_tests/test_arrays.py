@@ -179,7 +179,7 @@ class TestArrayOperators(ONNXModelTest):
         if self.ops == 'repeat':
             # TODO(disktnk): repeat uses 'Upsample', occur ShapeInferenceError
             # on opset=9, will solve later
-            skip_ver = (9,)
+            self.check_out_values = None
         self.expect(
             self.model, self.x, name=name, skip_opset_version=skip_ver)
 
