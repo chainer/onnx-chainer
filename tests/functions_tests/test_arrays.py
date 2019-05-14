@@ -140,6 +140,17 @@ from tests.helper import ONNXModelTest
     {'ops': 'expand_dims', 'input_shape': (3,),
      'input_argname': 'x', 'args': {'axis': -2},
      'name': 'expand_dims_minus2'},
+
+    # repeat
+    {'ops': 'repeat', 'input_shape': (3,),
+     'input_argname': 'x', 'args': {'repeats': 2},
+     'name': 'repeat_ndim1'},
+    {'ops': 'repeat', 'input_shape': (2, 3),
+     'input_argname': 'x', 'args': {'repeats': 2, 'axis': 1},
+     'name': 'repeat_with_axis'},
+    {'ops': 'repeat', 'input_shape': (2, 3),
+     'input_argname': 'x', 'args': {'repeats': 2},
+     'name': 'repeat_default_axis'},
 )
 class TestArrayOperators(ONNXModelTest):
 
@@ -164,7 +175,13 @@ class TestArrayOperators(ONNXModelTest):
         name = self.ops
         if hasattr(self, 'name'):
             name = self.name
-        self.expect(self.model, self.x, name=name)
+        skip_ver = None
+        if self.ops == 'repeat':
+            # TODO(disktnk): repeat uses 'Upsample', occur ShapeInferenceError
+            # on opset=9, will solve later
+            skip_ver = [9]
+        self.expect(
+            self.model, self.x, name=name, skip_outvalue_version=skip_ver)
 
 
 class TestConcat(ONNXModelTest):

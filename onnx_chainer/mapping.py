@@ -24,6 +24,7 @@ _supported_function_node_set = {
     'ExpandDims',
     'GetItem',
     'Pad',
+    'Repeat',
     'Reshape',
     'Space2Depth',
     'SplitAxis',
