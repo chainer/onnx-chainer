@@ -277,7 +277,10 @@ def _export(model, args, filename, export_params, graph_name, save_text,
     o.to_onnx_graph()
 
     implicit_input_names = set(o.inputs.keys()) - param_names -\
-        set(network_inputs.keys()) - set(network_outputs.keys())
+        set(network_inputs.keys())
+    # if an node is both intermediate input and output, the node should not be
+    # converted to initializer and will be converted as output.
+    implicit_input_names -= set(network_outputs.keys())
     for name in implicit_input_names:
         tensor = convert_parameter(o.inputs[name], context)
         initializers.append(tensor)

@@ -29,7 +29,6 @@ class Graph(object):
 
     def _build_computational_graph(self, outputs):
         cands = []
-        seen_edges = set()
         function_nodes = OrderedDict()
         push_count = [0]
 
@@ -51,22 +50,14 @@ class Graph(object):
             creator = cand.creator_node
             if creator is None:
                 continue
-            if (creator, cand) in seen_edges:
-                continue
             assert isinstance(creator, chainer.FunctionNode)
             creator_id = id(creator)
             if creator_id in function_nodes:
                 continue
-            seen_edges.add((creator, cand))
             function_nodes[creator_id] = creator
 
             for input_ in creator.inputs:
-                if input_ is creator:
-                    continue
-                if (input_, creator) in seen_edges:
-                    continue
                 add_cand(input_)
-                seen_edges.add((input_, creator))
 
         return reversed(function_nodes.values())
 
@@ -128,7 +119,7 @@ class Graph(object):
             self.additional_parameters)
         self.converted_nodes[temp_node_name] = nodes
 
-    def after_rename(self):
+    def rename_outputs(self):
         """Rename output names.
 
         When renaming an output name, another node can reference the same value
@@ -176,4 +167,4 @@ class Graph(object):
     def to_onnx_graph(self):
         for node in self.function_nodes:
             self.convert_to_onnx_node(node)
-        self.after_rename()
+        self.rename_outputs()
