@@ -23,6 +23,7 @@ from onnx_chainer.functions.array import convert_ResizeImages  # NOQA
 from onnx_chainer.functions.array import convert_Space2Depth  # NOQA
 from onnx_chainer.functions.array import convert_SplitAxis  # NOQA
 from onnx_chainer.functions.array import convert_Squeeze  # NOQA
+from onnx_chainer.functions.array import convert_Swapaxes  # NOQA
 from onnx_chainer.functions.array import convert_Tile  # NOQA
 from onnx_chainer.functions.array import convert_Transpose  # NOQA
 from onnx_chainer.functions.array import convert_Where  # NOQA

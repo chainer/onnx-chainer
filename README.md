@@ -260,6 +260,7 @@ Currently 59 Chainer Functions are supported to export in ONNX format.
 - Space2Depth
 - SplitAxis
 - Squeeze
+- Swapaxes
 - Tile
 - Transpose
 - ResizeImages

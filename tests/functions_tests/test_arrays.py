@@ -82,6 +82,14 @@ from tests.helper import ONNXModelTest
      'input_argname': 'x',
      'args': {'axis': (2, 4)}},
 
+    # swapaxes
+    {'ops': 'swapaxes', 'input_shape': (2, 3, 4, 5),
+     'input_argname': 'x',
+     'args': {'axis1': 1, 'axis2': 2}},
+    {'ops': 'swapaxes', 'input_shape': (2, 3, 4, 5),
+     'input_argname': 'x',
+     'args': {'axis1': -3, 'axis2': -1}},
+
     # tile
     {'ops': 'tile', 'input_shape': (1, 5),
      'input_argname': 'x',
