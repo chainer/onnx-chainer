@@ -346,10 +346,12 @@ def convert_ResizeImages(func, opset_version, input_names, num_outputs,
 
     if (scales[2] < 1.0e-8) and (scales[3] < 1.0e-8):
         raise ValueError(
-            'scaling factor is too small or zero. scales for h = {}, scales for w = {}'.format(scales[2], scales[3]))
+            'scaling factor is too small or zero. scales for h = {}, scales '
+            'for w = {}'.format(scales[2], scales[3]))
 
     # resize_images in Chainer only supports bilinear interpolation
-    mode = 'linear'  # Actually this will be mapped to 'bilinear' in onnxruntime
+    # Actually this will be mapped to 'bilinear' in onnxruntime
+    mode = 'linear'
     if opset_version == 7:
         return onnx_helper.make_node('Upsample', input_names, num_outputs,
                                      scales=scales, mode=mode),
@@ -358,4 +360,5 @@ def convert_ResizeImages(func, opset_version, input_names, num_outputs,
         scales_param = chainer.Parameter(scales)
         parameters.append(scales_param)
         input_names.append(context.get_name(scales_param))
-        return onnx_helper.make_node('Upsample', input_names, num_outputs, mode=mode),
+        return onnx_helper.make_node('Upsample', input_names, num_outputs,
+                                     mode=mode),

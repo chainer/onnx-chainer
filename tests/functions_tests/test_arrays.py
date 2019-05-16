@@ -1,3 +1,5 @@
+import warnings
+
 import chainer
 import chainer.functions as F
 from chainer import testing
@@ -224,7 +226,8 @@ class TestResizeImages(ONNXModelTest):
 
     def test_output(self):
 
-        # FIXME(syoyo): Currently the test will fail due to the different               # behavior of bilinear interpolation between Chainer and onnxruntime.
+        # FIXME(syoyo): Currently the test will fail due to the different
+        # behavior of bilinear interpolation between Chainer and onnxruntime.
         # So disable output value check for a while.
         #
         # Currently Chainer will give [64, 53.333336, 42.666668, 32]
@@ -238,7 +241,6 @@ class TestResizeImages(ONNXModelTest):
 
         self.check_out_values = None  # Skip output value check
 
-        # TODO(hamaji): onnxruntime does not support Upsample-9 yet.
-        # https://github.com/chainer/onnx-chainer/issues/111
-        self.expect(self.model, self.x, name='resize_images',
-                    skip_opset_version=[9])
+        with warnings.catch_warnings(record=True) as w:
+            self.expect(self.model, self.x)
+        assert len(w) == 1
