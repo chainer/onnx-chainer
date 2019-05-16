@@ -1,3 +1,5 @@
+import warnings
+
 import chainer
 import numpy as np
 from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
@@ -350,3 +352,48 @@ def convert_Repeat(func, opset_version, input_names, num_outputs, context,
         inputs.append(context.get_name(scales_param))
         gb.op('Upsample', inputs)
         return gb.nodes()
+
+
+# NOTE(syoyo): `Upsampling` is deprecated in ONNX opset 10.
+# Use `Reshape` for opset 10
+@support((7, 9))
+def convert_ResizeImages(func, opset_version, input_names, num_outputs,
+                         context, parameters):
+
+    warnings.warn(
+        '`resize_images` is mapped to `Upsampling` ONNX op with bilinear '
+        'interpolation. '
+        'Behavior of bilinear interpolation differs from each implementation. '
+        'See the issue https://github.com/chainer/onnx-chainer/issues/147 '
+        'for details.',
+        UserWarning)
+
+    outsize = (func.out_H, func.out_W)
+
+    h, w = func.inputs[0].shape[2:]
+
+    # Compute scaling factor.
+    # NOTE(syoyo): Despite of its name, `Upsample` onnx op will downsample
+    # images when scale value is less than 1.0
+    scales = [1.0, 1.0, float(outsize[0]) / float(h),
+              float(outsize[1]) / float(w)]
+
+    if (scales[2] < 1.0e-8) and (scales[3] < 1.0e-8):
+        raise ValueError(
+            'scaling factor is too small or zero. scales for h = {}, scales '
+            'for w = {}'.format(scales[2], scales[3]))
+
+    # resize_images in Chainer only supports bilinear interpolation
+    # Actually this will be mapped to 'bilinear' in onnxruntime
+    mode = 'linear'
+    if opset_version == 7:
+        return onnx_helper.make_node('Upsample', input_names, num_outputs,
+                                     scales=scales, mode=mode),
+
+    if opset_version == 9:
+        scales = np.array(scales, dtype=np.float32)
+        scales_param = chainer.Parameter(scales)
+        parameters.append(scales_param)
+        input_names.append(context.get_name(scales_param))
+        return onnx_helper.make_node('Upsample', input_names, num_outputs,
+                                     mode=mode),

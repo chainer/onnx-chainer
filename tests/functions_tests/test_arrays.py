@@ -1,3 +1,5 @@
+import warnings
+
 import chainer
 import chainer.functions as F
 from chainer import testing
@@ -213,3 +215,48 @@ class TestWhere(ONNXModelTest):
         x = input_generator.increasing(2, 3)
         y = np.zeros((2, 3), np.float32)
         self.expect(model, (cond, x, y), skip_opset_version=[7, 8])
+
+
+class TestResizeImages(ONNXModelTest):
+
+    def setUp(self):
+
+        class Model(chainer.Chain):
+
+            def __init__(self, ops, args, input_argname):
+                super(Model, self).__init__()
+                self.ops = ops
+                self.args = args
+                self.input_argname = input_argname
+
+            def __call__(self, x):
+                self.args[self.input_argname] = x
+                return self.ops(**self.args)
+
+        # (batch, channel, height, width) = (1, 1, 2, 2)
+        self.x = np.array([[[[64, 32], [64, 32]]]], np.float32)
+
+        # 2x upsampling
+        args = {'output_shape': (4, 4)}
+        self.model = Model(F.resize_images, args, 'x')
+
+    def test_output(self):
+
+        # FIXME(syoyo): Currently the test will fail due to the different
+        # behavior of bilinear interpolation between Chainer and onnxruntime.
+        # So disable output value check for a while.
+        #
+        # Currently Chainer will give [64, 53.333336, 42.666668, 32]
+        # (same result with tensorflow r1.13.1 with `align_corners=True`),
+        # while onnxruntime gives [64, 48, 32, 32]
+        # (same result with tensorflow r1.13.1 with `align_corners=False`)
+        #
+        # However, the correct behavior will be [64, 54, 40, 32].
+        # (cv2.resize and tensorflow master(r1.14 or r2.0) after this fix:
+        #  https://github.com/tensorflow/tensorflow/issues/6720)
+
+        self.check_out_values = None  # Skip output value check
+
+        with warnings.catch_warnings(record=True) as w:
+            self.expect(self.model, self.x)
+        assert len(w) == 1

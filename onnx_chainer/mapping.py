@@ -32,6 +32,7 @@ _supported_function_node_set = {
     'Tile',
     'Transpose',
     'Where',
+    'ResizeImages',
 
     # Connection
     'Convolution2DFunction',

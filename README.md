@@ -262,6 +262,7 @@ Currently 59 Chainer Functions are supported to export in ONNX format.
 - Squeeze
 - Tile
 - Transpose
+- ResizeImages
 
 ### Connection
 
