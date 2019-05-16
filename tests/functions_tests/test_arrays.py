@@ -177,7 +177,6 @@ class TestArrayOperators(ONNXModelTest):
         name = self.ops
         if hasattr(self, 'name'):
             name = self.name
-
         skip_ver = None
         if self.ops == 'repeat':
             # TODO(disktnk): repeat uses 'Upsample', occur ShapeInferenceError

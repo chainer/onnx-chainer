@@ -88,7 +88,6 @@ _supported_function_node_set = {
 
     # Loss
     'SoftmaxCrossEntropy',
-
 }
 
 _converters = None
