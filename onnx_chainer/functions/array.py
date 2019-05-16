@@ -320,6 +320,40 @@ def convert_Where(func, opset_version, input_names, num_outputs, context,
     return onnx_helper.make_node('Where', input_names, num_outputs),
 
 
+@support((7, 9))
+def convert_Repeat(func, opset_version, input_names, num_outputs, context,
+                   parameters):
+    repeats = func.repeats
+    if len(repeats) > 1:
+        raise NotImplementedError(
+            'ONNX-Chainer currently does not support elementwise repeat')
+
+    gb = onnx_helper.GraphBuilder()
+    inputs = list(input_names)
+    axis = func.axis
+    if axis is None:
+        shape_param = chainer.Parameter(np.array([-1]))
+        parameters.append(shape_param)
+        input_names.append(context.get_name(shape_param))
+        inputs = [gb.op('Reshape', input_names)]
+        scales = [float(repeats[0])]
+    else:
+        scales = [1.0] * func.inputs[0].data.ndim
+        scales[axis] = float(repeats[0])
+
+    if opset_version == 7:
+        gb.op('Upsample', inputs, scales=scales)
+        return gb.nodes()
+
+    if opset_version == 9:
+        scales = np.array(scales, dtype=np.float32)
+        scales_param = chainer.Parameter(scales)
+        parameters.append(scales_param)
+        inputs.append(context.get_name(scales_param))
+        gb.op('Upsample', inputs)
+        return gb.nodes()
+
+
 # NOTE(syoyo): `Upsampling` is deprecated in ONNX opset 10.
 # Use `Reshape` for opset 10
 @support((7, 9))
@@ -355,6 +389,7 @@ def convert_ResizeImages(func, opset_version, input_names, num_outputs,
     if opset_version == 7:
         return onnx_helper.make_node('Upsample', input_names, num_outputs,
                                      scales=scales, mode=mode),
+
     if opset_version == 9:
         scales = np.array(scales, dtype=np.float32)
         scales_param = chainer.Parameter(scales)

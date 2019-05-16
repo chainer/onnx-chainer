@@ -47,6 +47,7 @@ def convert_ConvolutionND(func, opset_version, input_names,
         kernel_shape=func.inputs[1].shape[2:],
         pads=pad,
         strides=func.stride,
+        group=func.groups,
     ),
 
 
@@ -60,6 +61,7 @@ def convert_Deconvolution2DFunction(func, opset_version,
         # pads: [x1_begin, x2_begin...x1_end, x2_end,...]
         pads=(func.ph, func.pw, func.ph, func.pw),
         strides=(func.sy, func.sx),
+        group=func.groups,
     ),
 
 
@@ -80,6 +82,7 @@ def convert_DeconvolutionND(func, opset_version, input_names,
         output_shape=func.outs,
         pads=pad,
         strides=func.stride,
+        group=func.groups,
     ),
 
 
