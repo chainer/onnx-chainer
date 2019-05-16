@@ -265,6 +265,16 @@ def convert_Squeeze(func, opset_version, input_names,
     ),
 
 
+def convert_Swapaxes(func, opset_version, input_names,
+                     num_outputs, context, parameters):
+    perm = list(range(len(func.inputs[0].shape)))
+    perm[func.axis1], perm[func.axis2] = perm[func.axis2], perm[func.axis1]
+
+    return onnx_helper.make_node(
+        'Transpose', input_names, num_outputs, perm=perm
+    ),
+
+
 @support((1, 6))
 def convert_Tile(func, opset_version, input_names, num_outputs,
                  context, parameters):
