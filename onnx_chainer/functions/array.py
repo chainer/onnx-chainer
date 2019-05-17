@@ -407,3 +407,45 @@ def convert_ResizeImages(func, opset_version, input_names, num_outputs,
         input_names.append(context.get_name(scales_param))
         return onnx_helper.make_node('Upsample', input_names, num_outputs,
                                      mode=mode),
+
+
+def convert_Stack(func, opset_version, input_names, num_outputs, context,
+                  parameters):
+    gb = onnx_helper.GraphBuilder()
+    axis = func.axis
+    if axis < 0:
+        axis = len(func.inputs[0].shape) + 1 + axis
+
+    # To use concat op, reshape every inputs add new axes
+    inputs = [gb.op('Unsqueeze', [name], axes=[axis]) for name in input_names]
+    gb.op('Concat', inputs, axis=axis)
+    return gb.nodes()
+
+
+def convert_Hstack(func, opset_version, input_names, num_outputs, context,
+                   parameters):
+    gb = onnx_helper.GraphBuilder()
+    input0_ndim = len(func.inputs[0].shape)
+    inputs = input_names
+    axis = 1
+    if input0_ndim == 0:
+        inputs = [gb.op('Unsqueeze', [name], axes=[0]) for name in input_names]
+        axis = 0
+    elif input0_ndim == 1:
+        axis = 0
+    gb.op('Concat', inputs, axis=axis)
+    return gb.nodes()
+
+
+def convert_Vstack(func, opset_version, input_names, num_outputs, context,
+                   parameters):
+    gb = onnx_helper.GraphBuilder()
+    input0_ndim = len(func.inputs[0].shape)
+    inputs = input_names
+    if input0_ndim == 0:
+        inputs = [gb.op('Unsqueeze', [name], axes=[0, 1]) for
+                  name in input_names]
+    elif input0_ndim == 1:
+        inputs = [gb.op('Unsqueeze', [name], axes=[0]) for name in input_names]
+    gb.op('Concat', inputs, axis=0)
+    return gb.nodes()

@@ -23,17 +23,20 @@ _supported_function_node_set = {
     'Depth2Space',
     'ExpandDims',
     'GetItem',
+    'Hstack',
     'Pad',
     'Repeat',
     'Reshape',
+    'ResizeImages',
     'Space2Depth',
     'SplitAxis',
     'Squeeze',
+    'Stack',
     'Swapaxes',
     'Tile',
     'Transpose',
+    'Vstack',
     'Where',
-    'ResizeImages',
 
     # Connection
     'Convolution2DFunction',
@@ -43,35 +46,44 @@ _supported_function_node_set = {
     'EmbedIDFunction',
     'LinearFunction',
 
+    # Loss
+    'SoftmaxCrossEntropy',
+
     # Math
+    'Absolute',
     'Add',
     'AddConstant',
-    'Absolute',
     'BroadcastTo',
+    'Clip',
     'Div',
+    'Exp',
+    'Identity',
+    'LinearInterpolate',
+    'LogSumExp',
+    'MatMul',
+    'Max',
+    'Maximum',
+    'Mean',
+    'Min',
+    'Minimum',
     'Mul',
     'MulConstant',
     'Neg',
     'PowVarConst',
-    'Sub',
-    'Clip',
-    'Exp',
-    'Identity',
-    'MatMul',
-    'Maximum',
-    'Minimum',
-    'Sqrt',
-    'LinearInterpolate',
-    'LogSumExp',
-    'Max',
-    'Mean',
-    'Min',
     'Prod',
-    'Sum',
+    'Sqrt',
     'Square',
+    'Sub',
+    'Sum',
 
     # Noise
     'Dropout',
+
+    # Normalization
+    'BatchNormalization',
+    'FixedBatchNormalization',
+    'LocalResponseNormalization',
+    'NormalizeL2',
 
     # Pooling
     'AveragePooling2D',
@@ -80,15 +92,6 @@ _supported_function_node_set = {
     'MaxPoolingND',
     'ROIPooling2D',
     'Unpooling2D',
-
-    # Normalization
-    'BatchNormalization',
-    'FixedBatchNormalization',
-    'LocalResponseNormalization',
-    'NormalizeL2',
-
-    # Loss
-    'SoftmaxCrossEntropy',
 }
 
 _converters = None
