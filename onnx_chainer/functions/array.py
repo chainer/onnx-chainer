@@ -416,16 +416,9 @@ def convert_Stack(func, opset_version, input_names, num_outputs, context,
     axis = func.axis
     if axis < 0:
         axis = len(func.inputs[0].shape) + 1 + axis
-    reshaped = []
-    for i, in_name in enumerate(input_names):
-        shape = [*func.inputs[i].shape]
-        shape.insert(axis, 1)
-        shape_param = chainer.Parameter(np.array(shape, dtype=np.int64))
-        parameters.append(shape_param)
-        shape_name = context.get_name(shape_param)
-        reshaped.append(gb.op('Reshape', [in_name, shape_name]))
 
-    gb.op('Concat', reshaped, axis=axis)
+    inputs = [gb.op('Unsqueeze', [name], axes=[axis]) for name in input_names]
+    gb.op('Concat', inputs, axis=axis)
     return gb.nodes()
 
 
@@ -439,8 +432,6 @@ def convert_Vstack(func, opset_version, input_names, num_outputs, context,
     gb = onnx_helper.GraphBuilder()
     inputs = input_names
     if len(func.inputs[0].shape) == 1:
-        inputs = []
-        for i, in_name in enumerate(input_names):
-            inputs.append(gb.op('Unsqueeze', [in_name], axes=[0]))
+        inputs = [gb.op('Unsqueeze', [name], axes=[0]) for name in input_names]
     gb.op('Concat', inputs, axis=0)
     return gb.nodes()
