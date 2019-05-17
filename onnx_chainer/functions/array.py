@@ -407,3 +407,33 @@ def convert_ResizeImages(func, opset_version, input_names, num_outputs,
         input_names.append(context.get_name(scales_param))
         return onnx_helper.make_node('Upsample', input_names, num_outputs,
                                      mode=mode),
+
+
+def convert_Stack(func, opset_version, input_names, num_outputs, context,
+                  parameters):
+    gb = onnx_helper.GraphBuilder()
+    # To use concat op, reshape every inputs add new axis
+    axis = func.axis
+    if axis < 0:
+        axis = len(func.inputs[0].shape) + 1 + axis
+    reshaped = []
+    for i, in_name in enumerate(input_names):
+        shape = [*func.inputs[i].shape]
+        shape.insert(axis, 1)
+        shape_param = chainer.Parameter(np.array(shape, dtype=np.int64))
+        parameters.append(shape_param)
+        shape_name = context.get_name(shape_param)
+        reshaped.append(gb.op('Reshape', [in_name, shape_name]))
+
+    gb.op('Concat', reshaped, axis=axis)
+    return gb.nodes()
+
+
+def convert_HStack(func, opset_version, input_names, num_outputs, context,
+                   parameters):
+    pass
+
+
+def convert_VStack(func, opset_version, input_names, num_outputs, context,
+                   parameters):
+    pass

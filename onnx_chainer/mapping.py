@@ -23,6 +23,7 @@ _supported_function_node_set = {
     'Depth2Space',
     'ExpandDims',
     'GetItem',
+    'HStack',
     'Pad',
     'Repeat',
     'Reshape',
@@ -30,9 +31,11 @@ _supported_function_node_set = {
     'Space2Depth',
     'SplitAxis',
     'Squeeze',
+    'Stack',
     'Swapaxes',
     'Tile',
     'Transpose',
+    'VStack',
     'Where',
 
     # Connection

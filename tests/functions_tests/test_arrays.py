@@ -268,3 +268,31 @@ class TestResizeImages(ONNXModelTest):
         with warnings.catch_warnings(record=True) as w:
             self.expect(self.model, self.x)
         assert len(w) == 1
+
+
+@testing.parameterize(
+    {'ops': 'stack', 'in_shapes': [(3, 4), (3, 4)], 'axis': 0,
+     'name': 'stack_axis0'},
+    {'ops': 'stack', 'in_shapes': [(3, 4), (3, 4)], 'axis': 1,
+     'name': 'stack_axis1'},
+    {'ops': 'stack', 'in_shapes': [(3, 4), (3, 4)], 'axis': 2,
+     'name': 'stack_axis2'},
+    {'ops': 'stack', 'in_shapes': [(3, 4), (3, 4)], 'axis': -1,
+     'name': 'stack_axis_neg'},
+)
+class TestStack(ONNXModelTest):
+
+    def test_output(self):
+
+        class Model(chainer.Chain):
+            def __init__(self, axis):
+                super(Model, self).__init__()
+                self.axis = axis
+
+            def __call__(self, *xs):
+                return F.stack(xs, axis=self.axis)
+
+        model = Model(axis=self.axis)
+        xs = [input_generator.increasing(*shape) for shape in self.in_shapes]
+
+        self.expect(model, xs, name=self.name)
