@@ -424,7 +424,10 @@ def convert_Stack(func, opset_version, input_names, num_outputs, context,
 
 def convert_Hstack(func, opset_version, input_names, num_outputs, context,
                    parameters):
-    pass
+    gb = onnx_helper.GraphBuilder()
+    axis = 0 if len(func.inputs[0].shape) == 1 else 1
+    gb.op('Concat', input_names, axis=axis)
+    return gb.nodes()
 
 
 def convert_Vstack(func, opset_version, input_names, num_outputs, context,
