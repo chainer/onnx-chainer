@@ -280,11 +280,15 @@ class TestResizeImages(ONNXModelTest):
     {'ops': 'stack', 'in_shapes': [(3, 4), (3, 4)], 'kwargs': {'axis': -1},
      'name': 'stack_axis_neg'},
 
+    {'ops': 'vstack', 'inputs': [2, 3], 'kwargs': {},
+     'name': 'vstack_ndim0'},
     {'ops': 'vstack', 'in_shapes': [(3,), (3,)], 'kwargs': {},
      'name': 'vstack_ndim1'},
     {'ops': 'vstack', 'in_shapes': [(3, 4), (2, 4)], 'kwargs': {},
      'name': 'vstack_ndim2'},
 
+    {'ops': 'hstack', 'inputs': [2, 3], 'kwargs': {},
+     'name': 'hstack_ndim0'},
     {'ops': 'hstack', 'in_shapes': [(3,), (3,)], 'kwargs': {},
      'name': 'hstack_ndim1'},
     {'ops': 'hstack', 'in_shapes': [(3, 4), (3, 2)], 'kwargs': {},
@@ -304,6 +308,10 @@ class TestStack(ONNXModelTest):
                 return self.ops(xs, **self.kwargs)
 
         model = Model(ops=self.ops, kwargs=self.kwargs)
-        xs = [input_generator.increasing(*shape) for shape in self.in_shapes]
+        if hasattr(self, 'inputs'):
+            xs = [np.array(value, dtype=np.float32) for value in self.inputs]
+        else:
+            xs = [input_generator.increasing(*shape) for
+                  shape in self.in_shapes]
 
         self.expect(model, xs, name=self.name)
