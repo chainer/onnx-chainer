@@ -16,7 +16,7 @@ from onnx_chainer.functions.array import convert_Copy  # NOQA
 from onnx_chainer.functions.array import convert_Depth2Space  # NOQA
 from onnx_chainer.functions.array import convert_ExpandDims  # NOQA
 from onnx_chainer.functions.array import convert_GetItem  # NOQA
-from onnx_chainer.functions.array import convert_HStack  # NOQA
+from onnx_chainer.functions.array import convert_Hstack  # NOQA
 from onnx_chainer.functions.array import convert_Pad  # NOQA
 from onnx_chainer.functions.array import convert_Repeat  # NOQA
 from onnx_chainer.functions.array import convert_Reshape  # NOQA
@@ -28,7 +28,7 @@ from onnx_chainer.functions.array import convert_Stack  # NOQA
 from onnx_chainer.functions.array import convert_Swapaxes  # NOQA
 from onnx_chainer.functions.array import convert_Tile  # NOQA
 from onnx_chainer.functions.array import convert_Transpose  # NOQA
-from onnx_chainer.functions.array import convert_VStack  # NOQA
+from onnx_chainer.functions.array import convert_Vstack  # NOQA
 from onnx_chainer.functions.array import convert_Where  # NOQA
 
 from onnx_chainer.functions.connection import convert_Convolution2DFunction  # NOQA

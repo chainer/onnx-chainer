@@ -271,28 +271,34 @@ class TestResizeImages(ONNXModelTest):
 
 
 @testing.parameterize(
-    {'ops': 'stack', 'in_shapes': [(3, 4), (3, 4)], 'axis': 0,
-     'name': 'stack_axis0'},
-    {'ops': 'stack', 'in_shapes': [(3, 4), (3, 4)], 'axis': 1,
+    {'ops': 'stack', 'in_shapes': [(3, 4), (3, 4)], 'kwargs': {},
+     'name': 'stack_default'},
+    {'ops': 'stack', 'in_shapes': [(3, 4), (3, 4)], 'kwargs': {'axis': 1},
      'name': 'stack_axis1'},
-    {'ops': 'stack', 'in_shapes': [(3, 4), (3, 4)], 'axis': 2,
+    {'ops': 'stack', 'in_shapes': [(3, 4), (3, 4)], 'kwargs': {'axis': 2},
      'name': 'stack_axis2'},
-    {'ops': 'stack', 'in_shapes': [(3, 4), (3, 4)], 'axis': -1,
+    {'ops': 'stack', 'in_shapes': [(3, 4), (3, 4)], 'kwargs': {'axis': -1},
      'name': 'stack_axis_neg'},
+
+    {'ops': 'vstack', 'in_shapes': [(3,), (3,)], 'kwargs': {},
+     'name': 'vstack_ndim1'},
+    {'ops': 'vstack', 'in_shapes': [(3, 4), (2, 4)], 'kwargs': {},
+     'name': 'vstack_ndim2'},
 )
 class TestStack(ONNXModelTest):
 
     def test_output(self):
 
         class Model(chainer.Chain):
-            def __init__(self, axis):
+            def __init__(self, ops, kwargs):
                 super(Model, self).__init__()
-                self.axis = axis
+                self.ops = getattr(F, ops)
+                self.kwargs = kwargs
 
             def __call__(self, *xs):
-                return F.stack(xs, axis=self.axis)
+                return self.ops(xs, **self.kwargs)
 
-        model = Model(axis=self.axis)
+        model = Model(ops=self.ops, kwargs=self.kwargs)
         xs = [input_generator.increasing(*shape) for shape in self.in_shapes]
 
         self.expect(model, xs, name=self.name)

@@ -429,11 +429,18 @@ def convert_Stack(func, opset_version, input_names, num_outputs, context,
     return gb.nodes()
 
 
-def convert_HStack(func, opset_version, input_names, num_outputs, context,
+def convert_Hstack(func, opset_version, input_names, num_outputs, context,
                    parameters):
     pass
 
 
-def convert_VStack(func, opset_version, input_names, num_outputs, context,
+def convert_Vstack(func, opset_version, input_names, num_outputs, context,
                    parameters):
-    pass
+    gb = onnx_helper.GraphBuilder()
+    inputs = input_names
+    if len(func.inputs[0].shape) == 1:
+        inputs = []
+        for i, in_name in enumerate(input_names):
+            inputs.append(gb.op('Unsqueeze', [in_name], axes=[0]))
+    gb.op('Concat', inputs, axis=0)
+    return gb.nodes()
