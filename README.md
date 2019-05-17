@@ -5,7 +5,6 @@
 [![codecov](https://codecov.io/gh/chainer/onnx-chainer/branch/master/graph/badge.svg)](https://codecov.io/gh/chainer/onnx-chainer)
 
 This is an add-on package for ONNX support by Chainer.
-ONNX-Chainer supports opset version <= 7.
 
 ## Tested environment
 
