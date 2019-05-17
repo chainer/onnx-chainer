@@ -412,11 +412,11 @@ def convert_ResizeImages(func, opset_version, input_names, num_outputs,
 def convert_Stack(func, opset_version, input_names, num_outputs, context,
                   parameters):
     gb = onnx_helper.GraphBuilder()
-    # To use concat op, reshape every inputs add new axis
     axis = func.axis
     if axis < 0:
         axis = len(func.inputs[0].shape) + 1 + axis
 
+    # To use concat op, reshape every inputs add new axis
     inputs = [gb.op('Unsqueeze', [name], axes=[axis]) for name in input_names]
     gb.op('Concat', inputs, axis=axis)
     return gb.nodes()
