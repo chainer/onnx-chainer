@@ -449,3 +449,20 @@ def convert_Vstack(func, opset_version, input_names, num_outputs, context,
         inputs = [gb.op('Unsqueeze', [name], axes=[0]) for name in input_names]
     gb.op('Concat', inputs, axis=0)
     return gb.nodes()
+
+
+def convert_Dstack(func, opset_version, input_names, num_outputs, context,
+                   parameters):
+    gb = onnx_helper.GraphBuilder()
+    input0_ndim = len(func.inputs[0].shape)
+    inputs = input_names
+    if input0_ndim == 0:
+        inputs = [gb.op('Unsqueeze', [name], axes=[0, 1, 2]) for
+                  name in input_names]
+    elif input0_ndim == 1:
+        inputs = [gb.op('Unsqueeze', [name], axes=[0, 2]) for
+                  name in input_names]
+    elif input0_ndim == 2:
+        inputs = [gb.op('Unsqueeze', [name], axes=[2]) for name in input_names]
+    gb.op('Concat', inputs, axis=2)
+    return gb.nodes()
