@@ -293,6 +293,15 @@ class TestResizeImages(ONNXModelTest):
      'name': 'hstack_ndim1'},
     {'ops': 'hstack', 'in_shapes': [(3, 4), (3, 2)], 'kwargs': {},
      'name': 'hstack_ndim2'},
+
+    {'ops': 'dstack', 'inputs': [2, 3], 'kwargs': {},
+     'name': 'dstack_ndim0'},
+    {'ops': 'dstack', 'in_shapes': [(3,), (3,)], 'kwargs': {},
+     'name': 'dstack_ndim1'},
+    {'ops': 'dstack', 'in_shapes': [(3, 2), (3, 2)], 'kwargs': {},
+     'name': 'dstack_ndim2'},
+    {'ops': 'dstack', 'in_shapes': [(3, 2, 2), (3, 2, 1)], 'kwargs': {},
+     'name': 'dstack_ndim3'},
 )
 class TestStack(ONNXModelTest):
 
