@@ -74,7 +74,7 @@ onnx_chainer.export(model, x, filename='vgg16.onnx')
 
 ## Supported Functions
 
-Currently 59 Chainer Functions are supported to export in ONNX format.
+Currently 75 Chainer Functions are supported to export in ONNX format.
 
 ### Activation
 
@@ -96,6 +96,7 @@ Currently 59 Chainer Functions are supported to export in ONNX format.
 - Concat
 - Copy
 - Depth2Space
+- Dstack
 - ExpandDims
 - GetItem
 - Hstack
