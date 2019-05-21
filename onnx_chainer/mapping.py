@@ -21,6 +21,7 @@ _supported_function_node_set = {
     'Concat',
     'Copy',
     'Depth2Space',
+    'Dstack',
     'ExpandDims',
     'GetItem',
     'Hstack',
