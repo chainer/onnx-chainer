@@ -47,8 +47,9 @@ class FunctionConverter(object):
         func = params.func
         opset_version = params.opset_version
         input_names = params.input_names
-        num_outputs = len(params.output_names)
+        output_names = params.output_names
         context = params.context
         parameters = params.parameters
         return self.converter(
-            func, opset_version, input_names, num_outputs, context, parameters)
+            func, opset_version, input_names, output_names, context,
+            parameters)

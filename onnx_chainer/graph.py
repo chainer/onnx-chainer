@@ -71,10 +71,7 @@ class Graph(object):
             func, self.specified_opset_version, input_names, output_names,
             self.context, parameters)
         nodes = converter(params)
-        nodes = list(reversed(nodes))
-        assert len(nodes[0].output) == len(output_names)
-        nodes[0].output[:] = output_names
-        return nodes
+        return list(reversed(nodes))
 
     def convert_to_onnx_node(self, function):
         if isinstance(function, chainer.function.FunctionAdapter):

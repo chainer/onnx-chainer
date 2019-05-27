@@ -3,14 +3,14 @@ import warnings
 import chainer
 from chainer.utils import conv
 import numpy as np
+import onnx
 
 from onnx_chainer.functions.opset_version import support
-from onnx_chainer import onnx_helper
 
 
 @support((1, 7))
 def convert_AveragePooling2D(func, opset_version, input_names,
-                             num_outputs, context, parameters):
+                             output_names, context, parameters):
     pad = [func.ph, func.pw]
     stride = [func.sy, func.sx]
     ksize = [func.kh, func.kw]
@@ -31,8 +31,8 @@ def convert_AveragePooling2D(func, opset_version, input_names,
             'AveragePooling2D is not compatible with ONNX\'s AveragePool-1. '
             'Use operation set version >= 7.')
     elif opset_version == 7:
-        return onnx_helper.make_node(
-            'AveragePool', input_names, num_outputs,
+        return onnx.helper.make_node(
+            'AveragePool', input_names, output_names,
             kernel_shape=ksize,
             pads=pad,
             strides=stride,
@@ -42,7 +42,7 @@ def convert_AveragePooling2D(func, opset_version, input_names,
 
 @support((1, 7))
 def convert_AveragePoolingND(func, opset_version, input_names,
-                             num_outputs, context, parameters):
+                             output_names, context, parameters):
     pad = list(func.pad[:])
     if func.cover_all:
         # Supports cover_all by setting extra padding
@@ -63,8 +63,8 @@ def convert_AveragePoolingND(func, opset_version, input_names,
             'AveragePoolingND is not compatible with ONNX\'s AveragePool-1. '
             'Use operation set version >= 7.')
     elif opset_version == 7:
-        return onnx_helper.make_node(
-            'AveragePool', input_names, num_outputs,
+        return onnx.helper.make_node(
+            'AveragePool', input_names, output_names,
             kernel_shape=func.ksize,
             pads=pad,
             strides=func.stride,
@@ -74,7 +74,7 @@ def convert_AveragePoolingND(func, opset_version, input_names,
 
 @support((1, 8))
 def convert_MaxPooling2D(func, opset_version, input_names,
-                         num_outputs, context, parameters):
+                         output_names, context, parameters):
     pad = [func.ph, func.pw]
     stride = [func.sy, func.sx]
     ksize = [func.kh, func.kw]
@@ -91,15 +91,15 @@ def convert_MaxPooling2D(func, opset_version, input_names,
         pad = pad * 2
 
     if opset_version == 1:
-        return onnx_helper.make_node(
-            'MaxPool', input_names, num_outputs,
+        return onnx.helper.make_node(
+            'MaxPool', input_names, output_names,
             kernel_shape=ksize,
             pads=pad,
             strides=stride
         ),
     elif opset_version == 8:
-        return onnx_helper.make_node(
-            'MaxPool', input_names, num_outputs,
+        return onnx.helper.make_node(
+            'MaxPool', input_names, output_names,
             kernel_shape=ksize,
             pads=pad,
             strides=stride,
@@ -109,7 +109,7 @@ def convert_MaxPooling2D(func, opset_version, input_names,
 
 @support((1, 8))
 def convert_MaxPoolingND(func, opset_version, input_names,
-                         num_outputs, context, parameters):
+                         output_names, context, parameters):
     pad = list(func.pad[:])
     if func.cover_all:
         # Supports cover_all by setting extra padding
@@ -126,15 +126,15 @@ def convert_MaxPoolingND(func, opset_version, input_names,
         pad = pad * 2
 
     if opset_version == 1:
-        return onnx_helper.make_node(
-            'MaxPool', input_names, num_outputs,
+        return onnx.helper.make_node(
+            'MaxPool', input_names, output_names,
             kernel_shape=func.ksize,
             pads=pad,
             strides=func.stride
         ),
     elif opset_version == 8:
-        return onnx_helper.make_node(
-            'MaxPool', input_names, num_outputs,
+        return onnx.helper.make_node(
+            'MaxPool', input_names, output_names,
             kernel_shape=func.ksize,
             pads=pad,
             strides=func.stride,
@@ -143,21 +143,21 @@ def convert_MaxPoolingND(func, opset_version, input_names,
 
 
 def convert_ROIPooling2D(func, opset_version, input_names,
-                         num_outputs, context, parameters):
+                         output_names, context, parameters):
     warnings.warn(
         'It\'s possible that output does not match with Chainer, please check '
         'each runtime\'s implementation. For example, when input x has '
         'negative values, some runtimes set max(output, 0) unlike Chainer.',
         UserWarning)
-    return onnx_helper.make_node(
-        'MaxRoiPool', input_names, num_outputs,
+    return onnx.helper.make_node(
+        'MaxRoiPool', input_names, output_names,
         pooled_shape=[func.outh, func.outw],
         spatial_scale=func.spatial_scale,
     ),
 
 
 @support((7, 9))
-def convert_Unpooling2D(func, opset_version, input_names, num_outputs,
+def convert_Unpooling2D(func, opset_version, input_names, output_names,
                         context, parameters):
     pad = [func.ph, func.pw]
     stride = [func.sy, func.sx]
@@ -188,11 +188,11 @@ def convert_Unpooling2D(func, opset_version, input_names, num_outputs,
                                stride, ksize))
     scales = [1.0, 1.0, float(func.kh), float(func.kw)]
     if opset_version == 7:
-        return onnx_helper.make_node('Upsample', input_names, num_outputs,
+        return onnx.helper.make_node('Upsample', input_names, output_names,
                                      scales=scales),
     if opset_version == 9:
         scales = np.array(scales, dtype=np.float32)
         scales_param = chainer.Parameter(scales)
         parameters.append(scales_param)
         input_names.append(context.get_name(scales_param))
-        return onnx_helper.make_node('Upsample', input_names, num_outputs),
+        return onnx.helper.make_node('Upsample', input_names, output_names),
