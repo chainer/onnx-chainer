@@ -161,6 +161,12 @@ from tests.helper import ONNXModelTest
     {'ops': 'repeat', 'input_shape': (2, 3),
      'input_argname': 'x', 'args': {'repeats': 2},
      'name': 'repeat_default_axis'},
+
+    # separate
+    {'ops': 'separate', 'input_shape': (2, 3),
+     'input_argname': 'x', 'args': {}, 'name': 'separate_axis0'},
+    {'ops': 'separate', 'input_shape': (2, 3),
+     'input_argname': 'x', 'args': {'axis': 1}, 'name': 'separate_axis1'},
 )
 class TestArrayOperators(ONNXModelTest):
 
