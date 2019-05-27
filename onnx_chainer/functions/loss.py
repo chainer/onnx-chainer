@@ -8,7 +8,7 @@ from onnx_chainer import onnx_helper
 @support((9,))
 def convert_SoftmaxCrossEntropy(
         func, opset_version, input_names,
-        num_outputs, context, parameters):
+        output_names, context, parameters):
     # obtain input variable
     if not isinstance(func, chainer.FunctionNode):
         raise NotImplementedError(
@@ -41,4 +41,4 @@ def convert_SoftmaxCrossEntropy(
     sr = gb.op('ReduceSum', [sn], axes=[1], keepdims=0)
     gb.op('ReduceMean', [sr], axes=[0], keepdims=0)
 
-    return gb.nodes()
+    return gb.nodes(output_names=output_names)

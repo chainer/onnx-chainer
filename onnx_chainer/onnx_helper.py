@@ -88,13 +88,16 @@ class GraphBuilder(object):
         tensor = onnx.numpy_helper.from_array(array)
         return self.op('Constant', [], 1, value=tensor)
 
-    def nodes(self):
+    def nodes(self, output_names=None):
         """Returns all nodes created so far.
 
         Returns:
           A list of `onnx.NodeProto` objects, suitable as the return
           value of converter functions.
         """
+        if output_names is not None:
+            assert len(self._nodes[-1].output) == len(output_names)
+            self._nodes[-1].output[:] = output_names
         return tuple(self._nodes)
 
 
