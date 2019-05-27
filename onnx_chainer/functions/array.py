@@ -467,3 +467,15 @@ def convert_Dstack(func, opset_version, input_names, output_names, context,
         inputs = [gb.op('Unsqueeze', [name], axes=[2]) for name in input_names]
     gb.op_output_named('Concat', inputs, output_names, axis=2)
     return gb.nodes()
+
+
+def convert_Separate(func, opset_version, input_names, output_names, context,
+                     parameters):
+    gb = onnx_helper.GraphBuilder()
+    print(output_names)
+    split_outs = gb.op(
+        'Split', input_names, num_outputs=len(output_names), axis=func.axis)
+    for i, node_name in enumerate(split_outs):
+        gb.op_output_named(
+            'Squeeze', [node_name], [output_names[i]], axes=[func.axis])
+    return gb.nodes()
