@@ -27,26 +27,6 @@ def gensym():
     return 'tmp{}_{}'.format(__func_name, __func_to_id[__func_name])
 
 
-def make_node(op_name, input_names, num_outputs, **kwargs):
-    """A thin wrapper of `onnx.helper.make_node`.
-
-    Unlike `onnx.helper.make_node`, this function takes the number of
-    output values instead of the names of them. Unique names will be
-    assigned automatically.
-
-    Args:
-      op_name (str): The name of an ONNX op.
-      input_names (list of str): The names of input values.
-      num_outputs (int): The number of output values.
-      **kwargs (dict): ONNX attributes of the node.
-
-    Returns:
-      An `onnx.NodeProto` object.
-    """
-    output_names = [gensym() for i in range(num_outputs)]
-    return onnx.helper.make_node(op_name, input_names, output_names, **kwargs)
-
-
 class GraphBuilder(object):
     """A helper class to build consecutive ONNX nodes."""
 
@@ -66,12 +46,31 @@ class GraphBuilder(object):
           A str of the output name when `num_outputs` is 1.
           A tuple of str of the output names otherwise.
         """
+        output_names = [gensym() for i in range(num_outputs)]
+        return self.op_output_named(
+            op_name, input_names, output_names, **kwargs)
+
+    def op_output_named(
+            self, op_name, input_names, output_names, **kwargs):
+        """Creates a new ONNX node with output names, and returns its outputs.
+
+        Args:
+          op_name (str): The name of an ONNX op.
+          input_names (list of str): The names of input values.
+          output_names (int of str): The names of output values.
+          **kwargs (dict): ONNX attributes of the node.
+
+        Returns:
+          A str of the output name when number of output is 1.
+          A tuple of str of the output names otherwise.
+        """
         # Prevent a common mistake. `input_names="input"` creates a
         # node with 5 inputs.
         assert not isinstance(input_names, str)
-        node = make_node(op_name, input_names, num_outputs, **kwargs)
+        node = onnx.helper.make_node(
+            op_name, input_names, output_names, **kwargs)
         self._nodes.append(node)
-        if num_outputs == 1:
+        if len(output_names) == 1:
             return node.output[0]
         else:
             return tuple(node.output)
@@ -90,6 +89,10 @@ class GraphBuilder(object):
 
     def nodes(self, output_names=None):
         """Returns all nodes created so far.
+
+        Args:
+          output_names (list of str): The names of output values to be set at
+            the last node.
 
         Returns:
           A list of `onnx.NodeProto` objects, suitable as the return

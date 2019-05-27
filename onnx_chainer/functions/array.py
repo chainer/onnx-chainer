@@ -353,16 +353,16 @@ def convert_Repeat(func, opset_version, input_names, output_names, context,
         scales[axis] = float(repeats[0])
 
     if opset_version == 7:
-        gb.op('Upsample', inputs, scales=scales)
-        return gb.nodes(output_names=output_names)
+        gb.op_output_named('Upsample', inputs, output_names, scales=scales)
+        return gb.nodes()
 
     if opset_version == 9:
         scales = np.array(scales, dtype=np.float32)
         scales_param = chainer.Parameter(scales)
         parameters.append(scales_param)
         inputs.append(context.get_name(scales_param))
-        gb.op('Upsample', inputs)
-        return gb.nodes(output_names=output_names)
+        gb.op_output_named('Upsample', inputs, output_names)
+        return gb.nodes()
 
 
 # NOTE(syoyo): `Upsampling` is deprecated in ONNX opset 10.
@@ -419,8 +419,8 @@ def convert_Stack(func, opset_version, input_names, output_names, context,
 
     # To use concat op, reshape every inputs add new axes
     inputs = [gb.op('Unsqueeze', [name], axes=[axis]) for name in input_names]
-    gb.op('Concat', inputs, axis=axis)
-    return gb.nodes(output_names=output_names)
+    gb.op_output_named('Concat', inputs, output_names, axis=axis)
+    return gb.nodes()
 
 
 def convert_Hstack(func, opset_version, input_names, output_names, context,
@@ -434,8 +434,8 @@ def convert_Hstack(func, opset_version, input_names, output_names, context,
         axis = 0
     elif input0_ndim == 1:
         axis = 0
-    gb.op('Concat', inputs, axis=axis)
-    return gb.nodes(output_names=output_names)
+    gb.op_output_named('Concat', inputs, output_names, axis=axis)
+    return gb.nodes()
 
 
 def convert_Vstack(func, opset_version, input_names, output_names, context,
@@ -448,8 +448,8 @@ def convert_Vstack(func, opset_version, input_names, output_names, context,
                   name in input_names]
     elif input0_ndim == 1:
         inputs = [gb.op('Unsqueeze', [name], axes=[0]) for name in input_names]
-    gb.op('Concat', inputs, axis=0)
-    return gb.nodes(output_names=output_names)
+    gb.op_output_named('Concat', inputs, output_names, axis=0)
+    return gb.nodes()
 
 
 def convert_Dstack(func, opset_version, input_names, output_names, context,
@@ -465,5 +465,5 @@ def convert_Dstack(func, opset_version, input_names, output_names, context,
                   name in input_names]
     elif input0_ndim == 2:
         inputs = [gb.op('Unsqueeze', [name], axes=[2]) for name in input_names]
-    gb.op('Concat', inputs, axis=2)
-    return gb.nodes(output_names=output_names)
+    gb.op_output_named('Concat', inputs, output_names, axis=2)
+    return gb.nodes()

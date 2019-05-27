@@ -265,9 +265,9 @@ def convert_LinearInterpolate(func, opset_version, input_names,
     n1 = gb.op('Sub', [context.get_name(one), p], **kwargs, **kwargs2)
     n2 = gb.op('Mul', [p, x], **kwargs)
     n3 = gb.op('Mul', [n1, y], **kwargs)
-    gb.op('Add', [n2, n3], **kwargs)
+    gb.op_output_named('Add', [n2, n3], output_names, **kwargs)
 
-    return gb.nodes(output_names=output_names)
+    return gb.nodes()
 
 
 @support((1, 6, 7))

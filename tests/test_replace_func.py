@@ -61,8 +61,9 @@ class TestReplaceNumpyFullToConstantOfShape(ONNXModelTest):
             output = gb.op('Shape', params.input_names)
             value = onnx.helper.make_tensor(
                 'value', onnx.TensorProto.FLOAT, [1], [params.func.value])
-            gb.op('ConstantOfShape', [output], value=value)
-            return gb.nodes(output_names=params.output_names)
+            gb.op_output_named(
+                'ConstantOfShape', [output], params.output_names, value=value)
+            return gb.nodes()
 
         addon_converters = {'NumpyFull': numpy_full_converter}
 
