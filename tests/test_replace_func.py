@@ -62,7 +62,7 @@ class TestReplaceNumpyFullToConstantOfShape(ONNXModelTest):
             value = onnx.helper.make_tensor(
                 'value', onnx.TensorProto.FLOAT, [1], [params.func.value])
             gb.op('ConstantOfShape', [output], value=value)
-            return gb.nodes()
+            return gb.nodes(output_names=params.output_names)
 
         addon_converters = {'NumpyFull': numpy_full_converter}
 
@@ -179,8 +179,8 @@ def test_replace_func_collection_return(tmpdir, return_type):
         model.tiled_array = fake_as_funcnode(model.tiled_array, 'xTiledArray')
 
     def tiled_array_converter(params):
-        return onnx_helper.make_node(
-            'xTiledArray', params.input_names, len(params.output_names)),
+        return onnx.helper.make_node(
+            'xTiledArray', params.input_names, params.output_names),
 
     addon_converters = {'xTiledArray': tiled_array_converter}
 
