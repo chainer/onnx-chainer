@@ -71,7 +71,7 @@ class Graph(object):
             func, self.specified_opset_version, input_names, output_names,
             self.context, parameters)
         nodes = converter(params)
-        return list(reversed(nodes))
+        return list(nodes)
 
     def convert_to_onnx_node(self, function):
         if isinstance(function, chainer.function.FunctionAdapter):
@@ -133,7 +133,8 @@ class Graph(object):
             base_node_name = '{}_{}'.format(
                 func_name, func_name_counts[func_name])
             func_name_counts[func_name] += 1
-            for num, node in enumerate(reversed(nodes)):
+
+            for num, node in enumerate(nodes):
                 if len(nodes) > 1 and num != len(nodes)-1:
                     node_name = '{}_tmp_{}'.format(base_node_name, num)
                 else:
