@@ -74,7 +74,7 @@ onnx_chainer.export(model, x, filename='vgg16.onnx')
 
 ## Supported Functions
 
-Currently 75 Chainer Functions are supported to export in ONNX format.
+Currently 76 Chainer Functions are supported to export in ONNX format.
 
 ### Activation
 
@@ -104,6 +104,7 @@ Currently 75 Chainer Functions are supported to export in ONNX format.
 - Repeat
 - Reshape
 - ResizeImages
+- Separate
 - Space2Depth
 - SplitAxis
 - Squeeze
