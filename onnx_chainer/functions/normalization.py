@@ -2,9 +2,9 @@ import sys
 
 import chainer
 import numpy as np
-import onnx
 
 from onnx_chainer.functions.opset_version import support
+from onnx_chainer import onnx_helper
 
 
 @support((1, 6, 7))
@@ -44,7 +44,7 @@ def convert_BatchNormalization(func, opset_version, input_names,
     # must make 5 values for output and return them.
 
     if opset_version == 1:
-        return onnx.helper.make_node(
+        return onnx_helper.make_node(
             'BatchNormalization', input_names, output_names,
             epsilon=func.eps,
             momentum=momentum,
@@ -52,14 +52,14 @@ def convert_BatchNormalization(func, opset_version, input_names,
             consumed_inputs=[False, False, False, True, True],
         ),
     elif opset_version == 6:
-        return onnx.helper.make_node(
+        return onnx_helper.make_node(
             'BatchNormalization', input_names, output_names,
             epsilon=func.eps,
             momentum=momentum,
             is_test=not chainer.config.train,
         ),
     elif opset_version == 7:
-        return onnx.helper.make_node(
+        return onnx_helper.make_node(
             'BatchNormalization', input_names, output_names,
             epsilon=func.eps,
             momentum=momentum,
@@ -78,7 +78,7 @@ def convert_LocalResponseNormalization(func, opset_version,
                                        input_names, output_names, context,
                                        parameters):
     size = int(func.n)
-    return onnx.helper.make_node(
+    return onnx_helper.make_node(
         'LRN', input_names, output_names,
         alpha=float(func.alpha) * size,
         beta=float(func.beta),
@@ -100,7 +100,7 @@ def convert_NormalizeL2(func, opset_version, input_names,
             ' so that ONNX-Chainer does not accept custom values for \'eps\' '
             '({})'.format(func.eps))
 
-    return onnx.helper.make_node(
+    return onnx_helper.make_node(
         'LpNormalization', input_names, output_names,
         axis=int(func.axis[0]),
         p=2,

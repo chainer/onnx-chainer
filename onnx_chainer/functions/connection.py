@@ -1,15 +1,15 @@
 import chainer
 import numpy as np
-import onnx
 
 from onnx_chainer.functions.opset_version import support
+from onnx_chainer import onnx_helper
 
 
 def convert_Convolution2DFunction(func, opset_version,
                                   input_names, output_names, context,
                                   parameters):
     if hasattr(func, 'dy') and hasattr(func, 'dx'):
-        node = onnx.helper.make_node(
+        node = onnx_helper.make_node(
             'Conv', input_names, output_names,
             dilations=(func.dy, func.dx),
             kernel_shape=func.inputs[1].shape[2:],
@@ -19,7 +19,7 @@ def convert_Convolution2DFunction(func, opset_version,
             group=func.groups,
         )
     else:
-        node = onnx.helper.make_node(
+        node = onnx_helper.make_node(
             'Conv', input_names, output_names,
             dilations=(1, 1),
             kernel_shape=func.inputs[1].shape[2:],
@@ -42,7 +42,7 @@ def convert_ConvolutionND(func, opset_version, input_names,
         pad.append(p)
     pad = pad * 2
 
-    return onnx.helper.make_node(
+    return onnx_helper.make_node(
         'Conv', input_names, output_names,
         kernel_shape=func.inputs[1].shape[2:],
         pads=pad,
@@ -54,7 +54,7 @@ def convert_ConvolutionND(func, opset_version, input_names,
 def convert_Deconvolution2DFunction(func, opset_version,
                                     input_names, output_names, context,
                                     parameters):
-    return onnx.helper.make_node(
+    return onnx_helper.make_node(
         'ConvTranspose', input_names, output_names,
         kernel_shape=func.inputs[1].shape[2:],
         output_shape=(func.outh, func.outw),
@@ -76,7 +76,7 @@ def convert_DeconvolutionND(func, opset_version, input_names,
         pad.append(p)
     pad = pad * 2
 
-    return onnx.helper.make_node(
+    return onnx_helper.make_node(
         'ConvTranspose', input_names, output_names,
         kernel_shape=func.inputs[1].shape[2:],
         output_shape=func.outs,
@@ -95,7 +95,7 @@ def convert_EmbedIDFunction(func, opset_version, input_names,
         raise ValueError(
             'Current ONNX doesn\'t support ignore_label for EmbedID.')
 
-    return onnx.helper.make_node(
+    return onnx_helper.make_node(
         'Gather', input_names, output_names, axis=0),
 
 
@@ -111,10 +111,10 @@ def convert_LinearFunction(func, opset_version, input_names,
         input_names.append(context.get_name(bias_param))
 
     if opset_version == 1 or opset_version == 6:
-        return onnx.helper.make_node(
+        return onnx_helper.make_node(
             'Gemm', input_names, output_names,
             alpha=1.0, beta=1.0, broadcast=1, transA=0, transB=1),
     elif opset_version == 7:
-        return onnx.helper.make_node(
+        return onnx_helper.make_node(
             'Gemm', input_names, output_names,
             alpha=1.0, beta=1.0, transA=0, transB=1),

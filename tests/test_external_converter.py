@@ -19,7 +19,7 @@ def test_export_external_converters_overwrite(tmpdir):
     x = input_generator.positive_increasing(2, 5)
 
     def custom_converter(params):
-        return onnx.helper.make_node(
+        return onnx_helper.make_node(
             'Tanh', params.input_names, params.output_names),
 
     addon_converters = {'Sigmoid': custom_converter}
@@ -54,7 +54,7 @@ def test_export_external_converters_custom_op(tmpdir, domain, version):
     x = input_generator.increasing(2, 5)
 
     def custom_converter(params):
-        return onnx.helper.make_node(
+        return onnx_helper.make_node(
             'Dummy', params.input_names, params.output_names, domain=domain),
 
     addon_converters = {'Dummy': custom_converter}
