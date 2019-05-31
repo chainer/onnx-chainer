@@ -13,9 +13,17 @@ from tests.helper import ONNXModelTest
     {'name': 'hard_sigmoid'},
     {'name': 'leaky_relu'},
     {'name': 'log_softmax'},
+    {'name': 'log_softmax',
+     'args': {'axis': 0}},
+    {'name': 'log_softmax',
+     'args': {'axis': 2}},
     {'name': 'relu'},
     {'name': 'sigmoid'},
     {'name': 'softmax'},
+    {'name': 'softmax',
+     'args': {'axis': 0}},
+    {'name': 'softmax',
+     'args': {'axis': 2}},
     {'name': 'softplus'},
     {'name': 'tanh'},
 )
@@ -25,16 +33,20 @@ class TestActivations(ONNXModelTest):
 
         class Model(chainer.Chain):
 
-            def __init__(self, ops):
+            def __init__(self, ops, args):
                 super(Model, self).__init__()
                 self.ops = ops
+                self.args = args
 
             def __call__(self, x):
-                return self.ops(x)
+                return self.ops(x, **self.args)
 
         ops = getattr(F, self.name)
-        self.model = Model(ops)
-        self.x = input_generator.increasing(2, 5)
+        args = {}
+        if hasattr(self, 'args'):
+            args = self.args
+        self.model = Model(ops, args)
+        self.x = input_generator.increasing(2, 5, 3)
 
     def test_output(self):
         self.expect(self.model, self.x, self.name)
