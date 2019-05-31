@@ -25,7 +25,7 @@ def get_func_name():
 def make_node(*args, **kwargs):
     """A thin wrapper of `onnx.helper.make_node`.
 
-    Node name assigned automatically.
+    Node name will be assigned automatically.
 
     Args:
       *args (tuple): ONNX node parameters of the node

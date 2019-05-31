@@ -107,7 +107,9 @@ class Graph(object):
                     var = output_ref()
             output_name = self.context.get_name(var)
 
-            # change more understandable name
+            # The context sets unique names on node and param, like "v1".
+            # To be more understandable, change the names like function name
+            # + number like "FuncitionName_0"
             if not self.context.is_pinned(var):
                 if len(function.outputs) == 1:
                     new_name = base_func_name
