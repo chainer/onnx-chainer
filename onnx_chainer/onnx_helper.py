@@ -1,9 +1,7 @@
-import collections
 import onnx
 
 
-__func_name = None
-__func_to_id = collections.defaultdict(int)
+__func_name = None  # not care the name is unique on whole graph
 
 
 def set_func_name(func_name):
@@ -16,15 +14,26 @@ def set_func_name(func_name):
     __func_name = func_name
 
 
-def gensym():
-    """Returns a unique symbol.
+def get_func_name():
+    """Return processing function name
 
-    Returns:
-      A unique string symbol.
     """
     assert __func_name is not None
-    __func_to_id[__func_name] += 1
-    return 'tmp{}_{}'.format(__func_name, __func_to_id[__func_name])
+    return __func_name
+
+
+def make_node(*args, **kwargs):
+    """A thin wrapper of `onnx.helper.make_node`.
+
+    Node name will be assigned automatically.
+
+    Args:
+      *args (tuple): ONNX node parameters of the node
+      **kwargs (dict): ONNX attributes of the node.
+    Returns:
+      An `onnx.NodeProto` object.
+    """
+    return onnx.helper.make_node(*args, name=get_func_name(), **kwargs)
 
 
 class GraphBuilder(object):
@@ -32,6 +41,10 @@ class GraphBuilder(object):
 
     def __init__(self):
         self._nodes = []
+        self._func_name = get_func_name()
+
+    def node_name(self):
+        return '{}_tmp_{}'.format(self._func_name, len(self._nodes))
 
     def op(self, op_name, input_names, num_outputs=1, **kwargs):
         """Creates a new ONNX node and returns its outputs.
@@ -46,7 +59,11 @@ class GraphBuilder(object):
           A str of the output name when `num_outputs` is 1.
           A tuple of str of the output names otherwise.
         """
-        output_names = [gensym() for i in range(num_outputs)]
+        if num_outputs == 1:
+            output_names = [self.node_name()]
+        else:
+            output_names = ['{}_{}'.format(self.node_name(), i) for
+                            i in range(num_outputs)]
         return self.op_output_named(
             op_name, input_names, output_names, **kwargs)
 
@@ -68,7 +85,8 @@ class GraphBuilder(object):
         # node with 5 inputs.
         assert not isinstance(input_names, str)
         node = onnx.helper.make_node(
-            op_name, input_names, output_names, **kwargs)
+            op_name, input_names, output_names, name=self.node_name(),
+            **kwargs)
         self._nodes.append(node)
         if len(output_names) == 1:
             return node.output[0]

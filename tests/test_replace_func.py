@@ -180,7 +180,7 @@ def test_replace_func_collection_return(tmpdir, return_type):
         model.tiled_array = fake_as_funcnode(model.tiled_array, 'xTiledArray')
 
     def tiled_array_converter(params):
-        return onnx.helper.make_node(
+        return onnx_helper.make_node(
             'xTiledArray', params.input_names, params.output_names),
 
     addon_converters = {'xTiledArray': tiled_array_converter}
