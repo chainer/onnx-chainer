@@ -14,16 +14,16 @@ from tests.helper import ONNXModelTest
     {'name': 'leaky_relu'},
     {'name': 'log_softmax'},
     {'name': 'log_softmax',
-     'args': {'axis': 0}},
+     'args': {'axis': 0}, 'test_name': 'log_softmax_axis0'},
     {'name': 'log_softmax',
-     'args': {'axis': 2}},
+     'args': {'axis': 2}, 'test_name': 'log_softmax_axis2'},
     {'name': 'relu'},
     {'name': 'sigmoid'},
     {'name': 'softmax'},
     {'name': 'softmax',
-     'args': {'axis': 0}},
+     'args': {'axis': 0}, 'test_name': 'softmax_axis0'},
     {'name': 'softmax',
-     'args': {'axis': 2}},
+     'args': {'axis': 2}, 'test_name': 'softmax_axis2'},
     {'name': 'softplus'},
     {'name': 'tanh'},
 )
@@ -49,7 +49,8 @@ class TestActivations(ONNXModelTest):
         self.x = input_generator.increasing(2, 5, 3)
 
     def test_output(self):
-        self.expect(self.model, self.x, self.name)
+        test_name = getattr(self, 'test_name', self.name)
+        self.expect(self.model, self.x, test_name)
 
 
 class TestPReLU(ONNXModelTest):
