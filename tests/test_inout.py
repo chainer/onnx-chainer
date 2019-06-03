@@ -4,6 +4,7 @@ import chainer.links as L
 from chainer import testing
 import numpy as np
 import unittest
+import warnings
 
 from onnx_chainer import export
 from onnx_chainer.testing import input_generator
@@ -212,3 +213,33 @@ class TestOutputTypeCheck(unittest.TestCase):
             with self.assertRaises(ValueError) as e:
                 export(model, (x,))
             assert 'must be Chainer Variable'.find(e.exception.args[0])
+
+
+class TestUnusedLink(ONNXModelTest):
+
+    # When some links are under init scope but not used on forwarding, params
+    # of the links are not initialized. This means exporter cannot convert them
+    # to ONNX's tensor because of lack of shape etc.
+
+    def test_outputs(self):
+        class MLP(chainer.Chain):
+            def __init__(self, n_units, n_out):
+                super(MLP, self).__init__()
+                with self.init_scope():
+                    self.l1 = L.Linear(None, n_units)
+                    self.l2 = L.Linear(None, n_units)
+                    self.l3 = L.Linear(None, n_out)
+
+            def __call__(self, x):
+                h1 = F.relu(self.l1(x))
+                # Unused for some reason, then params are not initialized.
+                # h2 = F.relu(self.l2(h1))
+                return self.l3(h1)
+
+        model = MLP(100, 10)
+        x = np.random.rand(1, 768).astype(np.float32)
+
+        with warnings.catch_warnings(record=True) as w:
+            self.expect(model, x)
+            assert len(w) == 1
+            assert '/l2/W' in str(w[-1].message)
