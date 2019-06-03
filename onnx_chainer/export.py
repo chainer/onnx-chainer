@@ -239,7 +239,14 @@ def _export(model, args, filename, export_params, graph_name, save_text,
     initializers = []
     input_tensors = []
     param_names = set()
-    for param in model.params():
+    for org_name, param in model.namedparams():
+        # `model.namedparams()` has `include_uninit` flag but not use, to
+        # output user warning
+        if param.array is None:
+            warnings.warn(
+                'The parameter \'{}\' is not initialized, skip setting to '
+                'ONNX graph'.format(org_name))
+            continue
         name = context.get_name(param)
         param_names.add(name)
         tensor = convert_parameter(param, context)
