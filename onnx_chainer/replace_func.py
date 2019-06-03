@@ -40,11 +40,6 @@ class WrappedFunctionNode(chainer.FunctionNode):
                 'must consist only array, function name: {}'.format(self.name))
         return dummy_results
 
-    def backward(self, indexes, gys):
-        xp = chainer.backend.get_array_module(self.xs[0])
-        ret = tuple(chainer.Variable(xp.zeros_like(x)) for x in self.xs)
-        return ret
-
 
 def fake_as_funcnode(alt_func, name, rename_attributes=None):
     """The target function fakes FunctionNode
