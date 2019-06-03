@@ -50,6 +50,11 @@ from tests.helper import ONNXModelTest
               'mode': 'constant',
               'constant_values': -1},
      'name': 'pad_with_constant_values'},
+    {'ops': 'pad', 'input_shape': (1, 2, 3, 4),
+     'input_argname': 'x',
+     'args': {'pad_width': 2,
+              'mode': 'constant'},
+     'name': 'pad_scalar_pad_width'},
 
     # reshape
     {'ops': 'reshape', 'input_shape': (1, 6),

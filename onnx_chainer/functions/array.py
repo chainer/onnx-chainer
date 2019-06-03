@@ -143,7 +143,10 @@ def convert_Pad(func, opset_version, input_names, output_names,
 
     pad_begin = []
     pad_end = []
-    for pp in func.pad_bw.tolist():
+    pad_bw = func.pad_bw
+    if pad_bw.ndim == 1:
+        pad_bw = np.tile(pad_bw, (len(func.inputs[0].shape), 1))
+    for pp in pad_bw.tolist():
         pad_begin.append(pp[0])
         pad_end.append(pp[1])
     pad = pad_begin + pad_end
