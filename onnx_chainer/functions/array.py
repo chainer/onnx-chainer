@@ -374,7 +374,6 @@ def convert_Repeat(func, opset_version, input_names, output_names, context,
         parameters.append(scales_param)
         inputs.append(context.get_name(scales_param))
         op = 'Upsample' if opset_version == 9 else 'Resize'
-        print(inputs)
         gb.op_output_named(op, inputs, output_names)
         return gb.nodes()
 
