@@ -4,7 +4,7 @@ from setuptools import setup
 requirements = {
     'install': [
         'chainer>=5.0.0',
-        'onnx>=1.4.0,<1.5',
+        'onnx>=1.5.0,<1.6',
     ],
     'stylecheck': [
         'autopep8',
@@ -16,14 +16,14 @@ requirements = {
     ],
     'test-cpu': [
         '-r test',
-        'onnxruntime==0.3.0',
+        'onnxruntime==0.4.0',
     ],
     'test-gpu': [
         '-r test',
         # 'cupy',  # installed 'cupy-cudaXX' before
         # onnxruntime-gpu is better but prebuild version requires CUDA9.1
         # CUDA9.1 is not supported latest cuDNN, so decided to use CPU version
-        'onnxruntime==0.3.0',
+        'onnxruntime==0.4.0',
     ],
     'travis': [
         '-r stylecheck',
@@ -63,7 +63,7 @@ setup(
         'onnx_chainer.functions',
         'onnx_chainer.testing',
     ],
-    version='1.4.1',
+    version='1.5.0',
     description='Convert a Chainer model into ONNX',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
