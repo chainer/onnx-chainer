@@ -59,17 +59,20 @@ def test_export_external_converters_custom_op(tmpdir, domain, version):
 
     addon_converters = {'Dummy': custom_converter}
 
-    expected_warning_num = 3
+    expected_warning_num_min = 3
+    expected_warning_num_max = expected_warning_num_min
     external_opset_imports = {}
     if domain is not None:
         external_opset_imports[domain] = version
-        # TODO(take-cheeze) Investigate why onnx.checker.check_model succeed
-        # expected_warning_num += 1
+        # TODO(take-cheeze): Fix warning issue:
+        # https://github.com/chainer/onnx-chainer/issues/180
+        expected_warning_num_max += 1
     with warnings.catch_warnings(record=True) as w:
         export_testcase(
             model, x, path, external_converters=addon_converters,
             external_opset_imports=external_opset_imports)
-        assert len(w) == expected_warning_num
+        assert expected_warning_num_min <= len(w) and \
+            len(w) <= expected_warning_num_max
 
     output_path = os.path.join(path, 'test_data_set_0', 'output_0.pb')
     assert os.path.isfile(output_path)
