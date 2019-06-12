@@ -40,13 +40,7 @@ class TestPoolings(ONNXModelTest):
         name = self.op_name
         if hasattr(self, 'condition'):
             name += '_' + self.condition
-        # TODO(hamaji): onnxruntime does not support Upsample-9 yet.
-        # https://github.com/chainer/onnx-chainer/issues/111
-        skip_opset_version = []
-        if name == 'unpooling_2d':
-            skip_opset_version.append(9)
-        self.expect(self.model, self.x, name=name,
-                    skip_opset_version=skip_opset_version)
+        self.expect(self.model, self.x, name=name)
 
 
 @testing.parameterize(

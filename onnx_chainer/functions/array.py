@@ -74,6 +74,7 @@ def convert_Depth2Space(func, opset_version, input_names,
     ),
 
 
+@support((1, 10))
 def convert_GetItem(func, opset_version, input_names,
                     output_names, context, parameters):
     x = func.inputs[0]
@@ -119,8 +120,15 @@ def convert_GetItem(func, opset_version, input_names,
                 'ONNX-Chainer does not accept the type'.format(type(idx)))
 
     gb = onnx_helper.GraphBuilder()
-    output = gb.op('Slice', input_names,
-                   axes=axes, starts=starts, ends=ends)
+    if opset_version == 1:
+        output = gb.op('Slice', input_names,
+                       axes=axes, starts=starts, ends=ends)
+    elif opset_version == 10:
+        for param in [starts, ends, axes]:
+            param = chainer.Parameter(np.asarray(list(param), dtype=np.int64))
+            parameters.append(param)
+            input_names.append(context.get_name(param))
+        output = gb.op('Slice', input_names)
 
     if squeeze_idxs:
         output = gb.op('Squeeze', [output],
@@ -333,7 +341,7 @@ def convert_Where(func, opset_version, input_names, output_names, context,
     return onnx_helper.make_node('Where', input_names, output_names),
 
 
-@support((7, 9))
+@support((7, 9, 10))
 def convert_Repeat(func, opset_version, input_names, output_names, context,
                    parameters):
     repeats = func.repeats
@@ -358,18 +366,17 @@ def convert_Repeat(func, opset_version, input_names, output_names, context,
         gb.op_output_named('Upsample', inputs, output_names, scales=scales)
         return gb.nodes()
 
-    if opset_version == 9:
+    if opset_version in [9, 10]:
         scales = np.array(scales, dtype=np.float32)
         scales_param = chainer.Parameter(scales)
         parameters.append(scales_param)
         inputs.append(context.get_name(scales_param))
-        gb.op_output_named('Upsample', inputs, output_names)
+        op = 'Upsample' if opset_version == 9 else 'Resize'
+        gb.op_output_named(op, inputs, output_names)
         return gb.nodes()
 
 
-# NOTE(syoyo): `Upsampling` is deprecated in ONNX opset 10.
-# Use `Reshape` for opset 10
-@support((7, 9))
+@support((7, 9, 10))
 def convert_ResizeImages(func, opset_version, input_names, output_names,
                          context, parameters):
 
@@ -403,12 +410,13 @@ def convert_ResizeImages(func, opset_version, input_names, output_names,
         return onnx_helper.make_node('Upsample', input_names, output_names,
                                      scales=scales, mode=mode),
 
-    if opset_version == 9:
+    if opset_version in [9, 10]:
         scales = np.array(scales, dtype=np.float32)
         scales_param = chainer.Parameter(scales)
         parameters.append(scales_param)
         input_names.append(context.get_name(scales_param))
-        return onnx_helper.make_node('Upsample', input_names, output_names,
+        op = 'Upsample' if opset_version == 9 else 'Resize'
+        return onnx_helper.make_node(op, input_names, output_names,
                                      mode=mode),
 
 
