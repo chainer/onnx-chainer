@@ -74,6 +74,7 @@ def convert_Depth2Space(func, opset_version, input_names,
     ),
 
 
+@support((1, 10))
 def convert_GetItem(func, opset_version, input_names,
                     output_names, context, parameters):
     x = func.inputs[0]
@@ -119,18 +120,15 @@ def convert_GetItem(func, opset_version, input_names,
                 'ONNX-Chainer does not accept the type'.format(type(idx)))
 
     gb = onnx_helper.GraphBuilder()
-    if opset_version == 10:
-        starts_param = chainer.Parameter(
-            np.asarray(list(starts), dtype=np.int64))
-        ends_param = chainer.Parameter(np.asarray(list(ends), dtype=np.int64))
-        axes_param = chainer.Parameter(np.asarray(list(axes), dtype=np.int64))
-        for p in [starts_param, ends_param, axes_param]:
-            parameters.append(p)
-            input_names.append(context.get_name(p))
-        output = gb.op('Slice', input_names)
-    else:
+    if opset_version == 1:
         output = gb.op('Slice', input_names,
                        axes=axes, starts=starts, ends=ends)
+    elif opset_version == 10:
+        for param in [starts, ends, axes]:
+            param = chainer.Parameter(np.asarray(list(param), dtype=np.int64))
+            parameters.append(param)
+            input_names.append(context.get_name(param))
+        output = gb.op('Slice', input_names)
 
     if squeeze_idxs:
         output = gb.op('Squeeze', [output],

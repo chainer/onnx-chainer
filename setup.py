@@ -4,7 +4,7 @@ from setuptools import setup
 requirements = {
     'install': [
         'chainer>=5.0.0',
-        'onnx>=1.5.0,<1.6',
+        'onnx>=1.4.0,<1.6',
     ],
     'stylecheck': [
         'autopep8',
@@ -63,7 +63,7 @@ setup(
         'onnx_chainer.functions',
         'onnx_chainer.testing',
     ],
-    version='1.5.0',
+    version='1.4.1',
     description='Convert a Chainer model into ONNX',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
