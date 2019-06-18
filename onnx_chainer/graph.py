@@ -19,7 +19,6 @@ class Graph(object):
         self.func_name_counts = collections.defaultdict(int)
         self.inputs = {}  # Input `Variable` objects keyed by string IDs
         self.outputs = set()  # Output variable names
-        self.additional_parameters = []
         self.specified_opset_version = opset_version
         self.network_outputs = network_outputs
 
@@ -61,13 +60,13 @@ class Graph(object):
         return reversed(function_nodes.values())
 
     def create_node(
-            self, func_name, func, input_names, output_names, parameters):
+            self, func_name, func, input_names, output_names):
         converter = self.converters.get(func_name, None)
         if converter is None:
             raise ValueError('{} is not supported'.format(func_name))
         params = FunctionConverterParams(
             func, self.specified_opset_version, input_names, output_names,
-            self.context, parameters)
+            self.context, self.context.parameters)
         nodes = converter(params)
         return list(nodes)
 
@@ -126,8 +125,7 @@ class Graph(object):
 
         onnx_helper.set_func_name(base_func_name)
         nodes = self.create_node(
-            func_name, function, input_names, output_names,
-            self.additional_parameters)
+            func_name, function, input_names, output_names)
         self.graph.extend(nodes)
 
     def to_onnx_graph(self):

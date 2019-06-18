@@ -67,7 +67,8 @@ class Context(object):
         param = chainer.Parameter(array)
         if not (name.startswith('/') or name.startswith('_')):
             name = '/' + name
-        onnx_name = onnx_helper.cleanse_param_name(name)
+        onnx_name = '{}_{}'.format(
+            onnx_helper.get_func_name(), onnx_helper.cleanse_param_name(name))
         self.set_name(param, onnx_name)
         self.parameters.append(param)
         return onnx_name

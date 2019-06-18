@@ -303,12 +303,6 @@ def _export(model, args, filename, export_params, graph_name, save_text,
         initializers.append(tensor)
         input_tensors.append(helper.make_tensor_value_info(
             context.get_name(param), tensor.data_type, tensor.dims))
-    if o.additional_parameters:
-        for param in o.additional_parameters:
-            tensor = convert_parameter(param, context)
-            initializers.append(tensor)
-            input_tensors.append(helper.make_tensor_value_info(
-                context.get_name(param), tensor.data_type, tensor.dims))
 
     # Convert output tensors
     output_tensors = []
