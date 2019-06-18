@@ -10,23 +10,21 @@ from onnx_chainer import onnx_helper
 @support((1, 6, 7))
 def convert_BatchNormalization(func, opset_version, input_names,
                                output_names, context, parameters):
-    mean_name = '/bn/mean'
-    var_name = '/bn/var'
     if len(func.inputs) <= 3:
         # expect this `func` is F.batch_normalization
         x = func.inputs[0].get_variable().array
         mean = x.mean(axis=func.axis)
-        param_mean_name = context.add_param(mean, mean_name)
+        param_mean_name = context.add_param(mean, 'mean')
         input_names.append(param_mean_name)
-        param_var_name = context.add_param(x.var(axis=func.axis), var_name)
+        param_var_name = context.add_param(x.var(axis=func.axis), 'var')
         input_names.append(param_var_name)
     else:
         # expect this `func` is F.fixed_batch_normalization
         mean = func.inputs[3].get_variable().array
-        param_mean_name = context.add_param(mean, mean_name)
+        param_mean_name = context.add_param(mean, 'mean')
         input_names[3] = param_mean_name
         param_var_name = context.add_param(
-            func.inputs[4].get_variable().array, var_name)
+            func.inputs[4].get_variable().array, 'var')
         input_names[4] = param_var_name
 
     momentum = getattr(func, 'decay', 0.)
@@ -34,12 +32,12 @@ def convert_BatchNormalization(func, opset_version, input_names,
     # if `use_beta=False`, passed None value to the functions
     if func.inputs[2].get_variable_or_none() is None:
         beta_name = context.add_param(
-            np.zeros_like(mean, dtype=mean.dtype), '/bn/beta')
+            np.zeros_like(mean, dtype=mean.dtype), 'beta')
         input_names[2] = beta_name
     # `use_gamma=False` is same
     if func.inputs[1].get_variable_or_none() is None:
         gamma_name = context.add_param(
-            np.ones_like(mean, dtype=mean.dtype), '/bn/gamma')
+            np.ones_like(mean, dtype=mean.dtype), 'gamma')
         input_names[1] = gamma_name
 
     # TODO(disktnk): On definition of ONNX's BatchNormalization operator,
