@@ -10,27 +10,23 @@ from onnx_chainer import onnx_helper
 @support((1, 6, 7))
 def convert_BatchNormalization(func, opset_version, input_names,
                                output_names, context, parameters):
-    mean_name = onnx_helper.cleanse_param_name('/bn/mean')
-    var_name = onnx_helper.cleanse_param_name('/bn/var')
+    mean_name = '/bn/mean'
+    var_name = '/bn/var'
     if len(func.inputs) <= 3:
         # expect this `func` is F.batch_normalization
         x = func.inputs[0].get_variable().array
-        mean = chainer.Parameter(x.mean(axis=func.axis))
-        context.set_name(mean, mean_name)
-        input_names.append(mean_name)
-        var = chainer.Parameter(x.var(axis=func.axis))
-        context.set_name(var, var_name)
-        input_names.append(var_name)
+        mean = x.mean(axis=func.axis)
+        param_mean_name = context.add_param(mean, mean_name)
+        input_names.append(param_mean_name)
+        param_var_name = context.add_param(x.var(axis=func.axis), var_name)
+        input_names.append(param_var_name)
     else:
         # expect this `func` is F.fixed_batch_normalization
-        mean = chainer.Parameter(func.inputs[3].get_variable().array)
-        context.set_name(mean, mean_name)
-        input_names[3] = mean_name
-        var = chainer.Parameter(func.inputs[4].get_variable().array)
-        context.set_name(var, var_name)
-        input_names[4] = var_name
-    parameters.append(mean)
-    parameters.append(var)
+        mean = func.inputs[3].get_variable().array
+        param_mean_name = context.add_param(mean, mean_name)
+        input_names[3] = param_mean_name
+        param_var_name = context.add_param(func.inputs[4].get_variable().array, var_name)
+        input_names[4] = param_var_name
 
     momentum = getattr(func, 'decay', 0.)
 

@@ -19,6 +19,7 @@ class Context(object):
 
     def __init__(self, model):
         self.name_list = dict()
+        self.parameters = []
         for name, param in model.namedparams():
             onnx_name = onnx_helper.cleanse_param_name(name)
             self.set_name(param, onnx_name)
@@ -54,3 +55,17 @@ class Context(object):
         if str_id not in self.name_list:
             return False
         return self.name_list[str_id][1]
+
+    def add_param(self, array, name):
+        """Add array to context parameter
+
+        To be converted as ONNX tensor.
+
+        Return:
+            (str) registered name.
+        """
+        param = chainer.Parameter(array)
+        onnx_name = onnx_helper.cleanse_param_name(name)
+        self.set_name(param, onnx_name)
+        self.parameters.append(param)
+        return onnx_name
