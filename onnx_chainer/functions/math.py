@@ -18,10 +18,9 @@ def convert_Add(func, opset_version, input_names, output_names,
 @support((1, 6, 7))
 def convert_AddConstant(func, opset_version, input_names,
                         output_names, context, parameters):
-    value = np.array(func.value, dtype=func.inputs[0].dtype)
-    value_param = chainer.Parameter(value)
-    parameters.append(value_param)
-    input_names.append(context.get_name(value_param))
+    value_name = context.add_param(
+        np.array(func.value, dtype=func.inputs[0].dtype), 'value')
+    input_names.append(value_name)
 
     if opset_version == 1:
         return onnx_helper.make_node(
@@ -53,10 +52,9 @@ def convert_Mul(func, opset_version, input_names, output_names,
 @support((1, 6, 7))
 def convert_MulConstant(func, opset_version, input_names,
                         output_names, context, parameters):
-    value = np.array(func.value, dtype=func.inputs[0].dtype)
-    value_param = chainer.Parameter(value)
-    parameters.append(value_param)
-    input_names.append(context.get_name(value_param))
+    value_name = context.add_param(
+        np.array(func.value, dtype=func.inputs[0].dtype), 'value')
+    input_names.append(value_name)
 
     if opset_version == 1:
         return onnx_helper.make_node(
@@ -98,10 +96,9 @@ def convert_Absolute(func, opset_version, input_names,
 @support((1, 7))
 def convert_PowVarConst(func, opset_version, input_names,
                         output_names, context, parameters):
-    value = np.array(func.value, dtype=func.inputs[0].dtype)
-    value_param = chainer.Parameter(value)
-    parameters.append(value_param)
-    input_names.append(context.get_name(value_param))
+    value_name = context.add_param(
+        np.array(func.value, dtype=func.inputs[0].dtype), 'value')
+    input_names.append(value_name)
 
     if opset_version == 1 or opset_version == 7:
         return onnx_helper.make_node('Pow', input_names, output_names),
@@ -148,9 +145,8 @@ def convert_MatMul(func, opset_version, input_names,
         func.inputs[1].shape[-2] if func.transb else func.inputs[1].shape[-1]
     )
     bias_tensor = np.zeros(bias_shape, dtype=func.inputs[0].dtype)
-    bias_param = chainer.Parameter(bias_tensor)
-    parameters.append(bias_param)
-    input_names.append(context.get_name(bias_param))
+    bias_name = context.add_param(bias_tensor, 'bias')
+    input_names.append(bias_name)
 
     return onnx_helper.make_node(
         'Gemm', input_names, output_names,
@@ -253,15 +249,14 @@ def convert_LinearInterpolate(func, opset_version, input_names,
     typ = func.inputs[0].dtype if isinstance(
         func.inputs[0].dtype, np.dtype) else np.dtype(func.inputs[0].dtype)
 
-    one = chainer.Parameter(np.array(1, dtype=typ))
-    parameters.append(one)
+    one_name = context.add_param(np.array(1, dtype=typ), 'one')
 
     kwargs = {'consumed_inputs': [1, 1]} if opset_version == 1 else {}
     kwargs2 = {} if opset_version >= 7 else {'broadcast': 1}
 
     gb = onnx_helper.GraphBuilder()
     p, x, y = input_names
-    n1 = gb.op('Sub', [context.get_name(one), p], **kwargs, **kwargs2)
+    n1 = gb.op('Sub', [one_name, p], **kwargs, **kwargs2)
     n2 = gb.op('Mul', [p, x], **kwargs)
     n3 = gb.op('Mul', [n1, y], **kwargs)
     gb.op_output_named('Add', [n2, n3], output_names, **kwargs)
@@ -284,7 +279,6 @@ def convert_Square(func, opset_version, input_names,
 @support((8,))
 def convert_BroadcastTo(func, opset_version, input_names,
                         output_names, context, parameters):
-    shape = np.array(func._shape)
-    parameters.append(shape)
-    input_names.append(context.get_name(shape))
+    shape_name = context.add_param(np.array(func._shape), 'shape')
+    input_names.append(shape_name)
     return onnx_helper.make_node('Expand', input_names, output_names),
