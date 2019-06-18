@@ -10,19 +10,25 @@ from onnx_chainer import onnx_helper
 @support((1, 6, 7))
 def convert_BatchNormalization(func, opset_version, input_names,
                                output_names, context, parameters):
+    mean_name = onnx_helper.cleanse_param_name('/bn/mean')
+    var_name = onnx_helper.cleanse_param_name('/bn/var')
     if len(func.inputs) <= 3:
         # expect this `func` is F.batch_normalization
         x = func.inputs[0].get_variable().array
         mean = chainer.Parameter(x.mean(axis=func.axis))
-        input_names.append(context.get_name(mean))
+        context.set_name(mean, mean_name)
+        input_names.append(mean_name)
         var = chainer.Parameter(x.var(axis=func.axis))
-        input_names.append(context.get_name(var))
+        context.set_name(var, var_name)
+        input_names.append(var_name)
     else:
         # expect this `func` is F.fixed_batch_normalization
         mean = chainer.Parameter(func.inputs[3].get_variable().array)
-        input_names[3] = context.get_name(mean)
+        context.set_name(mean, mean_name)
+        input_names[3] = mean_name
         var = chainer.Parameter(func.inputs[4].get_variable().array)
-        input_names[4] = context.get_name(var)
+        context.set_name(var, var_name)
+        input_names[4] = var_name
     parameters.append(mean)
     parameters.append(var)
 
