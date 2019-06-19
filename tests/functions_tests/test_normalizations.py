@@ -91,9 +91,7 @@ class TestBatchNormalization(ONNXModelTest):
                 onnx.defs.onnx_opset_version() + 1):
             onnx_model = onnx_chainer.export(
                 self.model, self.x, opset_version=opset_version)
-            input_names = sorted(v.name for v in onnx_model.graph.input)
-            expected = sorted(['Input_0', 'param_bn_beta', 'param_bn_gamma',
-                               'param_bn_avg_mean', 'param_bn_avg_var'])
+            input_names = set(v.name for v in onnx_model.graph.input)
 
-            print(input_names)
-            assert input_names == expected
+            assert 'param_bn_mean' in input_names
+            assert 'param_bn_var' in input_names
