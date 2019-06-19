@@ -10,20 +10,35 @@ from onnx_chainer import onnx_helper
 @support((1, 6, 7))
 def convert_BatchNormalization(func, opset_version, input_names,
                                output_names, context, parameters):
+    names = [context.get_name(v.get_variable().array) for v in func.inputs]
+    if names[1].startswith('param_'):
+        prefix = names[1][:-6]  # remove "_gamma"
+    elif names[2].startswith('param_'):
+        prefix = names[2][:-5]  # remove "_beta"
+    else:
+        prefix = None
+
+    def add_param(v, suffix):
+        if prefix is None:
+            return context.add_param(v, suffix)
+        else:
+            return context.add_param(v, prefix + '_' + suffix,
+                                     use_original_name=True)
+
     if len(func.inputs) <= 3:
         # expect this `func` is F.batch_normalization
         x = func.inputs[0].get_variable().array
         mean = x.mean(axis=func.axis)
-        param_mean_name = context.add_param(mean, 'mean')
+        param_mean_name = add_param(mean, 'mean')
         input_names.append(param_mean_name)
-        param_var_name = context.add_param(x.var(axis=func.axis), 'var')
+        param_var_name = add_param(x.var(axis=func.axis), 'var')
         input_names.append(param_var_name)
     else:
         # expect this `func` is F.fixed_batch_normalization
         mean = func.inputs[3].get_variable().array
-        param_mean_name = context.add_param(mean, 'mean')
+        param_mean_name = add_param(mean, 'mean')
         input_names[3] = param_mean_name
-        param_var_name = context.add_param(
+        param_var_name = add_param(
             func.inputs[4].get_variable().array, 'var')
         input_names[4] = param_var_name
 

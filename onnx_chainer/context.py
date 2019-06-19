@@ -56,7 +56,7 @@ class Context(object):
             return False
         return self.name_list[str_id][1]
 
-    def add_param(self, array, name):
+    def add_param(self, array, name, use_original_name=False):
         """Add array to context parameter
 
         To be converted as ONNX tensor.
@@ -65,10 +65,14 @@ class Context(object):
             (str) registered name.
         """
         param = chainer.Parameter(array)
-        if not (name.startswith('/') or name.startswith('_')):
-            name = '/' + name
-        onnx_name = '{}_{}'.format(
-            onnx_helper.get_func_name(), onnx_helper.cleanse_param_name(name))
+        if use_original_name:
+            onnx_name = name
+        else:
+            if not (name.startswith('/') or name.startswith('_')):
+                name = '/' + name
+            onnx_name = '{}_{}'.format(
+                onnx_helper.get_func_name(),
+                onnx_helper.cleanse_param_name(name))
         self.set_name(param, onnx_name)
         self.parameters.append(param)
         return onnx_name
