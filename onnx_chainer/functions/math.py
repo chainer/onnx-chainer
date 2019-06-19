@@ -1,4 +1,3 @@
-import chainer
 import numpy as np
 
 from onnx_chainer.functions.opset_version import support

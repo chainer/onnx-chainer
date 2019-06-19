@@ -1,6 +1,5 @@
 import warnings
 
-import chainer
 from chainer.utils import conv
 import numpy as np
 
