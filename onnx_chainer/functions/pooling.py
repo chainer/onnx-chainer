@@ -1,6 +1,5 @@
 import warnings
 
-import chainer
 from chainer.utils import conv
 import numpy as np
 
@@ -191,9 +190,8 @@ def convert_Unpooling2D(func, opset_version, input_names, output_names,
         return onnx_helper.make_node('Upsample', input_names, output_names,
                                      scales=scales),
     if opset_version in [9, 10]:
-        scales = np.array(scales, dtype=np.float32)
-        scales_param = chainer.Parameter(scales)
-        parameters.append(scales_param)
-        input_names.append(context.get_name(scales_param))
+        scales_name = context.add_param(
+            np.array(scales, dtype=np.float32), 'scales')
+        input_names.append(scales_name)
         op = 'Upsample' if opset_version == 9 else 'Resize'
         return onnx_helper.make_node(op, input_names, output_names),

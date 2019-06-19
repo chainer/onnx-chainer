@@ -1,6 +1,5 @@
 import warnings
 
-import chainer
 import numpy as np
 from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 
@@ -124,10 +123,10 @@ def convert_GetItem(func, opset_version, input_names,
         output = gb.op('Slice', input_names,
                        axes=axes, starts=starts, ends=ends)
     elif opset_version == 10:
-        for param in [starts, ends, axes]:
-            param = chainer.Parameter(np.asarray(list(param), dtype=np.int64))
-            parameters.append(param)
-            input_names.append(context.get_name(param))
+        for param in [('starts', starts), ('ends', ends), ('axes', axes)]:
+            param_name = context.add_param(
+                np.asarray(list(param[1]), dtype=np.int64), param[0])
+            input_names.append(param_name)
         output = gb.op('Slice', input_names)
 
     if squeeze_idxs:
@@ -212,10 +211,9 @@ def convert_Reshape(func, opset_version, input_names,
             shape=func.shape
         ),
     elif opset_version == 5:
-        shape = np.asarray(list(func.shape), dtype=np.int64)
-        shape_param = chainer.Parameter(shape)
-        parameters.append(shape_param)
-        input_names.append(context.get_name(shape_param))
+        shape_name = context.add_param(
+            np.asarray(list(func.shape), dtype=np.int64), 'shape')
+        input_names.append(shape_name)
 
         return onnx_helper.make_node(
             'Reshape', input_names, output_names,
@@ -294,18 +292,16 @@ def convert_Tile(func, opset_version, input_names, output_names,
     # Add tiles and axis to graph
     if isinstance(func.reps, int):
         func.reps = [func.reps]
-    tiles = np.asarray(func.reps, dtype=np.int64)
-
-    tiles_param = chainer.Parameter(tiles)
-    parameters.append(tiles_param)
-    input_names.append(context.get_name(tiles_param))
+    tiles_name = context.add_param(
+        np.asarray(func.reps, dtype=np.int64), 'tiles')
+    input_names.append(tiles_name)
 
     # In operater version = 1, axis also should be given
     if opset_version == 1:
-        axis = np.array([i for i, _ in enumerate(func.reps)], dtype=np.float32)
-        axis_param = chainer.Parameter(axis)
-        parameters.append(axis_param)
-        input_names.append(context.get_name(axis_param))
+        axis_name = context.add_param(
+            np.array([i for i, _ in enumerate(func.reps)], dtype=np.float32),
+            'axis')
+        input_names.append(axis_name)
 
     return onnx_helper.make_node('Tile', input_names, output_names),
 
@@ -353,9 +349,8 @@ def convert_Repeat(func, opset_version, input_names, output_names, context,
     inputs = list(input_names)
     axis = func.axis
     if axis is None:
-        shape_param = chainer.Parameter(np.array([-1]))
-        parameters.append(shape_param)
-        input_names.append(context.get_name(shape_param))
+        shape_name = context.add_param(np.array([-1]), 'shape')
+        input_names.append(shape_name)
         inputs = [gb.op('Reshape', input_names)]
         scales = [float(repeats[0])]
     else:
@@ -367,10 +362,9 @@ def convert_Repeat(func, opset_version, input_names, output_names, context,
         return gb.nodes()
 
     if opset_version in [9, 10]:
-        scales = np.array(scales, dtype=np.float32)
-        scales_param = chainer.Parameter(scales)
-        parameters.append(scales_param)
-        inputs.append(context.get_name(scales_param))
+        scales_name = context.add_param(
+            np.array(scales, dtype=np.float32), 'scales')
+        inputs.append(scales_name)
         op = 'Upsample' if opset_version == 9 else 'Resize'
         gb.op_output_named(op, inputs, output_names)
         return gb.nodes()
@@ -411,10 +405,9 @@ def convert_ResizeImages(func, opset_version, input_names, output_names,
                                      scales=scales, mode=mode),
 
     if opset_version in [9, 10]:
-        scales = np.array(scales, dtype=np.float32)
-        scales_param = chainer.Parameter(scales)
-        parameters.append(scales_param)
-        input_names.append(context.get_name(scales_param))
+        scales_name = context.add_param(
+            np.array(scales, dtype=np.float32), 'scales')
+        input_names.append(scales_name)
         op = 'Upsample' if opset_version == 9 else 'Resize'
         return onnx_helper.make_node(op, input_names, output_names,
                                      mode=mode),

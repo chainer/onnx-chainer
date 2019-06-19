@@ -13,31 +13,32 @@ def convert_BatchNormalization(func, opset_version, input_names,
     if len(func.inputs) <= 3:
         # expect this `func` is F.batch_normalization
         x = func.inputs[0].get_variable().array
-        mean = chainer.Parameter(x.mean(axis=func.axis))
-        input_names.append(context.get_name(mean))
-        var = chainer.Parameter(x.var(axis=func.axis))
-        input_names.append(context.get_name(var))
+        mean = x.mean(axis=func.axis)
+        param_mean_name = context.add_param(mean, 'mean')
+        input_names.append(param_mean_name)
+        param_var_name = context.add_param(x.var(axis=func.axis), 'var')
+        input_names.append(param_var_name)
     else:
         # expect this `func` is F.fixed_batch_normalization
-        mean = chainer.Parameter(func.inputs[3].get_variable().array)
-        input_names[3] = context.get_name(mean)
-        var = chainer.Parameter(func.inputs[4].get_variable().array)
-        input_names[4] = context.get_name(var)
-    parameters.append(mean)
-    parameters.append(var)
+        mean = func.inputs[3].get_variable().array
+        param_mean_name = context.add_param(mean, 'mean')
+        input_names[3] = param_mean_name
+        param_var_name = context.add_param(
+            func.inputs[4].get_variable().array, 'var')
+        input_names[4] = param_var_name
 
     momentum = getattr(func, 'decay', 0.)
 
     # if `use_beta=False`, passed None value to the functions
     if func.inputs[2].get_variable_or_none() is None:
-        beta = chainer.Parameter(np.zeros_like(mean, dtype=mean.dtype))
-        parameters.append(beta)
-        input_names[2] = context.get_name(beta)
+        beta_name = context.add_param(
+            np.zeros_like(mean, dtype=mean.dtype), 'beta')
+        input_names[2] = beta_name
     # `use_gamma=False` is same
     if func.inputs[1].get_variable_or_none() is None:
-        gamma = chainer.Parameter(np.ones_like(mean, dtype=mean.dtype))
-        parameters.append(gamma)
-        input_names[1] = context.get_name(gamma)
+        gamma_name = context.add_param(
+            np.ones_like(mean, dtype=mean.dtype), 'gamma')
+        input_names[1] = gamma_name
 
     # TODO(disktnk): On definition of ONNX's BatchNormalization operator,
     # outputs one required output and four optional outputs. This converter

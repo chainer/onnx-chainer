@@ -1,4 +1,3 @@
-import chainer
 import numpy as np
 
 from onnx_chainer.functions.opset_version import support
@@ -106,9 +105,8 @@ def convert_LinearFunction(func, opset_version, input_names,
     if len(func.inputs) == 2:
         bias_dim = func.inputs[1].shape[0]
         bias = np.zeros((bias_dim,), dtype=func.inputs[0].dtype)
-        bias_param = chainer.Parameter(bias)
-        parameters.append(bias_param)
-        input_names.append(context.get_name(bias_param))
+        bias_name = context.add_param(bias, 'bias')
+        input_names.append(bias_name)
 
     if opset_version == 1 or opset_version == 6:
         return onnx_helper.make_node(
