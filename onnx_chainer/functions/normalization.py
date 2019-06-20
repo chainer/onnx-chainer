@@ -45,8 +45,8 @@ def convert_BatchNormalization(func, opset_version, input_names,
             return context.add_param(
                 v, '{}_{}'.format(prefix, suffix), use_original_name=True)
 
-    maen_name = add_param(mean, 'mean')
-    var_name = add_param(var, 'var')
+    maen_name = add_param(mean, 'avg_mean')
+    var_name = add_param(var, 'avg_var')
     if is_fixed_bn:
         input_names[3] = maen_name
         input_names[4] = var_name

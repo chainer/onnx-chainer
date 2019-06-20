@@ -93,5 +93,5 @@ class TestBatchNormalization(ONNXModelTest):
                 self.model, self.x, opset_version=opset_version)
             input_names = set(v.name for v in onnx_model.graph.input)
 
-            assert 'param_bn_mean' in input_names
-            assert 'param_bn_var' in input_names
+            assert 'param_bn_avg_mean' in input_names
+            assert 'param_bn_avg_var' in input_names
