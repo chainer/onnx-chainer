@@ -2,7 +2,9 @@ import chainer
 import chainer.functions as F
 import chainer.links as L
 from chainer import testing
+import onnx
 
+import onnx_chainer
 from onnx_chainer.testing import input_generator
 from tests.helper import ONNXModelTest
 
@@ -82,3 +84,14 @@ class TestBatchNormalization(ONNXModelTest):
         if hasattr(self, 'condition'):
             name += '_' + self.condition
         self.expect(self.model, self.x, name=name, train=train)
+
+    def test_input_names(self):
+        for opset_version in range(
+                onnx_chainer.MINIMUM_OPSET_VERSION,
+                onnx.defs.onnx_opset_version() + 1):
+            onnx_model = onnx_chainer.export(
+                self.model, self.x, opset_version=opset_version)
+            input_names = set(v.name for v in onnx_model.graph.input)
+
+            assert 'param_bn_mean' in input_names
+            assert 'param_bn_var' in input_names
