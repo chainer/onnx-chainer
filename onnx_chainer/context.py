@@ -20,7 +20,15 @@ class Context(object):
     def __init__(self, model):
         self.name_list = dict()
         self.parameters = []
+        namedlink = {n: l for n, l in model.namedlinks()}
+        self.param_to_link = {}
         for name, param in model.namedparams():
+            owned_link_name = name[:name.rindex('/')]
+            if owned_link_name in namedlink:
+                onnx_owned_link_name = onnx_helper.cleanse_param_name(
+                    owned_link_name)
+                self.param_to_link[id(param)] = (
+                    onnx_owned_link_name, namedlink[owned_link_name])
             onnx_name = onnx_helper.cleanse_param_name(name)
             self.set_name(param, onnx_name)
 
@@ -56,19 +64,33 @@ class Context(object):
             return False
         return self.name_list[str_id][1]
 
-    def add_param(self, array, name):
+    def add_param(self, array, name, use_original_name=False):
         """Add array to context parameter
 
         To be converted as ONNX tensor.
 
-        Return:
-            (str) registered name.
+        Returns:
+            str: registered name.
         """
-        param = chainer.Parameter(array)
-        if not (name.startswith('/') or name.startswith('_')):
-            name = '/' + name
-        onnx_name = '{}_{}'.format(
-            onnx_helper.get_func_name(), onnx_helper.cleanse_param_name(name))
-        self.set_name(param, onnx_name)
-        self.parameters.append(param)
+        if use_original_name:
+            onnx_name = name
+        else:
+            if not (name.startswith('/') or name.startswith('_')):
+                name = '/' + name
+            onnx_name = '{}_{}'.format(
+                onnx_helper.get_func_name(),
+                onnx_helper.cleanse_param_name(name))
+        self.set_name(array, onnx_name)
+        self.parameters.append(array)
         return onnx_name
+
+    def get_link(self, param):
+        """Return link with name which has the param.
+
+        Arguments:
+            param(chainer.Parameter): the target param.
+
+        Returns:
+            tuple: name and link. returns ``None`` when not found.
+        """
+        return self.param_to_link.get(id(param), None)
