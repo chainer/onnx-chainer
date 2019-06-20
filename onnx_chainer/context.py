@@ -70,7 +70,7 @@ class Context(object):
         To be converted as ONNX tensor.
 
         Returns:
-            (str) registered name.
+            str: registered name.
         """
         if use_original_name:
             onnx_name = name
