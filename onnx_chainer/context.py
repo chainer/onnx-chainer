@@ -61,7 +61,7 @@ class Context(object):
 
         To be converted as ONNX tensor.
 
-        Return:
+        Returns:
             (str) registered name.
         """
         param = chainer.Parameter(array)
