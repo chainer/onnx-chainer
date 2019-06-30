@@ -5,6 +5,10 @@ matrix:
   include:
     - name: "Py35, Chainer stable"
       python: "3.5"
+    - name: "Py36, Chainer stable, ONNX 1.4.1"
+      python: "3.6"
+      env:
+        - ONNX_VER="1.4.1"
     - name: "Py36, Chainer stable"
       python: "3.6"
       env:
@@ -31,6 +35,7 @@ notifications:
 
 before_install:
   - pip install $CHAINER_INSTALL chainer
+  - if [[ $ONNX_VER != "" ]]; then pip install onnx==$ONNX_VER; fi
   - pip install -U -e .[travis]
 
 script:
