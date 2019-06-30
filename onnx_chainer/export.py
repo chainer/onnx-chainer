@@ -10,6 +10,7 @@ from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 from onnx_chainer.context import Context
 from onnx_chainer.graph import Graph
 from onnx_chainer import mapping
+from onnx_chainer.onnx_helper import is_support_non_standard_domain
 
 try:
     from onnx import checker
@@ -121,7 +122,7 @@ def export(model, args, filename=None, export_params=True,
 
     ``y = model(*args)``
 
-    ``external_converters`` and ``external_opset_import`` are for external
+    ``external_converters`` and ``external_opset_imports`` are for external
     custom operator. When some ~chainer.FunctionNode are expected to convert to
     own customized operator, set converter function with ~chainer.FunctionNode
     name.
@@ -137,7 +138,7 @@ def export(model, args, filename=None, export_params=True,
     >>>
     >>> export(model, args,
     >>>        external_converters=external_converters,
-    >>>        external_imports=external_imports)
+    >>>        external_opset_imports=external_imports)
 
     Returned model has ``CustomizedRelu`` node.
 
@@ -337,11 +338,29 @@ def _export(model, args, filename, export_params, graph_name, save_text,
         if external_converters is None:
             raise e
         else:
-            warnings.warn(
-                'Unregistered operator error is occurred but ignored because '
-                'exporting with `external_converters`, please take care about '
-                'ONNX format check is insufficient. Error message:\n{}'.format(
-                    str(e)))
+            # ONNX version >= 1.5: default checker skips schema check when
+            # non standard domain is set. In ONNX-Chainer, external ops without
+            # doamin is also accepted, but show warning.
+            # ONNX version < 1.5: the checker does not skip schema check
+            # regardless domain is set or not. In ONNX-Chainer, ignore
+            # errors when external ops are set.
+            if is_support_non_standard_domain():
+                if external_opset_imports:
+                    raise e
+                else:
+                    warnings.warn(
+                        'ValidationError is occurred but ignored. '
+                        'ONNX-Chainer recommends to set '
+                        '`external_opset_imports` when using '
+                        '`external_converters` on exporting. Please take care '
+                        'about ONNX format check is insufficient. Error '
+                        'message:\n{}'.format(str(e)))
+            else:
+                warnings.warn(
+                    'ValidationError is occurred but ignored because '
+                    'exporting with `external_converters`. Please take care '
+                    'about ONNX format check is insufficient. Error '
+                    'message:\n{}'.format(str(e)))
 
     if filename is not None and isinstance(filename, str):
         with open(filename, 'wb') as fp:
