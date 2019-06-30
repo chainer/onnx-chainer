@@ -45,7 +45,7 @@ class ONNXModelTest(unittest.TestCase):
 
     def expect(self, model, args, name=None, skip_opset_version=None,
                skip_outvalue_version=None, with_warning=False,
-               customized_model_test_func=None, **kwargs):
+               custom_model_test_func=None, **kwargs):
         """Compare model output and test runtime output.
 
         Make an ONNX model from target model with args, and put output
@@ -58,9 +58,9 @@ class ONNXModelTest(unittest.TestCase):
             skip_opset_version (list): Versions to skip test.
             skip_outvalue_version (list): Versions to skip output value check.
             with_warning (bool): If True, check warnings.
-            customized_model_test_func (func): A function to check generated
+            custom_model_test_func (func): A function to check generated
                 model. The functions is called before checking output values.
-                ONNX model is passed to arugments.
+                ONNX model is passed to arguments.
             **kwargs (dict): keyward arguments for ``onnx_chainer.export``.
         """
 
@@ -124,8 +124,8 @@ class ONNXModelTest(unittest.TestCase):
                 np.testing.assert_allclose(
                     array, input_data[i], rtol=1e-5, atol=1e-5)
 
-            if customized_model_test_func is not None:
-                customized_model_test_func(onnx_model)
+            if custom_model_test_func is not None:
+                custom_model_test_func(onnx_model)
 
             if skip_outvalue_version is not None and\
                     opset_version in skip_outvalue_version:

@@ -90,7 +90,7 @@ class TestBatchNormalization(ONNXModelTest):
 
         self.expect(
             self.model, self.x, name=name, train=train,
-            customized_model_test_func=test_input_names)
+            custom_model_test_func=test_input_names)
 
 
 class TestBatchNormalizationFunction(ONNXModelTest):
@@ -115,7 +115,7 @@ class TestBatchNormalizationFunction(ONNXModelTest):
             assert 'BatchNormalization_0_param_avg_var' in input_names
 
         self.expect(
-            self.model, self.x, customized_model_test_func=test_input_names)
+            self.model, self.x, custom_model_test_func=test_input_names)
 
 
 class TestFixedBatchNormalizationFunction(ONNXModelTest):
@@ -142,4 +142,4 @@ class TestFixedBatchNormalizationFunction(ONNXModelTest):
             assert 'FixedBatchNormalization_0_param_avg_var' in input_names
 
         self.expect(
-            self.model, self.x, customized_model_test_func=test_input_names)
+            self.model, self.x, custom_model_test_func=test_input_names)
