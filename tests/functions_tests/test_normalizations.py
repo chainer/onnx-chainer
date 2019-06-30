@@ -2,9 +2,8 @@ import chainer
 import chainer.functions as F
 import chainer.links as L
 from chainer import testing
-import onnx
+import numpy as np
 
-import onnx_chainer
 from onnx_chainer.testing import input_generator
 from tests.helper import ONNXModelTest
 
@@ -83,15 +82,64 @@ class TestBatchNormalization(ONNXModelTest):
             name = 'fixed_' + name
         if hasattr(self, 'condition'):
             name += '_' + self.condition
-        self.expect(self.model, self.x, name=name, train=train)
 
-    def test_input_names(self):
-        for opset_version in range(
-                onnx_chainer.MINIMUM_OPSET_VERSION,
-                onnx.defs.onnx_opset_version() + 1):
-            onnx_model = onnx_chainer.export(
-                self.model, self.x, opset_version=opset_version)
+        def test_input_names(onnx_model):
             input_names = set(v.name for v in onnx_model.graph.input)
-
             assert 'param_bn_avg_mean' in input_names
             assert 'param_bn_avg_var' in input_names
+
+        self.expect(
+            self.model, self.x, name=name, train=train,
+            custom_model_test_func=test_input_names)
+
+
+class TestBatchNormalizationFunction(ONNXModelTest):
+
+    def setUp(self):
+
+        class Model(chainer.Chain):
+
+            def __call__(self, x):
+                gamma = np.ones(x.shape[1:], dtype=x.dtype)
+                beta = np.zeros(x.shape[1:], dtype=x.dtype)
+                return F.batch_normalization(x, gamma, beta)
+
+        self.model = Model()
+        self.x = input_generator.increasing(2, 5)
+
+    def test_output(self):
+
+        def test_input_names(onnx_model):
+            input_names = set(v.name for v in onnx_model.graph.input)
+            assert 'BatchNormalization_0_param_avg_mean' in input_names
+            assert 'BatchNormalization_0_param_avg_var' in input_names
+
+        self.expect(
+            self.model, self.x, custom_model_test_func=test_input_names)
+
+
+class TestFixedBatchNormalizationFunction(ONNXModelTest):
+
+    def setUp(self):
+
+        class Model(chainer.Chain):
+
+            def __call__(self, x):
+                mean = x.array.mean(axis=0)
+                var = x.array.var(axis=0)
+                gamma = np.ones_like(mean, dtype=x.dtype)
+                beta = np.zeros_like(mean, dtype=x.dtype)
+                return F.fixed_batch_normalization(x, gamma, beta, mean, var)
+
+        self.model = Model()
+        self.x = input_generator.increasing(2, 5)
+
+    def test_output(self):
+
+        def test_input_names(onnx_model):
+            input_names = set(v.name for v in onnx_model.graph.input)
+            assert 'FixedBatchNormalization_0_param_avg_mean' in input_names
+            assert 'FixedBatchNormalization_0_param_avg_var' in input_names
+
+        self.expect(
+            self.model, self.x, custom_model_test_func=test_input_names)
