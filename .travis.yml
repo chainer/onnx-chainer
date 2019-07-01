@@ -35,8 +35,9 @@ notifications:
 
 before_install:
   - pip install $CHAINER_INSTALL chainer
-  - if [[ $ONNX_VER != "" ]]; then pip install onnx==$ONNX_VER; fi
   - pip install -U -e .[travis]
+  - if [[ $ONNX_VER != "" ]]; then pip install onnx==$ONNX_VER; fi
+  - pip list -v
 
 script:
   - flake8
