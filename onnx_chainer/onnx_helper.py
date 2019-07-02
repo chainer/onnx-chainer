@@ -1,4 +1,5 @@
 import onnx
+from packaging import version
 
 
 __func_name = None  # not care the name is unique on whole graph
@@ -140,3 +141,9 @@ def cleanse_param_name(name):
       A valid ONNX name (e.g., param_l_W).
     """
     return 'param' + name.replace('/', '_')
+
+
+def is_support_non_standard_domain():
+    # from ONNX 1.5, skip schema check on ops in non-standard domain
+    # see: https://github.com/onnx/onnx/pull/1876
+    return version.parse(onnx.__version__) >= version.parse('1.5')

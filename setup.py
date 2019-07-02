@@ -28,6 +28,7 @@ requirements = {
     'travis': [
         '-r stylecheck',
         '-r test-cpu',
+        'packaging>=19.0',
         'pytest-cov',
         'codecov',
     ],

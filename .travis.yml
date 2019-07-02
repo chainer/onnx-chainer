@@ -17,7 +17,7 @@ matrix:
       python: "3.5"
       env:
         - CHAINER_INSTALL="--pre"
-    - name: "Py36, Chainer pre-rlease"
+    - name: "Py36, Chainer pre-release"
       python: "3.6"
       env:
         - CHAINER_INSTALL="--pre"
