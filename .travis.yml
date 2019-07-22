@@ -11,6 +11,8 @@ matrix:
         - ONNX_VER="1.4.1"
     - name: "Py36, Chainer stable"
       python: "3.6"
+    - name: "Py37, Chainer stable"
+      python: "3.7"
       env:
         - ONNX_CHAINER_DEPLOY_JOB=1
     - name: "Py35, Chainer pre-release"
@@ -19,6 +21,10 @@ matrix:
         - CHAINER_INSTALL="--pre"
     - name: "Py36, Chainer pre-release"
       python: "3.6"
+      env:
+        - CHAINER_INSTALL="--pre"
+    - name: "Py37, Chainer pre-release"
+      python: "3.7"
       env:
         - CHAINER_INSTALL="--pre"
 
