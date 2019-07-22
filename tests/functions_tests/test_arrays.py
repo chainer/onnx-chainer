@@ -331,3 +331,30 @@ class TestStack(ONNXModelTest):
                   shape in self.in_shapes]
 
         self.expect(model, xs, name=self.name)
+
+
+class TestDynamicReshape(ONNXModelTest):
+
+    def test_output(self):
+        from onnx_chainer.replace_func import as_funcnode
+
+        class Model(chainer.Chain):
+            def __init__(self):
+                super().__init__()
+
+            @as_funcnode('Reshape')
+            def dynamic_reshape(self, x, shape):
+                # shape is expected as variable type
+                return x.array.reshape(shape.array)
+
+            def forward(self, x, shape):
+                return self.dynamic_reshape(x, shape)
+
+        model = Model()
+        x = input_generator.increasing(3, 4, 5)
+        shape = np.array([12, 5])
+
+        def check_no_param(onnx_model):
+            assert not any(['param' in v.name for v in onnx_model.graph.input])
+
+        self.expect(model, (x, shape), custom_model_test_func=check_no_param)
