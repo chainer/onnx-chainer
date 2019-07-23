@@ -344,7 +344,7 @@ class TestShape(ONNXModelTest):
 
             @as_funcnode('Shape')
             def shape(self, x):
-                # ONNX Shape operator constrains to ruturn int64 type
+                # ONNX Shape operator constrains to return int64 type
                 return np.array(x.shape)
 
             def forward(self, x):
