@@ -190,7 +190,7 @@ def convert_Unpooling2D(func, opset_version, input_names, output_names,
         return onnx_helper.make_node('Upsample', input_names, output_names,
                                      scales=scales),
     if opset_version in [9, 10]:
-        scales_name = context.add_param(
+        scales_name = context.add_const(
             np.array(scales, dtype=np.float32), 'scales')
         input_names.append(scales_name)
         op = 'Upsample' if opset_version == 9 else 'Resize'

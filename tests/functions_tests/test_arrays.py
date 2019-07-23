@@ -198,7 +198,8 @@ class TestArrayOperators(ONNXModelTest):
             name = self.name
         skip_ver = None
         self.expect(
-            self.model, self.x, name=name, skip_outvalue_version=skip_ver)
+            self.model, self.x, name=name, skip_outvalue_version=skip_ver,
+            expected_num_initializers=0)
 
 
 class TestConcat(ONNXModelTest):
@@ -273,7 +274,7 @@ class TestResizeImages(ONNXModelTest):
         self.check_out_values = None  # Skip output value check
 
         with warnings.catch_warnings(record=True) as w:
-            self.expect(self.model, self.x)
+            self.expect(self.model, self.x, expected_num_initializers=0)
         assert len(w) == 1
 
 

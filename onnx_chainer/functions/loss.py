@@ -33,8 +33,9 @@ def convert_SoftmaxCrossEntropy(
     gb = onnx_helper.GraphBuilder()
     x, t = input_names
     y_log = gb.op('LogSoftmax', [x])
-    depth = gb.const(np.array([x_var.shape[1]], dtype=np.int32))
-    zeroone = gb.const(np.array([0, 1], dtype=x_var.dtype))
+    depth = context.add_const(np.array([x_var.shape[1]], dtype=np.int32),
+                              'depth')
+    zeroone = context.add_const(np.array([0, 1], dtype=x_var.dtype), 'zeroone')
     th = gb.op('OneHot', [t, depth, zeroone])
     s0 = gb.op('Mul', [y_log, th])
     sn = gb.op('Neg', [s0])

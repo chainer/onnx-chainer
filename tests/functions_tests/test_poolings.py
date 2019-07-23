@@ -40,7 +40,8 @@ class TestPoolings(ONNXModelTest):
         name = self.op_name
         if hasattr(self, 'condition'):
             name += '_' + self.condition
-        self.expect(self.model, self.x, name=name)
+        self.expect(self.model, self.x, name=name,
+                    expected_num_initializers=0)
 
 
 @testing.parameterize(
