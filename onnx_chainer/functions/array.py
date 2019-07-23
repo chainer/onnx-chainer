@@ -368,8 +368,7 @@ def convert_Repeat(func, opset_version, input_names, output_names, context,
         return gb.nodes()
 
     if opset_version in [9, 10]:
-        # TODO(hamaji): Check if why `add_const` does not work here.
-        scales_name = context.add_param(
+        scales_name = context.add_const(
             np.array(scales, dtype=np.float32), 'scales')
         inputs.append(scales_name)
         op = 'Upsample' if opset_version == 9 else 'Resize'

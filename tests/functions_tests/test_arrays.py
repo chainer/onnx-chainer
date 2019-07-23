@@ -197,11 +197,9 @@ class TestArrayOperators(ONNXModelTest):
         if hasattr(self, 'name'):
             name = self.name
         skip_ver = None
-        # TODO(hamaji): Always use 0 after fixing the exporter of `repeat`.
-        expected_num_initializers = None if self.ops == 'repeat' else 0
         self.expect(
             self.model, self.x, name=name, skip_outvalue_version=skip_ver,
-            expected_num_initializers=expected_num_initializers)
+            expected_num_initializers=0)
 
 
 class TestConcat(ONNXModelTest):
