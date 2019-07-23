@@ -1,5 +1,7 @@
 import chainer
 
+from onnx import numpy_helper
+
 from onnx_chainer import onnx_helper
 
 
@@ -20,6 +22,7 @@ class Context(object):
     def __init__(self, model):
         self.name_list = dict()
         self.parameters = []
+        self.constants = []
         namedlink = {n: l for n, l in model.namedlinks()}
         self.param_to_link = {}
         for name, param in model.namedparams():
@@ -82,6 +85,26 @@ class Context(object):
                 onnx_helper.cleanse_param_name(name))
         self.set_name(array, onnx_name)
         self.parameters.append(array)
+        return onnx_name
+
+    def add_const(self, array, name):
+        """Add array to context parameter
+
+        To be converted as ONNX tensor.
+
+        Returns:
+            str: registered name.
+        """
+        if not (name.startswith('/') or name.startswith('_')):
+            name = '/' + name
+        onnx_name = '{}_{}'.format(
+            onnx_helper.get_func_name(),
+            onnx_helper.cleanse_param_name(name))
+        self.set_name(array, onnx_name)
+        const_node = onnx_helper.make_node(
+            'Constant', [], [onnx_name],
+            value=numpy_helper.from_array(array, name=onnx_name))
+        self.constants.append(const_node)
         return onnx_name
 
     def get_link(self, param):

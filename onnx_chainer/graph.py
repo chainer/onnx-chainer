@@ -126,6 +126,9 @@ class Graph(object):
         onnx_helper.set_func_name(base_func_name)
         nodes = self.create_node(
             func_name, function, input_names, output_names)
+        # Insert constants before computation nodes.
+        self.graph.extend(self.context.constants)
+        self.context.constants.clear()
         self.graph.extend(nodes)
 
     def to_onnx_graph(self):

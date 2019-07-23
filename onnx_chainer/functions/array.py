@@ -411,7 +411,7 @@ def convert_ResizeImages(func, opset_version, input_names, output_names,
                                      scales=scales, mode=mode),
 
     if opset_version in [9, 10]:
-        scales_name = context.add_param(
+        scales_name = context.add_const(
             np.array(scales, dtype=np.float32), 'scales')
         input_names.append(scales_name)
         op = 'Upsample' if opset_version == 9 else 'Resize'
