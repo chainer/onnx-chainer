@@ -136,22 +136,22 @@ def convert_Identity(func, opset_version, input_names,
     return onnx_helper.make_node('Identity', input_names, output_names),
 
 
-@support((1, 6, 7))
 def convert_MatMul(func, opset_version, input_names,
                    output_names, context, parameters):
-    bias_shape = (
-        func.inputs[0].shape[-1] if func.transa else func.inputs[0].shape[-2],
-        func.inputs[1].shape[-2] if func.transb else func.inputs[1].shape[-1]
-    )
-    bias_tensor = np.zeros(bias_shape, dtype=func.inputs[0].dtype)
-    bias_name = context.add_const(bias_tensor, 'bias')
-    input_names.append(bias_name)
+    ndim_a = len(func.inputs[0].shape)
+    ndim_b = len(func.inputs[1].shape)
 
-    return onnx_helper.make_node(
-        'Gemm', input_names, output_names,
-        transA=func.transa,
-        transB=func.transb
-    ),
+    gb = onnx_helper.GraphBuilder()
+    if ndim_a > 1 and func.transa:
+        perm = list(range(ndim_a))
+        perm[-1], perm[-2] = perm[-2], perm[-1]
+        input_names[0] = gb.op('Transpose', [input_names[0]], perm=perm)
+    if ndim_b > 1 and func.transb:
+        perm = list(range(ndim_b))
+        perm[-1], perm[-2] = perm[-2], perm[-1]
+        input_names[1] = gb.op('Transpose', [input_names[1]], perm=perm)
+    gb.op('MatMul', input_names)
+    return gb.nodes(output_names)
 
 
 @support((1, 6, 8))
