@@ -124,7 +124,7 @@ def convert_GetItem(func, opset_version, input_names,
                        axes=axes, starts=starts, ends=ends)
     elif opset_version == 10:
         for param in [('starts', starts), ('ends', ends), ('axes', axes)]:
-            param_name = context.add_param(
+            param_name = context.add_const(
                 np.asarray(list(param[1]), dtype=np.int64), param[0])
             input_names.append(param_name)
         output = gb.op('Slice', input_names)
@@ -214,7 +214,7 @@ def convert_Reshape(func, opset_version, input_names,
         if hasattr(func, 'shape'):
             # if the function has shape parameter, means not dynamic
             assert len(input_names) == 1
-            shape_name = context.add_param(
+            shape_name = context.add_const(
                 np.asarray(list(func.shape), dtype=np.int64), 'shape')
             input_names.append(shape_name)
         else:
@@ -298,13 +298,13 @@ def convert_Tile(func, opset_version, input_names, output_names,
     # Add tiles and axis to graph
     if isinstance(func.reps, int):
         func.reps = [func.reps]
-    tiles_name = context.add_param(
+    tiles_name = context.add_const(
         np.asarray(func.reps, dtype=np.int64), 'tiles')
     input_names.append(tiles_name)
 
     # In operater version = 1, axis also should be given
     if opset_version == 1:
-        axis_name = context.add_param(
+        axis_name = context.add_const(
             np.array([i for i, _ in enumerate(func.reps)], dtype=np.float32),
             'axis')
         input_names.append(axis_name)
@@ -355,7 +355,7 @@ def convert_Repeat(func, opset_version, input_names, output_names, context,
     inputs = list(input_names)
     axis = func.axis
     if axis is None:
-        shape_name = context.add_param(np.array([-1]), 'shape')
+        shape_name = context.add_const(np.array([-1]), 'shape')
         input_names.append(shape_name)
         inputs = [gb.op('Reshape', input_names)]
         scales = [float(repeats[0])]
@@ -368,6 +368,7 @@ def convert_Repeat(func, opset_version, input_names, output_names, context,
         return gb.nodes()
 
     if opset_version in [9, 10]:
+        # TODO(hamaji): Check if why `add_const` does not work here.
         scales_name = context.add_param(
             np.array(scales, dtype=np.float32), 'scales')
         inputs.append(scales_name)
