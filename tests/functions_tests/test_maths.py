@@ -72,7 +72,8 @@ class TestUnaryMathOperators(ONNXModelTest):
         if self.op_name == 'BroadcastTo':
             skip_opset_version.append(7)
         self.expect(self.model, self.a, name=name,
-                    skip_opset_version=skip_opset_version)
+                    skip_opset_version=skip_opset_version,
+                    expected_num_initializers=0)
 
 
 @testing.parameterize(
@@ -109,7 +110,8 @@ class TestBinaryMathOperators(ONNXModelTest):
         for tc in test_cases:
             xs = getattr(self, tc)()
             name = '{}_{}'.format(self.op_name.lower(), tc)
-            self.expect(self.get_model(), xs, name=name)
+            self.expect(
+                self.get_model(), xs, name=name, expected_num_initializers=0)
 
     def matrix(self):
         a = chainer.Variable(input_generator.increasing(5, 2, 3))
@@ -157,4 +159,5 @@ class TestTernaryMathOperators(ONNXModelTest):
 
     def test_output(self):
         name = self.op_name.lower()
-        self.expect(self.model, self.x, name=name)
+        self.expect(self.model, self.x, name=name,
+                    expected_num_initializers=0)

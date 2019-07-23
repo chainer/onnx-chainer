@@ -1,6 +1,21 @@
 import chainer
 
+import onnx
+from onnx import numpy_helper
+
 from onnx_chainer import onnx_helper
+
+
+def _tensor_from_array_for_constant(array, name):
+    tensor = numpy_helper.from_array(array, name=name)
+    # Avoid `raw_data` for better debuggability. This would be OK
+    # since constants are usually small.
+    field_name = onnx.mapping.STORAGE_TENSOR_TYPE_TO_FIELD.get(
+        tensor.data_type, None)
+    if field_name is not None:
+        tensor.ClearField('raw_data')
+        getattr(tensor, field_name)[:] = array.flatten().tolist()
+    return tensor
 
 
 class Context(object):
@@ -20,6 +35,7 @@ class Context(object):
     def __init__(self, model):
         self.name_list = dict()
         self.parameters = []
+        self.constants = []
         namedlink = {n: l for n, l in model.namedlinks()}
         self.param_to_link = {}
         for name, param in model.namedparams():
@@ -82,6 +98,26 @@ class Context(object):
                 onnx_helper.cleanse_param_name(name))
         self.set_name(array, onnx_name)
         self.parameters.append(array)
+        return onnx_name
+
+    def add_const(self, array, name):
+        """Add array to context parameter
+
+        To be converted as ONNX tensor.
+
+        Returns:
+            str: registered name.
+        """
+        if not (name.startswith('/') or name.startswith('_')):
+            name = '/' + name
+        onnx_name = '{}_{}'.format(
+            onnx_helper.get_func_name(),
+            onnx_helper.cleanse_param_name(name))
+        self.set_name(array, onnx_name)
+        tensor = _tensor_from_array_for_constant(array, name=onnx_name)
+        const_node = onnx_helper.make_node(
+            'Constant', [], [onnx_name], value=tensor)
+        self.constants.append(const_node)
         return onnx_name
 
     def get_link(self, param):

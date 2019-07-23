@@ -45,7 +45,8 @@ class ONNXModelTest(unittest.TestCase):
 
     def expect(self, model, args, name=None, skip_opset_version=None,
                skip_outvalue_version=None, with_warning=False,
-               custom_model_test_func=None, **kwargs):
+               custom_model_test_func=None, expected_num_initializers=None,
+               **kwargs):
         """Compare model output and test runtime output.
 
         Make an ONNX model from target model with args, and put output
@@ -61,6 +62,8 @@ class ONNXModelTest(unittest.TestCase):
             custom_model_test_func (func): A function to check generated
                 model. The functions is called before checking output values.
                 ONNX model is passed to arguments.
+            expected_num_initializers (int): The expected number of
+                initializers in the output ONNX model.
             **kwargs (dict): keyward arguments for ``onnx_chainer.export``.
         """
 
@@ -89,6 +92,10 @@ class ONNXModelTest(unittest.TestCase):
             with open(onnx_model_path, 'rb') as f:
                 onnx_model = onnx.load_model(f)
             check_all_connected_from_inputs(onnx_model)
+
+            if expected_num_initializers is not None:
+                actual_num_initializers = len(onnx_model.graph.initializer)
+                assert expected_num_initializers == actual_num_initializers
 
             graph_input_names = _get_graph_input_names(onnx_model)
             if kwargs.get('input_names', {}):

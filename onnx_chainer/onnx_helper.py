@@ -94,18 +94,6 @@ class GraphBuilder(object):
         else:
             return tuple(node.output)
 
-    def const(self, array):
-        """Creates a Constant node of ONNX.
-
-        Args:
-          array (numpy.ndarray): A numpy array.
-
-        Returns:
-          A str of the name of the constant value.
-        """
-        tensor = onnx.numpy_helper.from_array(array)
-        return self.op('Constant', [], 1, value=tensor)
-
     def nodes(self, output_names=None):
         """Returns all nodes created so far.
 

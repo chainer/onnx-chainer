@@ -198,7 +198,8 @@ class TestArrayOperators(ONNXModelTest):
             name = self.name
         skip_ver = None
         self.expect(
-            self.model, self.x, name=name, skip_outvalue_version=skip_ver)
+            self.model, self.x, name=name, skip_outvalue_version=skip_ver,
+            expected_num_initializers=0)
 
 
 class TestConcat(ONNXModelTest):
@@ -273,7 +274,7 @@ class TestResizeImages(ONNXModelTest):
         self.check_out_values = None  # Skip output value check
 
         with warnings.catch_warnings(record=True) as w:
-            self.expect(self.model, self.x)
+            self.expect(self.model, self.x, expected_num_initializers=0)
         assert len(w) == 1
 
 
@@ -331,3 +332,54 @@ class TestStack(ONNXModelTest):
                   shape in self.in_shapes]
 
         self.expect(model, xs, name=self.name)
+
+
+class TestShape(ONNXModelTest):
+
+    def test_output(self):
+        from onnx_chainer.replace_func import as_funcnode
+
+        class Model(chainer.Chain):
+            def __init__(self):
+                super().__init__()
+
+            @as_funcnode('Shape')
+            def shape(self, x):
+                # ONNX Shape operator constrains to return int64 type
+                return np.array(x.shape)
+
+            def forward(self, x):
+                # use shape method instead of x.shape to connect graph.
+                return self.shape(x)
+
+        model = Model()
+        x = input_generator.increasing(3, 4, 5)
+
+        self.expect(model, (x,))
+
+
+class TestDynamicReshape(ONNXModelTest):
+
+    def test_output(self):
+        from onnx_chainer.replace_func import as_funcnode
+
+        class Model(chainer.Chain):
+            def __init__(self):
+                super().__init__()
+
+            @as_funcnode('Reshape')
+            def dynamic_reshape(self, x, shape):
+                # shape is expected as variable type
+                return F.reshape(x, tuple(shape.array))
+
+            def forward(self, x, shape):
+                return self.dynamic_reshape(x, shape)
+
+        model = Model()
+        x = input_generator.increasing(3, 4, 5)
+        shape = np.array([12, 5])
+
+        def check_no_param(onnx_model):
+            assert not any(['param' in v.name for v in onnx_model.graph.input])
+
+        self.expect(model, (x, shape), custom_model_test_func=check_no_param)

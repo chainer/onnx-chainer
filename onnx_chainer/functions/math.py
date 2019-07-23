@@ -17,7 +17,7 @@ def convert_Add(func, opset_version, input_names, output_names,
 @support((1, 6, 7))
 def convert_AddConstant(func, opset_version, input_names,
                         output_names, context, parameters):
-    value_name = context.add_param(
+    value_name = context.add_const(
         np.array(func.value, dtype=func.inputs[0].dtype), 'value')
     input_names.append(value_name)
 
@@ -51,7 +51,7 @@ def convert_Mul(func, opset_version, input_names, output_names,
 @support((1, 6, 7))
 def convert_MulConstant(func, opset_version, input_names,
                         output_names, context, parameters):
-    value_name = context.add_param(
+    value_name = context.add_const(
         np.array(func.value, dtype=func.inputs[0].dtype), 'value')
     input_names.append(value_name)
 
@@ -95,7 +95,7 @@ def convert_Absolute(func, opset_version, input_names,
 @support((1, 7))
 def convert_PowVarConst(func, opset_version, input_names,
                         output_names, context, parameters):
-    value_name = context.add_param(
+    value_name = context.add_const(
         np.array(func.value, dtype=func.inputs[0].dtype), 'value')
     input_names.append(value_name)
 
@@ -248,7 +248,7 @@ def convert_LinearInterpolate(func, opset_version, input_names,
     typ = func.inputs[0].dtype if isinstance(
         func.inputs[0].dtype, np.dtype) else np.dtype(func.inputs[0].dtype)
 
-    one_name = context.add_param(np.array(1, dtype=typ), 'one')
+    one_name = context.add_const(np.array(1, dtype=typ), 'one')
 
     kwargs = {'consumed_inputs': [1, 1]} if opset_version == 1 else {}
     kwargs2 = {} if opset_version >= 7 else {'broadcast': 1}
@@ -278,6 +278,6 @@ def convert_Square(func, opset_version, input_names,
 @support((8,))
 def convert_BroadcastTo(func, opset_version, input_names,
                         output_names, context, parameters):
-    shape_name = context.add_param(np.array(func._shape), 'shape')
+    shape_name = context.add_const(np.array(func._shape), 'shape')
     input_names.append(shape_name)
     return onnx_helper.make_node('Expand', input_names, output_names),

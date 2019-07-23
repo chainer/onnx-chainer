@@ -30,6 +30,7 @@ _supported_function_node_set = {
     'Reshape',
     'ResizeImages',
     'Separate',
+    'Shape',
     'Space2Depth',
     'SplitAxis',
     'Squeeze',
