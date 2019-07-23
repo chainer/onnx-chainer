@@ -81,9 +81,7 @@ class Context(object):
         return self.name_list[str_id][1]
 
     def add_param(self, array, name, use_original_name=False):
-        """Add array to context parameter
-
-        To be converted as ONNX tensor.
+        """Add a parameter array as an ONNX initializer.
 
         Returns:
             str: registered name.
@@ -101,18 +99,13 @@ class Context(object):
         return onnx_name
 
     def add_const(self, array, name):
-        """Add array to context parameter
-
-        To be converted as ONNX tensor.
+        """Add a constant array as an ONNX Constant node.
 
         Returns:
             str: registered name.
         """
-        if not (name.startswith('/') or name.startswith('_')):
-            name = '/' + name
-        onnx_name = '{}_{}'.format(
-            onnx_helper.get_func_name(),
-            onnx_helper.cleanse_param_name(name))
+        assert '/' not in name
+        onnx_name = '{}_const_{}'.format(onnx_helper.get_func_name(), name)
         self.set_name(array, onnx_name)
         tensor = _tensor_from_array_for_constant(array, name=onnx_name)
         const_node = onnx_helper.make_node(
