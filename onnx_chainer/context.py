@@ -1,8 +1,21 @@
 import chainer
 
+import onnx
 from onnx import numpy_helper
 
 from onnx_chainer import onnx_helper
+
+
+def _tensor_from_array_for_constant(array, name):
+    tensor = numpy_helper.from_array(array, name=name)
+    # Avoid `raw_data` for better debuggability. This would be OK
+    # since constants are usually small.
+    field_name = onnx.mapping.STORAGE_TENSOR_TYPE_TO_FIELD.get(
+        tensor.data_type, None)
+    if field_name is not None:
+        tensor.ClearField('raw_data')
+        getattr(tensor, field_name)[:] = array.flatten().tolist()
+    return tensor
 
 
 class Context(object):
@@ -101,9 +114,9 @@ class Context(object):
             onnx_helper.get_func_name(),
             onnx_helper.cleanse_param_name(name))
         self.set_name(array, onnx_name)
+        tensor = _tensor_from_array_for_constant(array, name=onnx_name)
         const_node = onnx_helper.make_node(
-            'Constant', [], [onnx_name],
-            value=numpy_helper.from_array(array, name=onnx_name))
+            'Constant', [], [onnx_name], value=tensor)
         self.constants.append(const_node)
         return onnx_name
 
