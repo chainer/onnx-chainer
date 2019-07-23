@@ -273,7 +273,7 @@ class TestResizeImages(ONNXModelTest):
         self.check_out_values = None  # Skip output value check
 
         with warnings.catch_warnings(record=True) as w:
-            self.expect(self.model, self.x)
+            self.expect(self.model, self.x, expected_num_initializers=0)
         assert len(w) == 1
 
 
