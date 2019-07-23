@@ -333,6 +333,30 @@ class TestStack(ONNXModelTest):
         self.expect(model, xs, name=self.name)
 
 
+class TestShape(ONNXModelTest):
+
+    def test_output(self):
+        from onnx_chainer.replace_func import as_funcnode
+
+        class Model(chainer.Chain):
+            def __init__(self):
+                super().__init__()
+
+            @as_funcnode('Shape')
+            def shape(self, x):
+                # ONNX Shape operator constrains to return int64 type
+                return np.array(x.shape)
+
+            def forward(self, x):
+                # use shape method instead of x.shape to connect graph.
+                return self.shape(x)
+
+        model = Model()
+        x = input_generator.increasing(3, 4, 5)
+
+        self.expect(model, (x,))
+
+
 class TestDynamicReshape(ONNXModelTest):
 
     def test_output(self):

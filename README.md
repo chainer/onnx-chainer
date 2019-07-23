@@ -8,11 +8,11 @@ This is an add-on package for ONNX support by Chainer.
 
 ## Tested environment
 
-- Python 3.5.5, 3.6.7
-- ONNX 1.4.0, 1.4.1
-    - opset version 7, 8, 9
+- Python 3.5.5, 3.6.7, 3.7.2
+- ONNX 1.4.0, 1.4.1, 1.5.0
+    - opset version 7, 8, 9, 10
 - Chainer stable, preview
-- ONNX-Runtime 0.3.0
+- ONNX-Runtime 0.4.0
 
 **(You can still specify all opset versions <= 9, but please noted that opset versions <= 6 are not tested)**
 

@@ -487,3 +487,8 @@ def convert_Separate(func, opset_version, input_names, output_names, context,
         gb.op_output_named(
             'Squeeze', [node_name], [output_names[i]], axes=[func.axis])
     return gb.nodes()
+
+
+def convert_Shape(func, opset_version, input_names, output_names, context,
+                  parameters):
+    return onnx_helper.make_node('Shape', input_names, output_names),
