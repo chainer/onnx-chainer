@@ -345,7 +345,7 @@ class TestDynamicReshape(ONNXModelTest):
             @as_funcnode('Reshape')
             def dynamic_reshape(self, x, shape):
                 # shape is expected as variable type
-                return x.array.reshape(shape.array)
+                return F.reshape(x, tuple(shape.array))
 
             def forward(self, x, shape):
                 return self.dynamic_reshape(x, shape)
