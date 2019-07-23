@@ -46,11 +46,6 @@ def convert_parameter(parameter, context):
                 type(parameter)))
     array = chainer.cuda.to_cpu(array)
     tensor = numpy_helper.from_array(array, context.get_name(parameter))
-    # TODO(take-cheeze): Workaround until this is merged:
-    # https://github.com/onnx/onnx/pull/2085
-    if array.ndim == 1 and tensor.data_type == onnx.TensorProto.FLOAT:
-        tensor.ClearField('raw_data')
-        tensor.float_data[:] = array.tolist()
     return tensor
 
 
