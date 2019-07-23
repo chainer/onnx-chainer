@@ -1,4 +1,4 @@
-FROM nvidia/cuda:10.0-devel
+FROM nvidia/cuda:10.1-cudnn7-devel
 
 LABEL author="Daisuke Tanaka <duaipp@gmail.com>, Shunta Saito <shunta.saito@gmail.com>"
 
