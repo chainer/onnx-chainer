@@ -108,11 +108,8 @@ class Context(object):
         Returns:
             str: registered name.
         """
-        if not (name.startswith('/') or name.startswith('_')):
-            name = '/' + name
-        onnx_name = '{}_{}'.format(
-            onnx_helper.get_func_name(),
-            onnx_helper.cleanse_param_name(name))
+        assert '/' not in name
+        onnx_name = '{}_const_{}'.format(onnx_helper.get_func_name(), name)
         self.set_name(array, onnx_name)
         tensor = _tensor_from_array_for_constant(array, name=onnx_name)
         const_node = onnx_helper.make_node(
