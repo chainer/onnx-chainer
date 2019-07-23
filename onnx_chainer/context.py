@@ -81,9 +81,7 @@ class Context(object):
         return self.name_list[str_id][1]
 
     def add_param(self, array, name, use_original_name=False):
-        """Add array to context parameter
-
-        To be converted as ONNX tensor.
+        """Add a parameter array as an ONNX initializer.
 
         Returns:
             str: registered name.
@@ -101,9 +99,7 @@ class Context(object):
         return onnx_name
 
     def add_const(self, array, name):
-        """Add array to context parameter
-
-        To be converted as ONNX tensor.
+        """Add a constant array as an ONNX Constant node.
 
         Returns:
             str: registered name.
