@@ -1,5 +1,6 @@
 import chainer
 from chainer import testing
+import numpy as np
 
 from onnx_chainer.testing import input_generator
 from tests.helper import ONNXModelTest
@@ -79,14 +80,16 @@ class TestUnaryMathOperators(ONNXModelTest):
     {'op_name': 'Sub', 'ops': 'a - b'},
     {'op_name': 'Mul', 'ops': 'a * b'},
     {'op_name': 'Div', 'ops': 'a / b'},
-    {'op_name': 'MatMul',
+    {'op_name': 'MatMul_transa',
+     'ops': 'chainer.functions.matmul(a, b, transa=True)'},
+    {'op_name': 'MatMul_transb',
      'ops': 'chainer.functions.matmul(a, b, transb=True)'},
     {'op_name': 'Maximum', 'ops': 'chainer.functions.maximum(a, b)'},
     {'op_name': 'Minimum', 'ops': 'chainer.functions.minimum(a, b)'},
 )
 class TestBinaryMathOperators(ONNXModelTest):
 
-    def setUp(self):
+    def get_model(self):
         class Model(chainer.Chain):
 
             def __init__(self, ops):
@@ -94,20 +97,34 @@ class TestBinaryMathOperators(ONNXModelTest):
                 self.ops = ops
 
             def __call__(self, a, b):
-                if not isinstance(a, chainer.Variable):
-                    a = chainer.Variable(a)
-                if not isinstance(b, chainer.Variable):
-                    b = chainer.Variable(b)
                 return eval(self.ops)
 
-        self.model = Model(self.ops)
-        a = chainer.Variable(input_generator.increasing(2, 3))
-        b = chainer.Variable(input_generator.nonzero_increasing(2, 3) * 0.3)
-        self.x = (a, b)
+        return Model(self.ops)
 
     def test_output(self):
-        name = self.op_name.lower()
-        self.expect(self.model, self.x, name=name)
+        test_cases = ['matrix', 'vector']
+        if not self.op_name.startswith('MatMul'):
+            test_cases.append('scalar')
+
+        for tc in test_cases:
+            xs = getattr(self, tc)()
+            name = '{}_{}'.format(self.op_name.lower(), tc)
+            self.expect(self.get_model(), xs, name=name)
+
+    def matrix(self):
+        a = chainer.Variable(input_generator.increasing(5, 2, 3))
+        b = chainer.Variable(input_generator.nonzero_increasing(5, 2, 3) * 0.3)
+        return (a, b)
+
+    def vector(self):
+        a = chainer.Variable(input_generator.increasing(2,))
+        b = chainer.Variable(input_generator.nonzero_increasing(2,) * 0.3)
+        return (a, b)
+
+    def scalar(self):
+        a = chainer.Variable(np.array(7, dtype=np.float32))
+        b = chainer.Variable(np.array(13, dtype=np.float32))
+        return (a, b)
 
 
 @testing.parameterize(
