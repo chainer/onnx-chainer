@@ -11,7 +11,8 @@ from onnx_chainer import onnx_helper
 class Graph(object):
 
     def __init__(
-            self, context, converters, opset_version, network_outputs):
+            self, context, converters, opset_version, network_outputs,
+            network_input_num, func_raw_inputs):
         self.context = context
         self.converters = converters
 
@@ -21,6 +22,9 @@ class Graph(object):
         self.outputs = set()  # Output variable names
         self.specified_opset_version = opset_version
         self.network_outputs = network_outputs
+        self.func_raw_inputs = func_raw_inputs
+        self.network_input_num = network_input_num
+        self.additional_network_inputs = {}
 
         self.function_nodes = self._build_computational_graph(
             network_outputs.values())
@@ -78,15 +82,22 @@ class Graph(object):
         base_func_name = '{}_{}'.format(
             func_name, self.func_name_counts[func_name])
         self.func_name_counts[func_name] += 1
+        onnx_helper.set_func_name(base_func_name)
 
         input_names = []
-        for input_var in function.inputs:
+        for i, input_var in enumerate(function.inputs):
             # 'input_var' is a VariableNode,
             # so check if it has a Variable/Parameter
             var = input_var.get_variable_or_none()
             if var is None:  # No reference to Variable/Parameter
-                # Use VariableNode as is
-                input_name = self.context.get_name(input_var)
+                # if inputs are cached, use them
+                func_raw_inputs = self.func_raw_inputs[id(function)]
+                if func_raw_inputs:
+                    input_name = self.context.add_const(
+                        func_raw_inputs[i], str(i))
+                else:
+                    # Use VariableNode as is
+                    input_name = self.context.get_name(input_var)
             else:  # It is a parameter inside a Link or network input
                 input_name = self.context.get_name(var)
                 if input_name not in self.outputs:
@@ -123,7 +134,6 @@ class Graph(object):
 
             output_names.append(output_name)
 
-        onnx_helper.set_func_name(base_func_name)
         nodes = self.create_node(
             func_name, function, input_names, output_names)
         # Insert constants before computation nodes.

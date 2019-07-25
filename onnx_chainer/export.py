@@ -103,6 +103,23 @@ def rename_variable_name(
         context.set_name(variables, new_name, pinned=True)
 
 
+class InputCacheHook(chainer.FunctionHook):
+    """cache raw inputs
+
+    Function nodes manage inputs variable nodes using weak reference. When
+    variable is made as temporary value, exporter cannot get the corresponded
+    variable from the variable node because the reference is collected. To
+    resolve it, cache all inputs and will use when make computational graph.
+    """
+
+    def __init__(self):
+        self.func_inputs = {}
+
+    def forward_postprocess(self, fn, in_data):
+        # in_data is ndarray, not variable
+        self.func_inputs[id(fn)] = in_data
+
+
 def export(model, args, filename=None, export_params=True,
            graph_name='Graph', save_text=False, opset_version=None,
            input_names=None, output_names=None, train=False,
@@ -207,35 +224,36 @@ def _export(model, args, filename, export_params, graph_name, save_text,
                 o=opset_version)
         )
 
-    # Forward computation
-    context = Context(model)
-    network_inputs = OrderedDict()
-    if isinstance(args, tuple):
-        args = list(args)
-    if isinstance(args, list):
-        for i, arg in enumerate(args):
-            if isinstance(arg, chainer.get_array_types()):
-                args[i] = chainer.Variable(arg)
-            network_inputs[context.get_name(args[i])] = args[i]
-        outputs = model(*args)
-    elif isinstance(args, dict):
-        for key, arg in args.items():
-            if isinstance(arg, chainer.get_array_types()):
-                args[key] = chainer.Variable(arg)
-            network_inputs[context.get_name(args[key])] = args[key]
-        outputs = model(**args)
-    elif isinstance(args, chainer.get_array_types()):
-        args = chainer.Variable(args)
-        network_inputs[context.get_name(args)] = args
-        outputs = model(args)
-    elif isinstance(args, chainer.Variable):
-        network_inputs[context.get_name(args)] = args
-        outputs = model(args)
-    else:
-        raise ValueError(
-            'The \'args\' argument should be a list, tuple, dict, '
-            'numpy array, or Chainer Variable. But a {} object was '
-            'given.'.format(type(args)))
+    with InputCacheHook() as hook:
+        # Forward computation
+        context = Context(model)
+        network_inputs = OrderedDict()
+        if isinstance(args, tuple):
+            args = list(args)
+        if isinstance(args, list):
+            for i, arg in enumerate(args):
+                if isinstance(arg, chainer.get_array_types()):
+                    args[i] = chainer.Variable(arg)
+                network_inputs[context.get_name(args[i])] = args[i]
+            outputs = model(*args)
+        elif isinstance(args, dict):
+            for key, arg in args.items():
+                if isinstance(arg, chainer.get_array_types()):
+                    args[key] = chainer.Variable(arg)
+                network_inputs[context.get_name(args[key])] = args[key]
+            outputs = model(**args)
+        elif isinstance(args, chainer.get_array_types()):
+            args = chainer.Variable(args)
+            network_inputs[context.get_name(args)] = args
+            outputs = model(args)
+        elif isinstance(args, chainer.Variable):
+            network_inputs[context.get_name(args)] = args
+            outputs = model(args)
+        else:
+            raise ValueError(
+                'The \'args\' argument should be a list, tuple, dict, '
+                'numpy array, or Chainer Variable. But a {} object was '
+                'given.'.format(type(args)))
     rename_variable_name(context, args, network_inputs, input_names)
 
     initializers = []
@@ -282,8 +300,14 @@ def _export(model, args, filename, export_params, graph_name, save_text,
     if output_names:
         rename_variable_name(context, outputs, network_outputs, output_names)
 
-    o = Graph(context, converters, opset_version, network_outputs)
+    o = Graph(
+        context, converters, opset_version, network_outputs,
+        len(network_inputs), hook.func_inputs)
     o.to_onnx_graph()
+
+    for name, var in o.additional_network_inputs.items():
+        input_tensors.append(helper.make_tensor_value_info(
+            name, NP_TYPE_TO_TENSOR_TYPE[var.dtype], var.shape))
 
     implicit_input_names = set(o.inputs.keys()) - param_names -\
         set(network_inputs.keys())
