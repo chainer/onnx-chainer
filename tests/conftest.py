@@ -17,3 +17,19 @@ def disable_experimental_warning():
         yield
     finally:
         chainer.disable_experimental_feature_warning = org_config
+
+
+@pytest.fixture(scope='function')
+def check_model_expect(request):
+    selected_runtime = request.config.getoption('value-check-runtime')
+    if selected_runtime == 'onnxruntime':
+        from onnx_chainer.testing.test_onnxruntime import check_model_expect  # NOQA
+        _checker = check_model_expect
+    elif selected_runtime == 'mxnet':
+        from onnx_chainer.testing.test_mxnet import check_model_expect
+        _checker = check_model_expect
+    else:
+        def empty_func(*args, **kwargs):
+            pass
+        _checker = empty_func
+    return _checker
