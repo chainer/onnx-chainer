@@ -132,7 +132,13 @@ class ONNXModelTest(unittest.TestCase):
                     array, input_data[i], rtol=1e-5, atol=1e-5)
 
             if custom_model_test_func is not None:
-                custom_model_test_func(onnx_model)
+                class Param(object):
+                    def __init__(self, onnx_model, test_path):
+                        self.onnx_model = onnx_model
+                        self.test_path = test_path
+
+                param = Param(onnx_model, test_path)
+                custom_model_test_func(param)
 
             if skip_outvalue_version is not None and\
                     opset_version in skip_outvalue_version:
