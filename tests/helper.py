@@ -29,19 +29,10 @@ class ONNXModelTest(unittest.TestCase):
         pass
 
     @pytest.fixture(autouse=True, scope='function')
-    def set_name(self, request):
+    def set_name(self, request, check_model_expect):
         cls_name = request.cls.__name__
         self.default_name = cls_name[len('Test'):].lower()
-        self.check_out_values = None
-        selected_runtime = request.config.getoption('value-check-runtime')
-        if selected_runtime == 'onnxruntime':
-            from onnx_chainer.testing.test_onnxruntime import check_model_expect  # NOQA
-            self.check_out_values = check_model_expect
-        elif selected_runtime == 'mxnet':
-            from onnx_chainer.testing.test_mxnet import check_model_expect
-            self.check_out_values = check_model_expect
-        else:
-            self.check_out_values = None
+        self.check_out_values = check_model_expect
 
     def expect(self, model, args, name=None, skip_opset_version=None,
                skip_outvalue_version=None, with_warning=False,

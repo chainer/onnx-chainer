@@ -9,10 +9,9 @@ import pytest
 from onnx_chainer import export_testcase
 from onnx_chainer import onnx_helper
 from onnx_chainer.testing import input_generator
-from onnx_chainer.testing.test_onnxruntime import check_model_expect
 
 
-def test_export_external_converters_overwrite(tmpdir):
+def test_export_external_converters_overwrite(tmpdir, check_model_expect):
     path = str(tmpdir)
 
     model = chainer.Sequential(chainer.functions.sigmoid)
