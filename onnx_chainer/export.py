@@ -124,7 +124,7 @@ def export(model, args, filename=None, export_params=True,
            graph_name='Graph', save_text=False, opset_version=None,
            input_names=None, output_names=None, train=False,
            return_named_inout=False, external_converters=None,
-           external_opset_imports=None):
+           external_opset_imports=None, export_implicit_inputs_public=False):
     """Export function for chainer.Chain in ONNX format.
 
     This function performs a forward computation of the given
@@ -188,6 +188,9 @@ def export(model, args, filename=None, export_params=True,
             keyed by ~chainer.FunctionNode name.
         external_opset_imports (dict): Import external opset. opset version
             number keyed by domain name.
+        export_implicit_inputs_public (bool): Implicit values not set as
+            model parameter are exported as Constant. If set True, the values
+            are exported as Inputs.
 
     Returns:
         ~onnx.ModelProto or tuple:
@@ -205,12 +208,14 @@ def export(model, args, filename=None, export_params=True,
         return _export(
             model, args, filename, export_params, graph_name, save_text,
             opset_version, input_names, output_names, return_named_inout,
-            external_converters, external_opset_imports)
+            external_converters, external_opset_imports,
+            export_implicit_inputs_public)
 
 
 def _export(model, args, filename, export_params, graph_name, save_text,
             opset_version, input_names, output_names, return_named_inout,
-            external_converters, external_opset_imports):
+            external_converters, external_opset_imports,
+            export_implicit_inputs_public):
     if opset_version is None:
         opset_version = int(onnx.defs.onnx_opset_version())
     elif opset_version < MINIMUM_OPSET_VERSION:
@@ -302,7 +307,7 @@ def _export(model, args, filename, export_params, graph_name, save_text,
 
     o = Graph(
         context, converters, opset_version, network_outputs,
-        len(network_inputs), hook.func_inputs)
+        len(network_inputs), hook.func_inputs, export_implicit_inputs_public)
     o.to_onnx_graph()
 
     for name, var in o.additional_network_inputs.items():

@@ -12,7 +12,7 @@ class Graph(object):
 
     def __init__(
             self, context, converters, opset_version, network_outputs,
-            network_input_num, func_raw_inputs):
+            network_input_num, func_raw_inputs, enable_additional_input):
         self.context = context
         self.converters = converters
 
@@ -22,8 +22,9 @@ class Graph(object):
         self.outputs = set()  # Output variable names
         self.specified_opset_version = opset_version
         self.network_outputs = network_outputs
-        self.func_raw_inputs = func_raw_inputs
         self.network_input_num = network_input_num
+        self.func_raw_inputs = func_raw_inputs
+        self.enable_additional_input = enable_additional_input
         self.additional_network_inputs = {}
 
         self.function_nodes = self._build_computational_graph(
@@ -93,8 +94,16 @@ class Graph(object):
                 # if inputs are cached, use them
                 func_raw_inputs = self.func_raw_inputs[id(function)]
                 if func_raw_inputs:
-                    input_name = self.context.add_const(
-                        func_raw_inputs[i], str(i))
+                    raw_in = func_raw_inputs[i]
+                    if self.enable_additional_input:
+                        self.context.get_name(raw_in)
+                        input_name = 'Input_{}'.format(
+                            len(self.additional_network_inputs) +
+                            self.network_input_num)
+                        self.context.set_name(raw_in, input_name)
+                        self.additional_network_inputs[input_name] = raw_in
+                    else:
+                        input_name = self.context.add_const(raw_in, str(i))
                 else:
                     # Use VariableNode as is
                     input_name = self.context.get_name(input_var)
