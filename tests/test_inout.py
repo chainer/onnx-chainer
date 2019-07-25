@@ -77,23 +77,27 @@ class TestMultipleInputs(ONNXModelTest):
 
 class TestImplicitInput(ONNXModelTest):
 
-    def setUp(self):
-
+    def test_implicit_param(self):
         class Model(chainer.Chain):
 
             def __init__(self):
                 super(Model, self).__init__()
-
                 self.frac = chainer.Parameter(np.array(2, dtype=np.float32))
 
-            def __call__(self, x):
+            def forward(self, x):
                 return x / self.frac
 
-        self.model = Model()
+        x = chainer.Variable(np.array(1, dtype=np.float32))
+        self.expect(Model(), x, name='implicit_param')
 
     def test_implicit_input(self):
-        x = chainer.Variable(np.array(1, dtype=np.float32))
-        self.expect(self.model, x)
+        class Model(chainer.Chain):
+
+            def forward(self, x):
+                return x + chainer.Variable(np.array(3, dtype=np.float32))
+
+        x = np.array(5, dtype=np.float32)
+        self.expect(Model(), x, name='implicit_input')
 
 
 @testing.parameterize(
