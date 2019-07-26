@@ -119,6 +119,21 @@ class TestImplicitInput(ONNXModelTest):
             export_implicit_inputs_public=True,
             custom_model_test_func=add_additional_input)
 
+    def test_implicit_input_deg(self):
+        class Model(chainer.Chain):
+
+            def __init__(self):
+                super().__init__()
+                with self.init_scope():
+                    self.bn = L.BatchNormalization(5)
+
+            def __call__(self, x):
+                return self.bn(x)
+
+        x = np.ones((2,5), dtype=np.float32)
+        self.expect(Model(), x, name='implicit_input_deg',
+            export_implicit_inputs_public=True)
+
 
 @testing.parameterize(
     {'use_bn': True, 'out_type': 'dict', 'condition': 'bn_out_dict'},
