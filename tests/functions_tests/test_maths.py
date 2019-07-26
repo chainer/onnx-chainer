@@ -12,6 +12,7 @@ from tests.helper import ONNXModelTest
     {'op_name': 'Clip', 'ops': 'chainer.functions.clip(a, 0.1, 0.2)'},
     {'op_name': 'Exp', 'ops': 'chainer.functions.exp(a)'},
     {'op_name': 'Sqrt', 'ops': 'chainer.functions.sqrt(a)'},
+    {'op_name': 'RSqrt', 'ops': 'chainer.functions.rsqrt(a)'},
     {'op_name': 'PowVarConst',
      'ops': 'chainer.functions.math.basic_math.pow(a, 2)'},
     {'op_name': 'Sum', 'ops': 'chainer.functions.sum(a)'},
