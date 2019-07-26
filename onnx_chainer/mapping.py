@@ -77,6 +77,7 @@ _supported_function_node_set = {
     'Sqrt',
     'Square',
     'Sub',
+    'SubFromConstant',
     'Sum',
 
     # Noise

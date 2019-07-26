@@ -67,6 +67,7 @@ from onnx_chainer.functions.math import convert_Prod  # NOQA
 from onnx_chainer.functions.math import convert_Sqrt  # NOQA
 from onnx_chainer.functions.math import convert_Square  # NOQA
 from onnx_chainer.functions.math import convert_Sub  # NOQA
+from onnx_chainer.functions.math import convert_SubFromConstant  # NOQA
 from onnx_chainer.functions.math import convert_Sum  # NOQA
 
 from onnx_chainer.functions.noise import convert_Dropout  # NOQA
