@@ -3,6 +3,7 @@ from setuptools import setup
 
 requirements = {
     'install': [
+        'packaging>=19.0',
         'chainer>=5.0.0',
         'onnx>=1.4.0,<1.6',
     ],
@@ -28,7 +29,6 @@ requirements = {
     'travis': [
         '-r stylecheck',
         '-r test-cpu',
-        'packaging>=19.0',
         'pytest-cov',
         'codecov',
     ],
