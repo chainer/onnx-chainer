@@ -21,6 +21,8 @@ from tests.helper import ONNXModelTest
      'condition': 'keepdims'},
     {'op_name': 'AddConstant', 'ops': 'a + 1'},
     {'op_name': 'MulConstant', 'ops': 'a * 2'},
+    {'op_name': 'SubFromConstant', 'ops': '1 - a'},
+    {'op_name': 'DivFromConstant', 'ops': '2 / a'},
     {'op_name': 'Max', 'ops': 'chainer.functions.max(a)'},
     {'op_name': 'Max', 'ops': 'chainer.functions.max(a, axis=0)',
      'condition': 'axis0'},
