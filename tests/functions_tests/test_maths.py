@@ -20,6 +20,7 @@ from tests.helper import ONNXModelTest
     {'op_name': 'Sum', 'ops': 'chainer.functions.sum(a, keepdims=True)',
      'condition': 'keepdims'},
     {'op_name': 'AddConstant', 'ops': 'a + 1'},
+    {'op_name': 'MulConstant', 'ops': 'a * 2'},
     {'op_name': 'Max', 'ops': 'chainer.functions.max(a)'},
     {'op_name': 'Max', 'ops': 'chainer.functions.max(a, axis=0)',
      'condition': 'axis0'},
