@@ -65,6 +65,7 @@ from onnx_chainer.functions.math import convert_MulConstant  # NOQA
 from onnx_chainer.functions.math import convert_Neg  # NOQA
 from onnx_chainer.functions.math import convert_PowVarConst  # NOQA
 from onnx_chainer.functions.math import convert_Prod  # NOQA
+from onnx_chainer.functions.math import convert_RsqrtGPU  # NOQA
 from onnx_chainer.functions.math import convert_Sqrt  # NOQA
 from onnx_chainer.functions.math import convert_Square  # NOQA
 from onnx_chainer.functions.math import convert_Sub  # NOQA

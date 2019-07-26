@@ -212,6 +212,15 @@ def convert_Sqrt(func, opset_version, input_names, output_names,
         return onnx_helper.make_node('Sqrt', input_names, output_names),
 
 
+def convert_RsqrtGPU(func, opset_version, input_names, output_names,
+                     context, parameters):
+    gb = onnx_chainer.GraphBuilder()
+    sqrt_out = gb.op('Sqrt', input_names)
+    one = context.add_const(np.array(1, dtype=func.inputs[0].dtype), 'one')
+    gb.op('Div', [one, sqrt_out])
+    return gb.nodes(output_names)
+
+
 def convert_LogSumExp(func, opset_version, input_names,
                       output_names, context, parameters):
     # Use keepdims=False by default
