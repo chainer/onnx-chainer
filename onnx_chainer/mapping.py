@@ -59,6 +59,7 @@ _supported_function_node_set = {
     'BroadcastTo',
     'Clip',
     'Div',
+    'DivFromConstant',
     'Exp',
     'Identity',
     'LinearInterpolate',

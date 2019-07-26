@@ -96,6 +96,20 @@ def convert_Div(func, opset_version, input_names, output_names,
         return onnx_helper.make_node('Div', input_names, output_names),
 
 
+@support((1, 6, 7))
+def convert_DivFromConstant(func, opset_version, input_names, output_names,
+                            context, parameters):
+    value_name = context.add_const(
+        np.array(func.value, dtype=func.inputs[0].dtype), 'value')
+    input_names[:0] = [value_name]
+
+    if opset_version == 1:
+        return onnx_helper.make_node(
+            'Div', input_names, output_names, consumed_inputs=[1, 1]),
+    elif opset_version == 6 or opset_version == 7:
+        return onnx_helper.make_node('Div', input_names, output_names),
+
+
 @support((1, 6))
 def convert_Absolute(func, opset_version, input_names,
                      output_names, context, parameters):

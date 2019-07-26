@@ -49,6 +49,7 @@ from onnx_chainer.functions.math import convert_AddConstant  # NOQA
 from onnx_chainer.functions.math import convert_BroadcastTo  # NOQA
 from onnx_chainer.functions.math import convert_Clip  # NOQA
 from onnx_chainer.functions.math import convert_Div  # NOQA
+from onnx_chainer.functions.math import convert_DivFromConstant  # NOQA
 from onnx_chainer.functions.math import convert_Exp  # NOQA
 from onnx_chainer.functions.math import convert_Identity  # NOQA
 from onnx_chainer.functions.math import convert_LinearInterpolate  # NOQA
