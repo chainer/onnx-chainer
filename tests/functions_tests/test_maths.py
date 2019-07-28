@@ -1,6 +1,8 @@
 import chainer
 from chainer import testing
+from chainer.testing import attr
 import numpy as np
+import pytest
 
 from onnx_chainer.testing import input_generator
 from tests.helper import ONNXModelTest
@@ -53,7 +55,8 @@ from tests.helper import ONNXModelTest
 )
 class TestUnaryMathOperators(ONNXModelTest):
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup_test_case(self):
         class Model(chainer.Chain):
 
             def __init__(self, ops):
@@ -66,17 +69,29 @@ class TestUnaryMathOperators(ONNXModelTest):
                 return eval(self.ops)
 
         self.model = Model(self.ops)
-        self.a = chainer.Variable(input_generator.positive_increasing(2, 3))
+        self.a = input_generator.positive_increasing(2, 3)
 
-    def test_output(self):
         name = self.op_name.lower()
         if hasattr(self, 'condition'):
             name += '_' + self.condition
+        self.name = name
+
         skip_opset_version = []
         if self.op_name == 'BroadcastTo':
             skip_opset_version.append(7)
-        self.expect(self.model, self.a, name=name,
-                    skip_opset_version=skip_opset_version,
+        self.skip_opset_version = skip_opset_version
+
+    def test_output(self):
+        self.expect(self.model, self.a, name=self.name,
+                    skip_opset_version=self.skip_opset_version,
+                    expected_num_initializers=0)
+
+    @attr.gpu
+    def test_output_gpu(self):
+        model, a = self.to_gpu(self.model, self.a)
+        # test outputs are overwritten
+        self.expect(model, a, name=self.name,
+                    skip_opset_version=self.skip_opset_version,
                     expected_num_initializers=0)
 
 
