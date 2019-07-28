@@ -8,13 +8,6 @@ import chainercv.links as C
 from tests.helper import ONNXModelTest
 
 
-def _to_gpu(model, x):
-    model = model.copy()
-    model.to_gpu()
-    x = chainer.cuda.to_gpu(x)
-    return model, x
-
-
 class TestLeNet5(ONNXModelTest):
 
     def setUp(self):
@@ -36,7 +29,7 @@ class TestLeNet5(ONNXModelTest):
 
     @attr.gpu
     def test_output_gpu(self):
-        model, x = _to_gpu(self.model, self.x)
+        model, x = self.to_gpu(self.model, self.x)
         self.expect(model, x)
 
 
@@ -52,7 +45,7 @@ class TestVGG16(ONNXModelTest):
 
     @attr.gpu
     def test_output_gpu(self):
-        model, x = _to_gpu(self.model, self.x)
+        model, x = self.to_gpu(self.model, self.x)
         self.expect(model, x)
 
 
@@ -71,5 +64,5 @@ class TestResNet50(ONNXModelTest):
 
     @attr.gpu
     def test_output_gpu(self):
-        model, x = _to_gpu(self.model, self.x)
+        model, x = self.to_gpu(self.model, self.x)
         self.expect(model, x)
