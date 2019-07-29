@@ -10,9 +10,7 @@ from onnx_chainer import onnx_helper
 
 class Graph(object):
 
-    def __init__(
-            self, context, converters, opset_version, network_outputs,
-            network_input_num, func_raw_inputs, enable_additional_input):
+    def __init__(self, context, converters, opset_version, network_outputs):
         self.context = context
         self.converters = converters
 
@@ -22,10 +20,6 @@ class Graph(object):
         self.outputs = set()  # Output variable names
         self.specified_opset_version = opset_version
         self.network_outputs = network_outputs
-        self.network_input_num = network_input_num
-        self.func_raw_inputs = func_raw_inputs
-        self.enable_additional_input = enable_additional_input
-        self.additional_network_inputs = {}
 
         self.function_nodes = self._build_computational_graph(
             network_outputs.values())

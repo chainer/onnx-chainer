@@ -7,8 +7,10 @@ import chainer.functions as F
 import chainer.links as L
 from chainer import testing
 import numpy as np
+import pytest
 
 from onnx_chainer import export
+from onnx_chainer.export import RetainInputHook
 from onnx_chainer.onnx_helper import write_tensor_pb
 from onnx_chainer.testing import input_generator
 from tests.helper import ONNXModelTest
@@ -93,7 +95,7 @@ class TestImplicitInput(ONNXModelTest):
         x = chainer.Variable(np.array(1, dtype=np.float32))
         self.expect(Model(), x, name='implicit_param')
 
-    def test_implicit_input_const(self):
+    def test_implicit_temporary_input(self):
         class Model(chainer.Chain):
 
             def forward(self, x):
@@ -102,38 +104,37 @@ class TestImplicitInput(ONNXModelTest):
         x = np.array(5, dtype=np.float32)
         self.expect(Model(), x, name='implicit_input_const')
 
-    @unittest.skip('wip')
-    def test_implicit_input_public(self):
+
+class TestRetainInputHook(object):
+
+    def get_x(self, test_type):
+        if test_type == 'list':
+            return [
+                chainer.Variable(np.array(3, dtype=np.float32)),
+                chainer.Variable(np.array(5, dtype=np.float32))]
+        elif test_type == 'dict':
+            return  {'x': chainer.Variable(np.array(3, dtype=np.float32))}
+        else:
+            assert test_type == 'variable'
+            return chainer.Variable(np.array(3, dtype=np.float32))
+
+    @pytest.mark.parametrize('test_type', ['variable', 'list', 'dict'])
+    def test_hook(self, test_type):
         class Model(chainer.Chain):
 
             def forward(self, x):
-                return x + chainer.Variable(np.array(3, dtype=np.float32))
+                if test_type == 'variable':
+                    x = [x]
+                elif test_type == 'dict':
+                    x = list(x.values())
+                x.append(chainer.Variable(np.array(7, np.float32)))
+                return F.stack(x)
 
-        def add_additional_input(param):
-            test_param_path = os.path.join(param.test_path, 'test_data_set_0')
-            pb_name = os.path.join(test_param_path, 'input_1.pb')
-            write_tensor_pb(pb_name, 'Input_1', np.array(3, dtype=np.float32))
-
-        x = np.array(5, dtype=np.float32)
-        self.expect(
-            Model(), x, name='implicit_input_public',
-            export_implicit_inputs_public=True,
-            custom_model_test_func=add_additional_input)
-
-    def test_implicit_input_deg(self):
-        class Model(chainer.Chain):
-
-            def __init__(self):
-                super().__init__()
-                with self.init_scope():
-                    self.bn = L.BatchNormalization(5)
-
-            def __call__(self, x):
-                return self.bn(x)
-
-        x = np.ones((2,5), dtype=np.float32)
-        self.expect(Model(), x, name='implicit_input_deg',
-            export_implicit_inputs_public=True)
+        model = Model()
+        x = self.get_x(test_type)
+        with RetainInputHook() as h:
+            model(x)
+        assert len(h.retain_inputs) == 1
 
 
 @testing.parameterize(
