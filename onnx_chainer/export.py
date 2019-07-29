@@ -120,12 +120,12 @@ class RetainInputHook(chainer.LinkHook):
         self.retain_inputs = []
 
         self.org_apply = chainer.function_node.FunctionNode.apply
+
         def hooked_apply(_self, inputs):
             ret = self.org_apply(_self, inputs)
             for func_in in inputs:
                 if id(func_in) not in self.link_inputs:
                     self.retain_inputs.append(func_in)
-            print('retain', self.retain_inputs)
             return ret
         self.hooked_apply = hooked_apply
 
@@ -263,7 +263,8 @@ def _export(model, args, filename, export_params, graph_name, save_text,
                 m=MINIMUM_OPSET_VERSION,
                 o=opset_version)
         )
-    with RetainInputHook() as hook:
+
+    with RetainInputHook() as hook:  # NOQA hook is not used, to keep retained value
         # Forward computation
         context = Context(model)
         network_inputs = OrderedDict()

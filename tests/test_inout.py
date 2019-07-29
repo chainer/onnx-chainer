@@ -1,4 +1,3 @@
-import os
 import unittest
 import warnings
 
@@ -11,7 +10,6 @@ import pytest
 
 from onnx_chainer import export
 from onnx_chainer.export import RetainInputHook
-from onnx_chainer.onnx_helper import write_tensor_pb
 from onnx_chainer.testing import input_generator
 from tests.helper import ONNXModelTest
 
@@ -113,7 +111,7 @@ class TestRetainInputHook(object):
                 chainer.Variable(np.array(3, dtype=np.float32)),
                 chainer.Variable(np.array(5, dtype=np.float32))]
         elif test_type == 'dict':
-            return  {'x': chainer.Variable(np.array(3, dtype=np.float32))}
+            return {'x': chainer.Variable(np.array(3, dtype=np.float32))}
         else:
             assert test_type == 'variable'
             return chainer.Variable(np.array(3, dtype=np.float32))
