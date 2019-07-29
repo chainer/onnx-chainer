@@ -77,10 +77,9 @@ class Graph(object):
         base_func_name = '{}_{}'.format(
             func_name, self.func_name_counts[func_name])
         self.func_name_counts[func_name] += 1
-        onnx_helper.set_func_name(base_func_name)
 
         input_names = []
-        for i, input_var in enumerate(function.inputs):
+        for input_var in function.inputs:
             # 'input_var' is a VariableNode,
             # so check if it has a Variable/Parameter
             var = input_var.get_variable_or_none()
@@ -123,6 +122,7 @@ class Graph(object):
 
             output_names.append(output_name)
 
+        onnx_helper.set_func_name(base_func_name)
         nodes = self.create_node(
             func_name, function, input_names, output_names)
         # Insert constants before computation nodes.
