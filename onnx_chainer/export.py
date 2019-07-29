@@ -103,21 +103,61 @@ def rename_variable_name(
         context.set_name(variables, new_name, pinned=True)
 
 
-class InputCacheHook(chainer.FunctionHook):
-    """cache raw inputs
+class RetainInputHook(chainer.LinkHook):
+    """Retain raw inputs
 
     Function nodes manage inputs variable nodes using weak reference. When
     variable is made as temporary value, exporter cannot get the corresponded
     variable from the variable node because the reference is collected. To
     resolve it, cache all inputs and will use when make computational graph.
+
+    To reduce memory size, this hook retains only variables not showed in link
+    inputs. To enable this feature, links are required to use ``forward``, not
+    ``__call__``.
     """
-
     def __init__(self):
-        self.func_inputs = {}
+        self.link_inputs = set()
+        self.retain_inputs = []
 
-    def forward_postprocess(self, fn, in_data):
-        # in_data is ndarray, not variable
-        self.func_inputs[id(fn)] = in_data
+        self.org_apply = chainer.function_node.FunctionNode.apply
+        def hooked_apply(_self, inputs):
+            ret = self.org_apply(_self, inputs)
+            for func_in in inputs:
+                if id(func_in) not in self.link_inputs:
+                    self.retain_inputs.append(func_in)
+            print('retain', self.retain_inputs)
+            return ret
+        self.hooked_apply = hooked_apply
+
+    def _extract_inputs(self, args):
+        ret = set()
+        if isinstance(args, chainer.Variable):
+            ret.add(id(args))
+        elif isinstance(args, (list, tuple)):
+            for arg in args:
+                ret |= self._extract_inputs(arg)
+        elif isinstance(args, dict):
+            for arg in args.values():
+                ret |= self._extract_inputs(arg)
+        else:
+            raise ValueError('type {} is not supported to retain input'.fromat(
+                type(args)))
+        return ret
+
+    def forward_preprocess(self, args):
+        self.link_inputs |= self._extract_inputs(args.args)
+        self.link_inputs |= self._extract_inputs(args.kwargs)
+
+    def forward_postprocess(self, args):
+        self.link_inputs.clear()
+
+    def __enter__(self):
+        chainer.function_node.FunctionNode.apply = self.hooked_apply
+        return super().__enter__()
+
+    def __exit__(self, *exc_details):
+        chainer.function_node.FunctionNode.apply = self.org_apply
+        super().__exit__(*exc_details)
 
 
 def export(model, args, filename=None, export_params=True,
@@ -228,8 +268,7 @@ def _export(model, args, filename, export_params, graph_name, save_text,
                 m=MINIMUM_OPSET_VERSION,
                 o=opset_version)
         )
-
-    with InputCacheHook() as hook:
+    with RetainInputHook() as hook:
         # Forward computation
         context = Context(model)
         network_inputs = OrderedDict()
@@ -307,7 +346,7 @@ def _export(model, args, filename, export_params, graph_name, save_text,
 
     o = Graph(
         context, converters, opset_version, network_outputs,
-        len(network_inputs), hook.func_inputs, export_implicit_inputs_public)
+        len(network_inputs), [], export_implicit_inputs_public)
     o.to_onnx_graph()
 
     for name, var in o.additional_network_inputs.items():

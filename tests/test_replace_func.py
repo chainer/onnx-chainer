@@ -32,12 +32,8 @@ def test_fake_as_funcnode_without_replace():
     model = Model()
     x = input_generator.increasing(3, 4)
 
-    onnx_model = export(model, x)
-    sigmoid_nodes = [
-        node for node in onnx_model.graph.node if node.op_type == 'Sigmoid']
-    assert len(sigmoid_nodes) == 1
-    # sigmoid node is expected to connect with input, but cut
-    assert sigmoid_nodes[0].input[0] == 'Sigmoid_0_const_0'
+    with pytest.raises(onnx.checker.ValidationError):
+        export(model, x)
 
 
 class TestReplaceNumpyFullToConstantOfShape(ONNXModelTest):

@@ -91,22 +91,8 @@ class Graph(object):
             # so check if it has a Variable/Parameter
             var = input_var.get_variable_or_none()
             if var is None:  # No reference to Variable/Parameter
-                # if inputs are cached, use them
-                func_raw_inputs = self.func_raw_inputs[id(function)]
-                if func_raw_inputs:
-                    raw_in = func_raw_inputs[i]
-                    if self.enable_additional_input:
-                        self.context.get_name(raw_in)
-                        input_name = 'Input_{}'.format(
-                            len(self.additional_network_inputs) +
-                            self.network_input_num)
-                        self.context.set_name(raw_in, input_name)
-                        self.additional_network_inputs[input_name] = raw_in
-                    else:
-                        input_name = self.context.add_const(raw_in, str(i))
-                else:
-                    # Use VariableNode as is
-                    input_name = self.context.get_name(input_var)
+                # Use VariableNode as is
+                input_name = self.context.get_name(input_var)
             else:  # It is a parameter inside a Link or network input
                 input_name = self.context.get_name(var)
                 if input_name not in self.outputs:

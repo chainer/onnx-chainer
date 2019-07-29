@@ -102,6 +102,7 @@ class TestImplicitInput(ONNXModelTest):
         x = np.array(5, dtype=np.float32)
         self.expect(Model(), x, name='implicit_input_const')
 
+    @unittest.skip('wip')
     def test_implicit_input_public(self):
         class Model(chainer.Chain):
 
