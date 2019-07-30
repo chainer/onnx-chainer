@@ -32,8 +32,13 @@ def test_fake_as_funcnode_without_replace():
     model = Model()
     x = input_generator.increasing(3, 4)
 
-    with pytest.raises(onnx.checker.ValidationError):
-        export(model, x)
+    onnx_model = export(model, x)
+    sigmoid_nodes = [
+        node for node in onnx_model.graph.node if node.op_type == 'Sigmoid']
+    assert len(sigmoid_nodes) == 1
+    # sigmoid node should be expected to connect with input
+    # but the connection is cut because `add` method takes array.
+    assert not sigmoid_nodes[0].input[0] == 'Input_0'
 
 
 class TestReplaceNumpyFullToConstantOfShape(ONNXModelTest):
