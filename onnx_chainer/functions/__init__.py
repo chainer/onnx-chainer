@@ -46,6 +46,8 @@ from onnx_chainer.functions.loss import convert_SoftmaxCrossEntropy  # NOQA
 from onnx_chainer.functions.math import convert_Absolute  # NOQA
 from onnx_chainer.functions.math import convert_Add  # NOQA
 from onnx_chainer.functions.math import convert_AddConstant  # NOQA
+from onnx_chainer.functions.math import convert_ArgMax  # NOQA
+from onnx_chainer.functions.math import convert_ArgMin  # NOQA
 from onnx_chainer.functions.math import convert_BroadcastTo  # NOQA
 from onnx_chainer.functions.math import convert_Clip  # NOQA
 from onnx_chainer.functions.math import convert_Div  # NOQA

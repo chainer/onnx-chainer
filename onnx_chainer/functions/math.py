@@ -309,3 +309,15 @@ def convert_BroadcastTo(func, opset_version, input_names,
     shape_name = context.add_const(np.array(func._shape), 'shape')
     input_names.append(shape_name)
     return onnx_helper.make_node('Expand', input_names, output_names),
+
+
+def convert_ArgMax(func, opset_version, input_names, output_names, context,
+                   parameters):
+    return onnx_helper.make_node(
+        'ArgMax', input_names, output_names, axis=func.axis, keepdims=0),
+
+
+def convert_ArgMin(func, opset_version, input_names, output_names, context,
+                   parameters):
+    return onnx_helper.make_node(
+        'ArgMin', input_names, output_names, axis=func.axis, keepdims=0),
