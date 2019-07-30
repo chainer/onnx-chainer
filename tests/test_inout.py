@@ -93,6 +93,19 @@ class TestImplicitInput(ONNXModelTest):
         x = chainer.Variable(np.array(1, dtype=np.float32))
         self.expect(Model(), x, name='implicit_param')
 
+    def test_implicit_param_ndarray(self):
+        class Model(chainer.Chain):
+
+            def __init__(self):
+                super(Model, self).__init__()
+                self.frac = np.array(2, dtype=np.float32)
+
+            def forward(self, x):
+                return x / self.frac
+
+        x = chainer.Variable(np.array(1, dtype=np.float32))
+        self.expect(Model(), x, name='implicit_param_ndarray')
+
     def test_implicit_temporary_input(self):
         class Model(chainer.Chain):
 
@@ -100,7 +113,16 @@ class TestImplicitInput(ONNXModelTest):
                 return x + chainer.Variable(np.array(3, dtype=np.float32))
 
         x = np.array(5, dtype=np.float32)
-        self.expect(Model(), x, name='implicit_input_const')
+        self.expect(Model(), x, name='implicit_temp_input')
+
+    def test_implicit_temporary_input_ndarray(self):
+        class Model(chainer.Chain):
+
+            def forward(self, x):
+                return x + np.array(3, dtype=np.float32)
+
+        x = np.array(5, dtype=np.float32)
+        self.expect(Model(), x, name='implicit_temp_input_ndarray')
 
 
 class TestRetainInputHook(object):

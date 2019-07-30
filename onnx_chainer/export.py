@@ -123,9 +123,25 @@ class RetainInputHook(chainer.LinkHook):
 
         def hooked_apply(_self, inputs):
             ret = self.org_apply(_self, inputs)
-            for func_in in inputs:
-                if id(func_in) not in self.link_inputs:
-                    self.retain_inputs.append(func_in)
+            func_inodes = list(_self.inputs)
+            for i, inode in enumerate(func_inodes):
+                referenced_var = inode.get_variable_or_none()
+                if referenced_var is None:
+                    # This variable is created within function node and weakref
+                    # is lost. Make temporary variable and retain it.
+                    if isinstance(inputs[i], chainer.Variable):
+                        temp_var = inputs[i]
+                    else:
+                        temp_var = chainer.Variable(inputs[i])
+                    func_inodes[i] = temp_var.node
+                    self.retain_inputs.append(temp_var)
+                else:
+                    if id(referenced_var) not in self.link_inputs:
+                        # This variable is created within link forward, outside
+                        # of function node. To avoid to lose reference out
+                        # of the forward, retain the variable.
+                        self.retain_inputs.append(referenced_var)
+            _self.inputs = tuple(func_inodes)
             return ret
         self.hooked_apply = hooked_apply
 
