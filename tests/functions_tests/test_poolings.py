@@ -1,12 +1,8 @@
-import unittest
-
 import chainer
 import chainer.functions as F
 from chainer import testing
 import numpy as np
-import onnx
 
-import onnx_chainer
 from onnx_chainer.testing import input_generator
 from tests.helper import ONNXModelTest
 
@@ -42,29 +38,6 @@ class TestPoolings(ONNXModelTest):
             name += '_' + self.condition
         self.expect(self.model, self.x, name=name,
                     expected_num_initializers=0)
-
-
-@testing.parameterize(
-    {'name': 'max_pooling_2d',
-     'in_shape': (1, 3, 6, 5), 'args': [2, 2, 1], 'cover_all': True},
-    {'name': 'max_pooling_nd',
-     'in_shape': (1, 3, 6, 5, 4), 'args': [2, 2, 1], 'cover_all': True},
-)
-class TestPoolingsWithUnsupportedSettings(unittest.TestCase):
-
-    def setUp(self):
-        ops = getattr(F, self.name)
-        self.model = Model(ops, self.args, self.cover_all)
-        self.x = input_generator.increasing(*self.in_shape)
-        self.fn = self.name + '.onnx'
-
-    def test_output(self):
-        for opset_version in range(
-                onnx_chainer.MINIMUM_OPSET_VERSION,
-                onnx.defs.onnx_opset_version() + 1):
-            with self.assertRaises(RuntimeError):
-                onnx_chainer.export(
-                    self.model, self.x, opset_version=opset_version)
 
 
 class Model(chainer.Chain):
