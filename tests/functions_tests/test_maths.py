@@ -168,8 +168,10 @@ class TestTernaryMathOperators(ONNXModelTest):
 
 
 @testing.parameterize(
+    {'op': 'argmax'},
     {'op': 'argmax', 'axis': 0},
     {'op': 'argmax', 'axis': 1},
+    {'op': 'argmin'},
     {'op': 'argmin', 'axis': 0},
     {'op': 'argmin', 'axis': 1},
 )
