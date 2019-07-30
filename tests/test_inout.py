@@ -243,3 +243,20 @@ class TestUnusedLink(ONNXModelTest):
             self.expect(model, x)
             assert len(w) == 1
             assert '/l2/W' in str(w[-1].message)
+
+
+class TestCustomizedInputShape(ONNXModelTest):
+
+    def setUp(self):
+        self.model = chainer.Sequential(
+            L.Convolution2D(None, 16, 5, 1, 2),
+            F.relu,
+            L.Convolution2D(16, 8, 5, 1, 2),
+            F.relu,
+            L.Convolution2D(8, 5, 5, 1, 2),
+            F.relu,
+        )
+        self.x = np.zeros((10, 3, 28, 28), dtype=np.float32)
+
+    def test_output(self):
+        self.expect(self.model, self.x, input_shapes=('batch_size', 3, 28, 28))

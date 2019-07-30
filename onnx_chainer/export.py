@@ -103,11 +103,55 @@ def rename_variable_name(
         context.set_name(variables, new_name, pinned=True)
 
 
+def check_customized_shapes(args, shapes):
+
+    def _check_shape(original, customized):
+        for shape_o, shape_c in zip(original.shape, customized):
+            if isinstance(shape_c, str):
+                continue
+            if shape_o != shape_c:
+                raise ValueError(
+                    'Integer shape must be same as input shape, '
+                    'customized: {}, original {}'.format(
+                        i, original.shape, customized.shape))
+
+    if isinstance(args, (list, tuple)):
+        if not isinstance(shapes, list) or len(args) != len(shapes):
+            raise ValueError('Customized shape cannot fit for input list')
+        for i, (arg, shape) in enumerate(zip(args, shapes)):
+            if len(arg.shape) != len(shape):
+                raise ValueError(
+                    'Index-{} length of customized must be same as '
+                    'input'.format(i))
+            _check_shape(arg, shape)
+    elif isinstance(args, dict):
+        if not isinstance(shapes, (list, dict)) or\
+                len(args) != len(shapes):
+            raise ValueError('Customized shape cannot fit for input dict')
+        if isinstance(shapes, list):
+            shapes = {k: v for k, v in zip(args.keys(), shapes)}
+        for k, arg in args.items():
+            if k not in shapes:
+                raise ValueError(
+                    'Key "{}" is not found in customized shape'.format(k))
+            _check_shape(arg, shapes[k])
+    else:
+        assert isinstance(args, (chainer.Variable, chainer.get_array_types()))
+        if isinstance(shapes, list):
+            if len(shape) != 1:
+                raise ValueError('Customized shape must be single')
+            shapes = shapes[0]
+        elif not isinstance(shapes, tuple):
+            raise ValueError(
+                'Type {} is not supported for single input'.format(type(shapes)))
+        _check_shape(args, shapes)
+
+
 def export(model, args, filename=None, export_params=True,
            graph_name='Graph', save_text=False, opset_version=None,
            input_names=None, output_names=None, train=False,
            return_named_inout=False, external_converters=None,
-           external_opset_imports=None):
+           external_opset_imports=None, input_shapes=None):
     """Export function for chainer.Chain in ONNX format.
 
     This function performs a forward computation of the given
@@ -171,6 +215,9 @@ def export(model, args, filename=None, export_params=True,
             keyed by ~chainer.FunctionNode name.
         external_opset_imports (dict): Import external opset. opset version
             number keyed by domain name.
+        input_shapes (tuple, list, dict): Input shape information follows the
+            customized shapes if set. When input are collection type, set
+            list or dict. Tuple of tuple is not supported.
 
     Returns:
         ~onnx.ModelProto or tuple:
@@ -188,12 +235,12 @@ def export(model, args, filename=None, export_params=True,
         return _export(
             model, args, filename, export_params, graph_name, save_text,
             opset_version, input_names, output_names, return_named_inout,
-            external_converters, external_opset_imports)
+            external_converters, external_opset_imports, input_shapes)
 
 
 def _export(model, args, filename, export_params, graph_name, save_text,
             opset_version, input_names, output_names, return_named_inout,
-            external_converters, external_opset_imports):
+            external_converters, external_opset_imports, input_shapes):
     if opset_version is None:
         opset_version = int(onnx.defs.onnx_opset_version())
     elif opset_version < MINIMUM_OPSET_VERSION:
@@ -206,6 +253,9 @@ def _export(model, args, filename, export_params, graph_name, save_text,
                 m=MINIMUM_OPSET_VERSION,
                 o=opset_version)
         )
+
+    if input_shapes is not None:
+        check_customized_shapes(args, input_shapes)
 
     # Forward computation
     context = Context(model)
@@ -258,7 +308,7 @@ def _export(model, args, filename, export_params, graph_name, save_text,
 
     for name, var in network_inputs.items():
         input_tensors.append(helper.make_tensor_value_info(
-            name, NP_TYPE_TO_TENSOR_TYPE[var.dtype], var.shape))
+            name, NP_TYPE_TO_TENSOR_TYPE[var.dtype], input_shapes))
 
     if external_converters:
         chainer.utils.experimental('external_converters')
