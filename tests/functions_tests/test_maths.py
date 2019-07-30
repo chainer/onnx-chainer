@@ -1,4 +1,5 @@
 import chainer
+import chainer.functions as F
 from chainer import testing
 import numpy as np
 
@@ -164,3 +165,23 @@ class TestTernaryMathOperators(ONNXModelTest):
         name = self.op_name.lower()
         self.expect(self.model, self.x, name=name,
                     expected_num_initializers=0)
+
+
+class TestArgMaxArgMin(ONNXModelTest):
+
+    def test_argmax(self):
+        class Model(chainer.Chain):
+
+            def __init__(self, axis):
+                self.axis = axis
+                super(Model, self).__init__()
+
+            def forward(self, x):
+                return F.argmax(x, axis=self.axis)
+
+        x = np.random.rand(2, 3).astype(np.float32)
+        self.axis = 0
+        model = Model(axis=self.axis)
+        name = 'argmax_axis_{}'.format(self.axis)
+
+        self.expect(model, x, name=name, expected_num_initializers=0)
