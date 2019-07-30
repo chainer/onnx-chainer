@@ -167,21 +167,30 @@ class TestTernaryMathOperators(ONNXModelTest):
                     expected_num_initializers=0)
 
 
+@testing.parameterize(
+    {'op': 'argmax', 'axis': 0},
+    {'op': 'argmax', 'axis': 1},
+    {'op': 'argmin', 'axis': 0},
+    {'op': 'argmin', 'axis': 1},
+)
 class TestArgMaxArgMin(ONNXModelTest):
 
     def test_argmax(self):
         class Model(chainer.Chain):
 
-            def __init__(self, axis):
+            def __init__(self, op, axis):
                 self.axis = axis
+                self.op = getattr(F, op)
                 super(Model, self).__init__()
 
             def forward(self, x):
-                return F.argmax(x, axis=self.axis)
+                return self.op(x, axis=self.axis)
 
         x = np.random.rand(2, 3).astype(np.float32)
-        self.axis = 0
-        model = Model(axis=self.axis)
-        name = 'argmax_axis_{}'.format(self.axis)
+        axis = getattr(self, 'axis', None)
+        model = Model(self.op, axis)
+        name = self.op
+        if axis is not None:
+            name += '_axis_{}'.format(self.axis)
 
         self.expect(model, x, name=name, expected_num_initializers=0)
