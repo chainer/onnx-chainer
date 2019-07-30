@@ -177,7 +177,7 @@ class TestTernaryMathOperators(ONNXModelTest):
 )
 class TestArgMaxArgMin(ONNXModelTest):
 
-    def test_argmax(self):
+    def test_output(self):
         class Model(chainer.Chain):
 
             def __init__(self, op, axis):

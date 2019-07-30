@@ -331,12 +331,10 @@ def _argminmax_nodes(op_name, func, input_names, output_names, context):
 @support((6,))
 def convert_ArgMax(func, opset_version, input_names, output_names, context,
                    parameters):
-    return _argminmax_nodes(
-        'ArgMax', func, input_names, output_names, context)
+    return _argminmax_nodes('ArgMax', func, input_names, output_names, context)
 
 
 @support((6,))
 def convert_ArgMin(func, opset_version, input_names, output_names, context,
                    parameters):
-    return _argminmax_nodes(
-        'ArgMin', func, input_names, output_names, context)
+    return _argminmax_nodes('ArgMin', func, input_names, output_names, context)
