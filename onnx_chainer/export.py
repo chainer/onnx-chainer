@@ -115,6 +115,7 @@ class RetainInputHook(chainer.LinkHook):
     inputs. To enable this feature, links are required to use ``forward``, not
     ``__call__``.
     """
+
     def __init__(self):
         self.link_inputs = set()
         self.retain_inputs = []
