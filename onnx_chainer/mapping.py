@@ -77,6 +77,7 @@ _supported_function_node_set = {
     'Neg',
     'PowVarConst',
     'Prod',
+    'RsqrtGPU',
     'Sqrt',
     'Square',
     'Sub',

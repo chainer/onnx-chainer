@@ -135,6 +135,12 @@ class ONNXModelTest(unittest.TestCase):
             if self.check_out_values is not None:
                 self.check_out_values(test_path, input_names=graph_input_names)
 
+    def to_gpu(self, model, x):
+        model = model.copy()
+        model.to_gpu()
+        x = chainer.cuda.to_gpu(x)
+        return model, x
+
 
 def check_all_connected_from_inputs(onnx_model):
     edge_names = set(_get_graph_input_names(onnx_model))
