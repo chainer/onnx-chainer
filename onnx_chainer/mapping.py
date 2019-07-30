@@ -56,6 +56,8 @@ _supported_function_node_set = {
     'Absolute',
     'Add',
     'AddConstant',
+    'ArgMax',
+    'ArgMin',
     'BroadcastTo',
     'Clip',
     'Div',

@@ -1,4 +1,5 @@
 import numpy as np
+from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 
 from onnx_chainer.functions.opset_version import support
 from onnx_chainer import onnx_helper
@@ -309,3 +310,31 @@ def convert_BroadcastTo(func, opset_version, input_names,
     shape_name = context.add_const(np.array(func._shape), 'shape')
     input_names.append(shape_name)
     return onnx_helper.make_node('Expand', input_names, output_names),
+
+
+def _argminmax_nodes(op_name, func, input_names, output_names, context):
+    gb = onnx_helper.GraphBuilder()
+    target_input_names = input_names
+    axis = func.axis
+    if axis is None:
+        shape_name = context.add_const(np.array([-1]), 'shape')
+        input_names.append(shape_name)
+        target_input_names = [gb.op('Reshape', input_names)]
+        axis = 0
+    out = gb.op(op_name, target_input_names, axis=axis, keepdims=0)
+    # Chainer's ArgMax always return value as int32
+    # Cast spec is changed from opset6, this logic does not support ~opset5
+    gb.op('Cast', [out], to=NP_TYPE_TO_TENSOR_TYPE[np.dtype('int32')])
+    return gb.nodes(output_names)
+
+
+@support((6,))
+def convert_ArgMax(func, opset_version, input_names, output_names, context,
+                   parameters):
+    return _argminmax_nodes('ArgMax', func, input_names, output_names, context)
+
+
+@support((6,))
+def convert_ArgMin(func, opset_version, input_names, output_names, context,
+                   parameters):
+    return _argminmax_nodes('ArgMin', func, input_names, output_names, context)
