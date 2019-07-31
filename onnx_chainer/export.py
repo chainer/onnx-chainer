@@ -104,12 +104,12 @@ def rename_variable_name(
 
 
 class RetainInputHook(chainer.LinkHook):
-    """Retain raw inputs
+    """Retain temporary inputs
 
     Function nodes manage inputs variable nodes using weak reference. When
     variable is made as temporary value, exporter cannot get the corresponded
     variable from the variable node because the reference is collected. To
-    resolve it, cache all inputs and will use when make computational graph.
+    resolve it, retain all inputs and will use when make computational graph.
 
     To reduce memory size, this hook retains only variables not showed in link
     inputs. To enable this feature, links are required to use ``forward``, not
@@ -130,10 +130,7 @@ class RetainInputHook(chainer.LinkHook):
                 if referenced_var is None:
                     # This variable is created within function node and weakref
                     # is lost. Make temporary variable and retain it.
-                    if isinstance(inputs[i], chainer.Variable):
-                        temp_var = inputs[i]
-                    else:
-                        temp_var = chainer.Variable(inputs[i])
+                    temp_var = chainer.as_variable(inputs[i])
                     func_inodes[i] = temp_var.node
                     self.retain_inputs.append(temp_var)
                 else:
