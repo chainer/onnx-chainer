@@ -10,8 +10,7 @@ from onnx_chainer import onnx_helper
 
 class Graph(object):
 
-    def __init__(
-            self, context, converters, opset_version, network_outputs):
+    def __init__(self, context, converters, opset_version, network_outputs):
         self.context = context
         self.converters = converters
 
