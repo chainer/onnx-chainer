@@ -3,6 +3,7 @@ import chainer.functions as F
 import chainer.links as L
 from chainer import testing
 import numpy as np
+import pytest
 import unittest
 import warnings
 
@@ -245,18 +246,100 @@ class TestUnusedLink(ONNXModelTest):
             assert '/l2/W' in str(w[-1].message)
 
 
+@testing.parameterize(
+    {
+        'x_shape': (10, 3, 28, 28), 'shape_option': ('b', 3, 28, 28),
+    },
+    {
+        'x_shape': (10, 3, 28, 28),
+        'shape_option': [('b', 3, 28, 28)],
+        'condition': 'var_list'
+    },
+    {
+        'x_shape': [(10, 3, 28, 28), (8, 3, 28, 28)],
+        'shape_option': [('b', 3, 28, 28), ('b', 3, 28, 28)],
+        'condition': 'list_list'
+    },
+    {
+        'x_shape': {'1': (10, 3, 28, 28), '2': (8, 3, 28, 28)},
+        'shape_option': {'2': ('b', 3, 28, 28), '1': ('b', 3, 28, 28)},
+        'condition': 'dict_dict'
+    },
+    {
+        'x_shape': {'1': (10, 3, 28, 28), '2': (8, 3, 28, 28)},
+        'shape_option': [('b', 3, 28, 28), ('b', 3, 28, 28)],
+        'condition': 'dict_list'
+    },
+)
 class TestCustomizedInputShape(ONNXModelTest):
 
-    def setUp(self):
-        self.model = chainer.Sequential(
-            L.Convolution2D(None, 16, 5, 1, 2),
-            F.relu,
-            L.Convolution2D(16, 8, 5, 1, 2),
-            F.relu,
-            L.Convolution2D(8, 5, 5, 1, 2),
-            F.relu,
-        )
-        self.x = np.zeros((10, 3, 28, 28), dtype=np.float32)
-
     def test_output(self):
-        self.expect(self.model, self.x, input_shapes=('batch_size', 3, 28, 28))
+        class Model(chainer.Chain):
+            def __init__(self):
+                super().__init__()
+                with self.init_scope():
+                    self.l1 = L.Convolution2D(None, 16, 5, 1, 2)
+                    self.l2 = L.Convolution2D(16, 8, 5, 1, 2)
+
+            def forward(self, *xs, **kwxs):
+                if kwxs:
+                    h = F.vstack(list(kwxs.values()))
+                elif len(xs) > 1:
+                    h = F.vstack(xs)
+                else:
+                    h = xs[0]
+                h2 = self.l1(h)
+                h3 = F.relu(h2)
+                h4 = self.l2(h3)
+                return F.relu(h4)
+
+        def check_input_shape(onnx_model):
+            assert [v.type.tensor_type.shape.dim[0] == 'b' for
+                    v in onnx_model.graph.input]
+            assert [v.type.tensor_type.shape.dim[0] == 'b' for
+                    v in onnx_model.graph.output]
+
+        if isinstance(self.x_shape, tuple):
+            xs = np.zeros(self.x_shape, dtype=np.float32)
+        elif isinstance(self.x_shape, list):
+            xs = tuple(
+                np.zeros(shape, dtype=np.float32) for shape in self.x_shape)
+        else:
+            assert isinstance(self.x_shape, dict)
+            xs = {k: np.zeros(shape, dtype=np.float32) for
+                  k, shape in self.x_shape.items()}
+
+        name = 'customized_input_shape'
+        if hasattr(self, 'condition'):
+            name += '_{}'.format(self.condition)
+
+        self.expect(
+            Model(), xs, name=name, input_shapes=self.shape_option,
+            custom_model_test_func=check_input_shape)
+
+
+@pytest.mark.parametrize('x_shape,shape_option', [
+    ((10, 5), '?'),  # not tuple
+    ((10, 5), ('?', 5, 5)),  # shape length error
+    ((10, 5), [('?', 5), ('?', 5)]),  # not single
+    ([(10, 5), (10, 5)], [('?', 5), ('?', 5), ('?', 5)]),  # list length error
+    ([(10, 5), (10, 5)], [('?', 5), ('?', 5, 5)]),  # shape length error
+    ({'a': (10, 5), 'b': (10, 5)}, {'a': ('?', 5), 'c': ('?', 5)}),  # NOQA not key found
+    ({'a': (10, 5), 'b': (10, 5)}, [('?', 5), ('?', 5), ('?', 5)]),  # NOQA list length error
+    ({'a': (10, 5), 'b': (10, 5)}, {'a': ('?', 5), 'b': ('?', 5, 5)}),  # NOQA not key found
+])
+def test_invalid_customized_input_shape(x_shape, shape_option):
+    model = chainer.Sequential(F.relu)
+
+    if isinstance(x_shape, tuple):
+        xs = np.zeros(x_shape, dtype=np.float32)
+    elif isinstance(x_shape, list):
+        xs = tuple(
+            np.zeros(shape, dtype=np.float32) for shape in x_shape)
+    else:
+        assert isinstance(x_shape, dict)
+        xs = {k: np.zeros(shape, dtype=np.float32) for
+              k, shape in x_shape.items()}
+
+    with pytest.raises(ValueError):
+        export(model, xs, input_shapes=shape_option)

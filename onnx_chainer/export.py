@@ -132,14 +132,17 @@ def format_customized_shapes(args, shapes):
     else:
         assert isinstance(args, (chainer.Variable, chainer.get_array_types()))
         if isinstance(shapes, list):
-            if len(shape) != 1:
+            if len(shapes) != 1:
                 raise ValueError('Customized shape must be single')
-            return shapes
         elif not isinstance(shapes, tuple):
             raise ValueError(
                 'Type {} is not supported for single input'.format(
                     type(shapes)))
-        return [shapes]
+        else:
+            shapes = [shapes]
+        if len(args.shape) != len(shapes[0]):
+            raise ValueError('Shape length must be same as input')
+        return shapes
 
 
 def export(model, args, filename=None, export_params=True,
