@@ -7,8 +7,7 @@ from onnx_chainer import onnx_helper
 
 @support((9,))
 def convert_SoftmaxCrossEntropy(
-        func, opset_version, input_names,
-        output_names, context, parameters):
+        func, opset_version, input_names, output_names, context):
     # obtain input variable
     if not isinstance(func, chainer.FunctionNode):
         raise NotImplementedError(

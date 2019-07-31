@@ -2,7 +2,7 @@ class FunctionConverterParams(object):
 
     def __init__(
             self, func=None, opset_version=None, input_names=None,
-            output_names=None, context=None, parameters=None):
+            output_names=None, context=None):
         """Wrapper of converter parameters
 
         Exporter set this parameters to the target converter's argument.
@@ -18,7 +18,6 @@ class FunctionConverterParams(object):
             input_names (list): List of input names.
             output_names (list): List of ouptut names.
             context (~onnx_chainer.context.Context): Context for Exporting
-            parameters (list): List of ~chainer.Parameter
         """
 
         self.func = func
@@ -26,7 +25,6 @@ class FunctionConverterParams(object):
         self.input_names = input_names
         self.output_names = output_names
         self.context = context
-        self.parameters = parameters
 
 
 class FunctionConverter(object):
@@ -49,7 +47,5 @@ class FunctionConverter(object):
         input_names = params.input_names
         output_names = params.output_names
         context = params.context
-        parameters = params.parameters
         return self.converter(
-            func, opset_version, input_names, output_names, context,
-            parameters)
+            func, opset_version, input_names, output_names, context)

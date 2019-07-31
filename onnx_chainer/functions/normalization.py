@@ -8,8 +8,8 @@ from onnx_chainer import onnx_helper
 
 
 @support((1, 6, 7))
-def convert_BatchNormalization(func, opset_version, input_names,
-                               output_names, context, parameters):
+def convert_BatchNormalization(
+        func, opset_version, input_names, output_names, context):
     is_fixed_bn = len(func.inputs) > 3
 
     # NOTE(disktnk):
@@ -90,16 +90,14 @@ def convert_BatchNormalization(func, opset_version, input_names,
 
 
 @support((1, 6, 7))
-def convert_FixedBatchNormalization(func, opset_version,
-                                    input_names, output_names, context,
-                                    parameters):
+def convert_FixedBatchNormalization(
+        func, opset_version, input_names, output_names, context):
     return convert_BatchNormalization(
-        func, opset_version, input_names, output_names, context, parameters)
+        func, opset_version, input_names, output_names, context)
 
 
-def convert_LocalResponseNormalization(func, opset_version,
-                                       input_names, output_names, context,
-                                       parameters):
+def convert_LocalResponseNormalization(
+        func, opset_version, input_names, output_names, context):
     size = int(func.n)
     return onnx_helper.make_node(
         'LRN', input_names, output_names,
@@ -110,8 +108,8 @@ def convert_LocalResponseNormalization(func, opset_version,
     ),
 
 
-def convert_NormalizeL2(func, opset_version, input_names,
-                        output_names, context, parameters):
+def convert_NormalizeL2(
+        func, opset_version, input_names, output_names, context):
     if isinstance(func.axis, tuple) and len(func.axis) != 1:
         raise ValueError(
             'Normalization along with multiple axes ({}) are not supported in '
