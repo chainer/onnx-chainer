@@ -451,8 +451,8 @@ def _export(model, args, filename, export_params, graph_name, save_text,
     check_onnx_model(model, external_converters, external_opset_imports)
 
     if input_shapes is not None:
-        for i in range(len(model.graph.output)):
-            model.graph.output[i].type.Clear()
+        for output in model.graph.output:
+            output.type.Clear()
         model = shape_inference.infer_shapes(model)
         check_onnx_model(model, external_converters, external_opset_imports)
 
