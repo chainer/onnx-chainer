@@ -6,6 +6,7 @@ import warnings
 import chainer
 import onnx
 from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
+from onnx import shape_inference
 
 from onnx_chainer.context import Context
 from onnx_chainer.graph import Graph
@@ -103,6 +104,47 @@ def rename_variable_name(
         context.set_name(variables, new_name, pinned=True)
 
 
+def format_customized_shapes(args, shapes):
+    if isinstance(args, (list, tuple)):
+        if not isinstance(shapes, list) or len(args) != len(shapes):
+            raise ValueError('Customized shapes cannot fit for input list')
+        for i, (arg, shape) in enumerate(zip(args, shapes)):
+            if len(arg.shape) != len(shape):
+                raise ValueError(
+                    'Index-{} shape length must be same as input'.format(i))
+        return shapes
+    elif isinstance(args, dict):
+        if not isinstance(shapes, (list, dict)) or\
+                len(args) != len(shapes):
+            raise ValueError('Customized shapes cannot fit for input dict')
+        if isinstance(shapes, list):
+            shapes = {k: v for k, v in zip(args.keys(), shapes)}
+        formatted_shapes = []
+        for k, arg in args.items():
+            if k not in shapes:
+                raise ValueError(
+                    'Key "{}" is not found in customized shapes'.format(k))
+            if len(arg.shape) != len(shapes[k]):
+                raise ValueError(
+                    'Key "{}" shape length must be same as input'.format(k))
+            formatted_shapes.append(shapes[k])
+        return formatted_shapes
+    else:
+        assert isinstance(args, (chainer.Variable, chainer.get_array_types()))
+        if isinstance(shapes, list):
+            if len(shapes) != 1:
+                raise ValueError('Customized shape must be single')
+        elif not isinstance(shapes, tuple):
+            raise ValueError(
+                'Type {} is not supported for single input'.format(
+                    type(shapes)))
+        else:
+            shapes = [shapes]
+        if len(args.shape) != len(shapes[0]):
+            raise ValueError('Shape length must be same as input')
+        return shapes
+
+
 class RetainInputHook(chainer.LinkHook):
     """Retain temporary inputs
 
@@ -178,7 +220,7 @@ def export(model, args, filename=None, export_params=True,
            graph_name='Graph', save_text=False, opset_version=None,
            input_names=None, output_names=None, train=False,
            return_named_inout=False, external_converters=None,
-           external_opset_imports=None):
+           external_opset_imports=None, input_shapes=None):
     """Export function for chainer.Chain in ONNX format.
 
     This function performs a forward computation of the given
@@ -242,6 +284,9 @@ def export(model, args, filename=None, export_params=True,
             keyed by ~chainer.FunctionNode name.
         external_opset_imports (dict): Import external opset. opset version
             number keyed by domain name.
+        input_shapes (tuple, list, dict): Input shape of output graph follows
+            the customized shapes if set. When input are collection type, set
+            list or dict. Tuple of tuple is not allowed.
 
     Returns:
         ~onnx.ModelProto or tuple:
@@ -259,12 +304,12 @@ def export(model, args, filename=None, export_params=True,
         return _export(
             model, args, filename, export_params, graph_name, save_text,
             opset_version, input_names, output_names, return_named_inout,
-            external_converters, external_opset_imports)
+            external_converters, external_opset_imports, input_shapes)
 
 
 def _export(model, args, filename, export_params, graph_name, save_text,
             opset_version, input_names, output_names, return_named_inout,
-            external_converters, external_opset_imports):
+            external_converters, external_opset_imports, input_shapes):
     if opset_version is None:
         opset_version = int(onnx.defs.onnx_opset_version())
     elif opset_version < MINIMUM_OPSET_VERSION:
@@ -277,6 +322,10 @@ def _export(model, args, filename, export_params, graph_name, save_text,
                 m=MINIMUM_OPSET_VERSION,
                 o=opset_version)
         )
+
+    if input_shapes is not None:
+        # if input shapes are invalid, raise exception before forwarding.
+        input_shapes = format_customized_shapes(args, input_shapes)
 
     with RetainInputHook() as hook:  # NOQA hook is not used, to keep retained value
         # Forward computation
@@ -328,9 +377,10 @@ def _export(model, args, filename, export_params, graph_name, save_text,
         input_tensors.append(helper.make_tensor_value_info(
             name, tensor.data_type, tensor.dims))
 
-    for name, var in network_inputs.items():
+    for i, (name, var) in enumerate(network_inputs.items()):
+        shape = var.shape if input_shapes is None else input_shapes[i]
         input_tensors.append(helper.make_tensor_value_info(
-            name, NP_TYPE_TO_TENSOR_TYPE[var.dtype], var.shape))
+            name, NP_TYPE_TO_TENSOR_TYPE[var.dtype], shape))
 
     if external_converters:
         chainer.utils.experimental('external_converters')
@@ -398,9 +448,32 @@ def _export(model, args, filename, export_params, graph_name, save_text,
     )
 
     model.ir_version = onnx.IR_VERSION
+    check_onnx_model(model, external_converters, external_opset_imports)
 
+    if input_shapes is not None:
+        for output in model.graph.output:
+            output.type.Clear()
+        model = shape_inference.infer_shapes(model)
+        check_onnx_model(model, external_converters, external_opset_imports)
+
+    if filename is not None and isinstance(filename, str):
+        with open(filename, 'wb') as fp:
+            fp.write(model.SerializeToString())
+        if save_text:
+            with open(filename + '.txt', 'w') as fp:
+                print(model, file=fp)
+    elif hasattr(filename, 'write'):
+        filename.write(model.SerializeToString())
+
+    if return_named_inout:
+        chainer.utils.experimental('return_named_inout')
+        return model, network_inputs, network_outputs
+    return model
+
+
+def check_onnx_model(onnx_model, external_converters, external_opset_imports):
     try:
-        checker.check_model(model)
+        checker.check_model(onnx_model)
     except onnx.checker.ValidationError as e:
         if external_converters is None:
             raise e
@@ -428,17 +501,3 @@ def _export(model, args, filename, export_params, graph_name, save_text,
                     'exporting with `external_converters`. Please take care '
                     'about ONNX format check is insufficient. Error '
                     'message:\n{}'.format(str(e)))
-
-    if filename is not None and isinstance(filename, str):
-        with open(filename, 'wb') as fp:
-            fp.write(model.SerializeToString())
-        if save_text:
-            with open(filename + '.txt', 'w') as fp:
-                print(model, file=fp)
-    elif hasattr(filename, 'write'):
-        filename.write(model.SerializeToString())
-
-    if return_named_inout:
-        chainer.utils.experimental('return_named_inout')
-        return model, network_inputs, network_outputs
-    return model
