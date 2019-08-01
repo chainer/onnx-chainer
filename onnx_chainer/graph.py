@@ -65,7 +65,7 @@ class Graph(object):
             raise ValueError('{} is not supported'.format(func_name))
         params = FunctionConverterParams(
             func, self.specified_opset_version, input_names, output_names,
-            self.context, self.context.parameters)
+            self.context)
         nodes = converter(params)
         return list(nodes)
 
