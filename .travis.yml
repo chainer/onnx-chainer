@@ -48,7 +48,7 @@ before_install:
 script:
   - flake8
   - autopep8 -r . --dif --exit-code
-  - CHAINER_TEST_GPU_LIMIT=0 pytest -x -s -vvvs tests/ --cov onnx_chainer
+  - pytest -m "not gpu" -x -s -vvvs tests/ --cov onnx_chainer
 
 after_success:
   - if [[ $ONNX_CHAINER_DEPLOY_JOB == 1 ]]; then codecov; fi

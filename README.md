@@ -9,7 +9,7 @@ This is an add-on package for ONNX support by Chainer.
 ## Tested environment
 
 - Python 3.5.5, 3.6.7, 3.7.2
-- ONNX 1.4.0, 1.4.1, 1.5.0
+- ONNX 1.4.1, 1.5.0
     - opset version 7, 8, 9, 10
 - Chainer stable, preview
 - ONNX-Runtime 0.4.0
@@ -42,7 +42,7 @@ $ pip install onnx-chainer[test-gpu]
 ### 2. Run tests
 
 ```bash
-$ CHAINER_TEST_GPU_LIMIT=0 pytest
+$ pytest -m "not gpu"
 ```
 
 Or, on GPU environment
@@ -74,7 +74,7 @@ onnx_chainer.export(model, x, filename='vgg16.onnx')
 
 ## Supported Functions
 
-Currently 76 Chainer Functions are supported to export in ONNX format.
+Currently 82 Chainer Functions are supported to export in ONNX format.
 
 ### Activation
 
@@ -105,6 +105,7 @@ Currently 76 Chainer Functions are supported to export in ONNX format.
 - Reshape
 - ResizeImages
 - Separate
+- Shape <sup>[5](#shape1)</sup>
 - Space2Depth
 - SplitAxis
 - Squeeze
@@ -133,9 +134,12 @@ Currently 76 Chainer Functions are supported to export in ONNX format.
 - Absolute
 - Add
 - AddConstant
+- ArgMax
+- ArgMin
 - BroadcastTo
 - Clip
 - Div
+- DivFromConstant
 - Exp
 - Identity
 - LinearInterpolate
@@ -151,9 +155,11 @@ Currently 76 Chainer Functions are supported to export in ONNX format.
 - Neg
 - PowVarConst
 - Prod
+- RsqrtGPU
 - Sqrt
 - Square
 - Sub
+- SubFromConstant
 - Sum
 
 ### Noise
@@ -189,3 +195,4 @@ Any contribution to ONNX-Chainer is welcome!
 <a name="pad2">2</a>: ONNX doesn't support multiple constant values for Pad operation<br />
 <a name="embed1">3</a>: Current ONNX doesn't support ignore_label for EmbedID<br />
 <a name="dropout1">4</a>: In test mode, all dropout layers aren't included in the exported file<br />
+<a name="shape1">5</a>: Chainer doesn't support Shape function<br />

@@ -145,6 +145,77 @@ def format_customized_shapes(args, shapes):
         return shapes
 
 
+class RetainInputHook(chainer.LinkHook):
+    """Retain temporary inputs
+
+    Function nodes manage inputs variable nodes using weak reference. When
+    variable is made as temporary value, exporter cannot get the corresponded
+    variable from the variable node because the reference is collected. To
+    resolve it, retain all inputs and will use when make computational graph.
+
+    To reduce memory size, this hook retains only variables not showed in link
+    inputs. To enable this feature, links are required to use ``forward``, not
+    ``__call__``.
+    """
+
+    def __init__(self):
+        self.link_inputs = set()
+        self.retain_inputs = []
+
+        self.org_apply = chainer.function_node.FunctionNode.apply
+
+        def hooked_apply(_self, inputs):
+            ret = self.org_apply(_self, inputs)
+            func_inodes = list(_self.inputs)
+            for i, inode in enumerate(func_inodes):
+                referenced_var = inode.get_variable_or_none()
+                if referenced_var is None:
+                    # This variable is created within function node and weakref
+                    # is lost. Make temporary variable and retain it.
+                    temp_var = chainer.as_variable(inputs[i])
+                    func_inodes[i] = temp_var.node
+                    self.retain_inputs.append(temp_var)
+                else:
+                    if id(referenced_var) not in self.link_inputs:
+                        # This variable is created within link forward, outside
+                        # of function node. To avoid to lose reference out
+                        # of the forward, retain the variable.
+                        self.retain_inputs.append(referenced_var)
+            _self.inputs = tuple(func_inodes)
+            return ret
+        self.hooked_apply = hooked_apply
+
+    def _extract_inputs(self, args):
+        ret = set()
+        if isinstance(args, chainer.Variable):
+            ret.add(id(args))
+        elif isinstance(args, (list, tuple)):
+            for arg in args:
+                ret |= self._extract_inputs(arg)
+        elif isinstance(args, dict):
+            for arg in args.values():
+                ret |= self._extract_inputs(arg)
+        else:
+            raise ValueError('type {} is not supported to retain input'.format(
+                type(args)))
+        return ret
+
+    def forward_preprocess(self, args):
+        self.link_inputs |= self._extract_inputs(args.args)
+        self.link_inputs |= self._extract_inputs(args.kwargs)
+
+    def forward_postprocess(self, args):
+        self.link_inputs.clear()
+
+    def __enter__(self):
+        chainer.function_node.FunctionNode.apply = self.hooked_apply
+        return super().__enter__()
+
+    def __exit__(self, *exc_details):
+        chainer.function_node.FunctionNode.apply = self.org_apply
+        super().__exit__(*exc_details)
+
+
 def export(model, args, filename=None, export_params=True,
            graph_name='Graph', save_text=False, opset_version=None,
            input_names=None, output_names=None, train=False,
@@ -256,35 +327,36 @@ def _export(model, args, filename, export_params, graph_name, save_text,
         # if input shapes are invalid, raise exception before forwarding.
         input_shapes = format_customized_shapes(args, input_shapes)
 
-    # Forward computation
-    context = Context(model)
-    network_inputs = OrderedDict()
-    if isinstance(args, tuple):
-        args = list(args)
-    if isinstance(args, list):
-        for i, arg in enumerate(args):
-            if isinstance(arg, chainer.get_array_types()):
-                args[i] = chainer.Variable(arg)
-            network_inputs[context.get_name(args[i])] = args[i]
-        outputs = model(*args)
-    elif isinstance(args, dict):
-        for key, arg in args.items():
-            if isinstance(arg, chainer.get_array_types()):
-                args[key] = chainer.Variable(arg)
-            network_inputs[context.get_name(args[key])] = args[key]
-        outputs = model(**args)
-    elif isinstance(args, chainer.get_array_types()):
-        args = chainer.Variable(args)
-        network_inputs[context.get_name(args)] = args
-        outputs = model(args)
-    elif isinstance(args, chainer.Variable):
-        network_inputs[context.get_name(args)] = args
-        outputs = model(args)
-    else:
-        raise ValueError(
-            'The \'args\' argument should be a list, tuple, dict, '
-            'numpy array, or Chainer Variable. But a {} object was '
-            'given.'.format(type(args)))
+    with RetainInputHook() as hook:  # NOQA hook is not used, to keep retained value
+        # Forward computation
+        context = Context(model)
+        network_inputs = OrderedDict()
+        if isinstance(args, tuple):
+            args = list(args)
+        if isinstance(args, list):
+            for i, arg in enumerate(args):
+                if isinstance(arg, chainer.get_array_types()):
+                    args[i] = chainer.Variable(arg)
+                network_inputs[context.get_name(args[i])] = args[i]
+            outputs = model(*args)
+        elif isinstance(args, dict):
+            for key, arg in args.items():
+                if isinstance(arg, chainer.get_array_types()):
+                    args[key] = chainer.Variable(arg)
+                network_inputs[context.get_name(args[key])] = args[key]
+            outputs = model(**args)
+        elif isinstance(args, chainer.get_array_types()):
+            args = chainer.Variable(args)
+            network_inputs[context.get_name(args)] = args
+            outputs = model(args)
+        elif isinstance(args, chainer.Variable):
+            network_inputs[context.get_name(args)] = args
+            outputs = model(args)
+        else:
+            raise ValueError(
+                'The \'args\' argument should be a list, tuple, dict, '
+                'numpy array, or Chainer Variable. But a {} object was '
+                'given.'.format(type(args)))
     rename_variable_name(context, args, network_inputs, input_names)
 
     initializers = []

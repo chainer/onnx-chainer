@@ -4,9 +4,8 @@ from onnx_chainer.functions.opset_version import support
 from onnx_chainer import onnx_helper
 
 
-def convert_Convolution2DFunction(func, opset_version,
-                                  input_names, output_names, context,
-                                  parameters):
+def convert_Convolution2DFunction(
+        func, opset_version, input_names, output_names, context):
     if hasattr(func, 'dy') and hasattr(func, 'dx'):
         node = onnx_helper.make_node(
             'Conv', input_names, output_names,
@@ -29,9 +28,8 @@ def convert_Convolution2DFunction(func, opset_version,
     return node,
 
 
-def convert_ConvolutionND(func, opset_version, input_names,
-                          output_names, context,
-                          parameters):
+def convert_ConvolutionND(
+        func, opset_version, input_names, output_names, context):
     pad = []
     x_ndim = len(func.inputs[0].shape)
     w_ndim = len(func.inputs[1].shape)
@@ -50,9 +48,8 @@ def convert_ConvolutionND(func, opset_version, input_names,
     ),
 
 
-def convert_Deconvolution2DFunction(func, opset_version,
-                                    input_names, output_names, context,
-                                    parameters):
+def convert_Deconvolution2DFunction(
+        func, opset_version, input_names, output_names, context):
     return onnx_helper.make_node(
         'ConvTranspose', input_names, output_names,
         kernel_shape=func.inputs[1].shape[2:],
@@ -64,8 +61,8 @@ def convert_Deconvolution2DFunction(func, opset_version,
     ),
 
 
-def convert_DeconvolutionND(func, opset_version, input_names,
-                            output_names, context, parameters):
+def convert_DeconvolutionND(
+        func, opset_version, input_names, output_names, context):
     pad = []
     x_ndim = len(func.inputs[0].shape)
     w_ndim = len(func.inputs[1].shape)
@@ -85,8 +82,8 @@ def convert_DeconvolutionND(func, opset_version, input_names,
     ),
 
 
-def convert_EmbedIDFunction(func, opset_version, input_names,
-                            output_names, context, parameters):
+def convert_EmbedIDFunction(
+        func, opset_version, input_names, output_names, context):
     x_index_name, W_name = input_names
     input_names = [W_name, x_index_name]
 
@@ -99,8 +96,8 @@ def convert_EmbedIDFunction(func, opset_version, input_names,
 
 
 @support((1, 6, 7))
-def convert_LinearFunction(func, opset_version, input_names,
-                           output_names, context, parameters):
+def convert_LinearFunction(
+        func, opset_version, input_names, output_names, context):
     # When the func has bias
     if len(func.inputs) == 2:
         bias_dim = func.inputs[1].shape[0]

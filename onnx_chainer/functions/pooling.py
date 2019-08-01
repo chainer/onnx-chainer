@@ -8,8 +8,8 @@ from onnx_chainer import onnx_helper
 
 
 @support((1, 7))
-def convert_AveragePooling2D(func, opset_version, input_names,
-                             output_names, context, parameters):
+def convert_AveragePooling2D(
+        func, opset_version, input_names, output_names, context):
     pad = [func.ph, func.pw]
     stride = [func.sy, func.sx]
     ksize = [func.kh, func.kw]
@@ -35,8 +35,8 @@ def convert_AveragePooling2D(func, opset_version, input_names,
 
 
 @support((1, 7))
-def convert_AveragePoolingND(func, opset_version, input_names,
-                             output_names, context, parameters):
+def convert_AveragePoolingND(
+        func, opset_version, input_names, output_names, context):
     pad = list(func.pad[:])
     if func.cover_all:
         # Supports cover_all by setting extra padding
@@ -60,8 +60,8 @@ def convert_AveragePoolingND(func, opset_version, input_names,
 
 
 @support((1, 8))
-def convert_MaxPooling2D(func, opset_version, input_names,
-                         output_names, context, parameters):
+def convert_MaxPooling2D(
+        func, opset_version, input_names, output_names, context):
     pad = [func.ph, func.pw]
     stride = [func.sy, func.sx]
     ksize = [func.kh, func.kw]
@@ -90,8 +90,8 @@ def convert_MaxPooling2D(func, opset_version, input_names,
 
 
 @support((1, 8))
-def convert_MaxPoolingND(func, opset_version, input_names,
-                         output_names, context, parameters):
+def convert_MaxPoolingND(
+        func, opset_version, input_names, output_names, context):
     pad = list(func.pad[:])
     if func.cover_all:
         # Supports cover_all by setting extra padding
@@ -117,8 +117,8 @@ def convert_MaxPoolingND(func, opset_version, input_names,
         ),
 
 
-def convert_ROIPooling2D(func, opset_version, input_names,
-                         output_names, context, parameters):
+def convert_ROIPooling2D(
+        func, opset_version, input_names, output_names, context):
     warnings.warn(
         'It\'s possible that output does not match with Chainer, please check '
         'each runtime\'s implementation. For example, when input x has '
@@ -132,8 +132,8 @@ def convert_ROIPooling2D(func, opset_version, input_names,
 
 
 @support((7, 9, 10))
-def convert_Unpooling2D(func, opset_version, input_names, output_names,
-                        context, parameters):
+def convert_Unpooling2D(
+        func, opset_version, input_names, output_names, context):
     pad = [func.ph, func.pw]
     stride = [func.sy, func.sx]
     ksize = [func.kh, func.kw]

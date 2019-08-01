@@ -10,8 +10,7 @@ from onnx_chainer import onnx_helper
 
 class Graph(object):
 
-    def __init__(
-            self, context, converters, opset_version, network_outputs):
+    def __init__(self, context, converters, opset_version, network_outputs):
         self.context = context
         self.converters = converters
 
@@ -66,7 +65,7 @@ class Graph(object):
             raise ValueError('{} is not supported'.format(func_name))
         params = FunctionConverterParams(
             func, self.specified_opset_version, input_names, output_names,
-            self.context, self.context.parameters)
+            self.context)
         nodes = converter(params)
         return list(nodes)
 

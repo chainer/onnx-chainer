@@ -1,13 +1,15 @@
+import unittest
+import warnings
+
 import chainer
 import chainer.functions as F
 import chainer.links as L
 from chainer import testing
 import numpy as np
 import pytest
-import unittest
-import warnings
 
 from onnx_chainer import export
+from onnx_chainer.export import RetainInputHook
 from onnx_chainer.testing import input_generator
 from tests.helper import ONNXModelTest
 
@@ -78,23 +80,81 @@ class TestMultipleInputs(ONNXModelTest):
 
 class TestImplicitInput(ONNXModelTest):
 
-    def setUp(self):
-
+    def test_implicit_param(self):
         class Model(chainer.Chain):
 
             def __init__(self):
                 super(Model, self).__init__()
-
                 self.frac = chainer.Parameter(np.array(2, dtype=np.float32))
 
-            def __call__(self, x):
+            def forward(self, x):
                 return x / self.frac
 
-        self.model = Model()
-
-    def test_implicit_input(self):
         x = chainer.Variable(np.array(1, dtype=np.float32))
-        self.expect(self.model, x)
+        self.expect(Model(), x, name='implicit_param')
+
+    def test_implicit_param_ndarray(self):
+        class Model(chainer.Chain):
+
+            def __init__(self):
+                super(Model, self).__init__()
+                self.frac = np.array(2, dtype=np.float32)
+
+            def forward(self, x):
+                return x / self.frac
+
+        x = chainer.Variable(np.array(1, dtype=np.float32))
+        self.expect(Model(), x, name='implicit_param_ndarray')
+
+    def test_implicit_temporary_input(self):
+        class Model(chainer.Chain):
+
+            def forward(self, x):
+                return x + chainer.Variable(np.array(3, dtype=np.float32))
+
+        x = np.array(5, dtype=np.float32)
+        self.expect(Model(), x, name='implicit_temp_input')
+
+    def test_implicit_temporary_input_ndarray(self):
+        class Model(chainer.Chain):
+
+            def forward(self, x):
+                return x + np.array(3, dtype=np.float32)
+
+        x = np.array(5, dtype=np.float32)
+        self.expect(Model(), x, name='implicit_temp_input_ndarray')
+
+
+class TestRetainInputHook(object):
+
+    def get_x(self, test_type):
+        if test_type == 'list':
+            return [
+                chainer.Variable(np.array(3, dtype=np.float32)),
+                chainer.Variable(np.array(5, dtype=np.float32))]
+        elif test_type == 'dict':
+            return {'x': chainer.Variable(np.array(3, dtype=np.float32))}
+        else:
+            assert test_type == 'variable'
+            return chainer.Variable(np.array(3, dtype=np.float32))
+
+    @pytest.mark.parametrize('test_type', ['variable', 'list', 'dict'])
+    def test_hook(self, test_type):
+        class Model(chainer.Chain):
+
+            def forward(self, x):
+                if test_type == 'variable':
+                    x = [x]
+                elif test_type == 'dict':
+                    x = list(x.values())
+                x.append(chainer.Variable(np.array(7, np.float32)))
+                return F.stack(x)
+
+        model = Model()
+        x = self.get_x(test_type)
+        with RetainInputHook() as h:
+            model(x)
+        assert len(h.retain_inputs) == 1
 
 
 @testing.parameterize(
