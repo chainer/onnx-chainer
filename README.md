@@ -3,6 +3,7 @@
 [![GitHub license](https://img.shields.io/github/license/chainer/onnx-chainer.svg)](https://github.com/chainer/onnx-chainer)
 [![Build Status](https://travis-ci.org/chainer/onnx-chainer.svg?branch=master)](https://travis-ci.org/chainer/onnx-chainer)
 [![codecov](https://codecov.io/gh/chainer/onnx-chainer/branch/master/graph/badge.svg)](https://codecov.io/gh/chainer/onnx-chainer)
+[![Documentation Status](https://readthedocs.org/projects/onnx-chainer/badge/?version=latest)](https://onnx-chainer.readthedocs.io/en/latest/?badge=latest)
 
 This is an add-on package for ONNX support by Chainer.
 
