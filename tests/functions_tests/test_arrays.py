@@ -172,6 +172,12 @@ from tests.helper import ONNXModelTest
      'input_argname': 'x', 'args': {}, 'name': 'separate_axis0'},
     {'ops': 'separate', 'input_shape': (2, 3),
      'input_argname': 'x', 'args': {'axis': 1}, 'name': 'separate_axis1'},
+
+    # moveaxis
+    {'ops': 'moveaxis', 'input_shape': (2, 3, 4, 5),
+     'input_argname': 'x', 'args': {'source': 0, 'destination': -1}},
+    {'ops': 'moveaxis', 'input_shape': (2, 3, 4, 5),
+     'input_argname': 'x', 'args': {'source': (0, 3), 'destination': (2, 0)}},
 )
 class TestArrayOperators(ONNXModelTest):
 
