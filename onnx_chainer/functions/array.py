@@ -473,3 +473,19 @@ def convert_Separate(func, opset_version, input_names, output_names, context):
 
 def convert_Shape(func, opset_version, input_names, output_names, context):
     return onnx_helper.make_node('Shape', input_names, output_names),
+
+
+def convert_Moveaxis(func, opset_version, input_names, output_names, context):
+
+    ndim = len(func.inputs[0].shape)
+    source = [a % ndim for a in func.source]
+    destination = [a % ndim for a in func.destination]
+
+    order = [n for n in range(ndim) if n not in source]
+    for dest, src in sorted(zip(destination, source)):
+        order.insert(dest, src)
+
+    node = onnx_helper.make_node('Transpose', input_names, output_names,
+                                 perm=order)
+
+    return node,
