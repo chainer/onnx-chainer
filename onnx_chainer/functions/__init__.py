@@ -78,6 +78,7 @@ from onnx_chainer.functions.noise import convert_Dropout  # NOQA
 
 from onnx_chainer.functions.normalization import convert_BatchNormalization  # NOQA
 from onnx_chainer.functions.normalization import convert_FixedBatchNormalization  # NOQA
+from onnx_chainer.functions.normalization import convert_GroupNormalization  # NOQA
 from onnx_chainer.functions.normalization import convert_LocalResponseNormalization  # NOQA
 from onnx_chainer.functions.normalization import convert_NormalizeL2  # NOQA
 

@@ -90,6 +90,7 @@ _supported_function_node_set = {
     # Normalization
     'BatchNormalization',
     'FixedBatchNormalization',
+    'GroupNormalization',
     'LocalResponseNormalization',
     'NormalizeL2',
 
