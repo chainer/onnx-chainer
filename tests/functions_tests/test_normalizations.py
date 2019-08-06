@@ -93,6 +93,26 @@ class TestBatchNormalization(ONNXModelTest):
             custom_model_test_func=test_input_names)
 
 
+class TestGroupNormalization(ONNXModelTest):
+
+    def get_model(self):
+        class Model(chainer.Chain):
+            def __init__(self):
+                super().__init__()
+                with self.init_scope():
+                    self.gn = L.GroupNormalization(2)
+
+            def forward(self, x):
+                return self.gn(x)
+        return Model()
+
+    def test_output(self):
+        model = self.get_model()
+        x = np.zeros((10, 4, 256, 256), dtype=np.float32)
+
+        self.expect(model, x, train=True)
+
+
 class TestBatchNormalizationFunction(ONNXModelTest):
 
     def setUp(self):
