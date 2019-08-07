@@ -45,3 +45,20 @@ configs {
     }
   }
 }
+
+configs {
+  key: "onnxchainer.win.chainer-pre"
+  value {
+    requirement {
+      cpu: 4
+      disk: 10
+      memory: 16
+      gpu: 1
+      image: "windows"
+    }
+    time_limit {
+      seconds: 600
+    }
+    command: ".chainerci\\run_test.bat 10_0 37"
+  }
+}
