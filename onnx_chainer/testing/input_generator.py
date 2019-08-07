@@ -32,11 +32,11 @@ def increasing(*shape, dtype=np.float32):
            [ 1. ,  1.5,  2. ,  2.5]], dtype=float32)
 
     Args:
-      shape (tuple of int): The shape of the output array.
-      dtype (numpy.dtype): The dtype of the output array.
+        shape (tuple of int): The shape of the output array.
+        dtype (numpy.dtype): The dtype of the output array.
 
     Returns:
-      numpy.ndarray
+        numpy.ndarray
     """
     return _increasing_impl(*shape, dtype=dtype)
 
@@ -56,12 +56,12 @@ def nonzero_increasing(*shape, dtype=np.float32, bias=1e-7):
           dtype=float32)
 
     Args:
-      shape (tuple of int): The shape of the output array.
-      dtype (numpy.dtype): The dtype of the output array.
-      bias (float): The bias to avoid zero.
+        shape (tuple of int): The shape of the output array.
+        dtype (numpy.dtype): The dtype of the output array.
+        bias (float): The bias to avoid zero.
 
     Returns:
-      numpy.ndarray
+        numpy.ndarray
     """
     assert dtype in (np.float32, np.float64)
     return _increasing_impl(*shape, dtype=dtype, bias=bias)
@@ -82,11 +82,11 @@ def positive_increasing(*shape, dtype=np.float32, bias=1e-7):
           dtype=float32)
 
     Args:
-      shape (tuple of int): The shape of the output array.
-      dtype (numpy.dtype): The dtype of the output array.
-      bias (float): The bias to avoid zero.
+        shape (tuple of int): The shape of the output array.
+        dtype (numpy.dtype): The dtype of the output array.
+        bias (float): The bias to avoid zero.
 
     Returns:
-      numpy.ndarray
+        numpy.ndarray
     """
     return _increasing_impl(*shape, dtype=dtype, negative=False, bias=bias)

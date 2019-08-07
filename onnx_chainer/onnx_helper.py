@@ -9,7 +9,7 @@ def set_func_name(func_name):
     """Set the name of Chainer function being converted.
 
     Args:
-      func_name (str): The name of Chainer function.
+        func_name (str): The name of Chainer function.
     """
     global __func_name
     __func_name = func_name
@@ -29,10 +29,10 @@ def make_node(*args, **kwargs):
     Node name will be assigned automatically.
 
     Args:
-      *args (tuple): ONNX node parameters of the node
-      **kwargs (dict): ONNX attributes of the node.
+        *args (tuple): ONNX node parameters of the node
+        **kwargs (dict): ONNX attributes of the node.
     Returns:
-      An `onnx.NodeProto` object.
+        An `onnx.NodeProto` object.
     """
     return onnx.helper.make_node(*args, name=get_func_name(), **kwargs)
 
@@ -51,14 +51,14 @@ class GraphBuilder(object):
         """Creates a new ONNX node and returns its outputs.
 
         Args:
-          op_name (str): The name of an ONNX op.
-          input_names (list of str): The names of input values.
-          num_outputs (int): The number of output values.
-          **kwargs (dict): ONNX attributes of the node.
+            op_name (str): The name of an ONNX op.
+            input_names (list of str): The names of input values.
+            num_outputs (int): The number of output values.
+            **kwargs (dict): ONNX attributes of the node.
 
         Returns:
-          A str of the output name when `num_outputs` is 1.
-          A tuple of str of the output names otherwise.
+            A str of the output name when `num_outputs` is 1.
+            A tuple of str of the output names otherwise.
         """
         if num_outputs == 1:
             output_names = [self.node_name()]
@@ -73,14 +73,14 @@ class GraphBuilder(object):
         """Creates a new ONNX node with output names, and returns its outputs.
 
         Args:
-          op_name (str): The name of an ONNX op.
-          input_names (list of str): The names of input values.
-          output_names (int of str): The names of output values.
-          **kwargs (dict): ONNX attributes of the node.
+            op_name (str): The name of an ONNX op.
+            input_names (list of str): The names of input values.
+            output_names (int of str): The names of output values.
+            **kwargs (dict): ONNX attributes of the node.
 
         Returns:
-          A str of the output name when number of output is 1.
-          A tuple of str of the output names otherwise.
+            A str of the output name when number of output is 1.
+            A tuple of str of the output names otherwise.
         """
         # Prevent a common mistake. `input_names="input"` creates a
         # node with 5 inputs.
@@ -98,12 +98,12 @@ class GraphBuilder(object):
         """Returns all nodes created so far.
 
         Args:
-          output_names (list of str): The names of output values to be set at
-            the last node.
+            output_names (list of str): The names of output values to be set at
+                the last node.
 
         Returns:
-          A list of `onnx.NodeProto` objects, suitable as the return
-          value of converter functions.
+            A list of `onnx.NodeProto` objects, suitable as the return
+            value of converter functions.
         """
         if output_names is not None:
             assert len(self._nodes[-1].output) == len(output_names)
@@ -123,10 +123,10 @@ def cleanse_param_name(name):
     Note ONNX identifiers must be a valid C identifier.
 
     Args:
-      name (str): A Chainer parameter name (e.g., /l/W).
+        name (str): A Chainer parameter name (e.g., /l/W).
 
     Returns
-      A valid ONNX name (e.g., param_l_W).
+        A valid ONNX name (e.g., param_l_W).
     """
     return 'param' + name.replace('/', '_')
 
