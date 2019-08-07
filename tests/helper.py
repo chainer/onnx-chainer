@@ -143,7 +143,8 @@ class ONNXModelTest(unittest.TestCase):
 
 
 def check_all_connected_from_inputs(onnx_model):
-    edge_names = set(_get_graph_input_names(onnx_model))
+    edge_names = _get_initializer_names(onnx_model) |\
+                 _get_input_names(onnx_model)
     # Nodes which are not connected from the network inputs.
     orphan_nodes = []
     for node in onnx_model.graph.node:
@@ -158,8 +159,14 @@ def check_all_connected_from_inputs(onnx_model):
     assert not(orphan_nodes), '{}'.format(orphan_nodes)
 
 
+def _get_initializer_names(onnx_model):
+    return {i.name for i in onnx_model.graph.initializer}
+
+
+def _get_input_names(onnx_model):
+    return {i.name for i in onnx_model.graph.input}
+
+
 def _get_graph_input_names(onnx_model):
-    initialized_graph_input_names = {
-        i.name for i in onnx_model.graph.initializer}
-    return [i.name for i in onnx_model.graph.input if i.name not in
-            initialized_graph_input_names]
+    return list(
+        _get_input_names(onnx_model) - _get_initializer_names(onnx_model))

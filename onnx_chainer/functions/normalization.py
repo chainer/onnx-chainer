@@ -3,8 +3,8 @@ import sys
 import chainer
 import numpy as np
 
-from onnx_chainer.functions.opset_version import support
 from onnx_chainer.functions.array import get_slice_node
+from onnx_chainer.functions.opset_version import support
 from onnx_chainer import onnx_helper
 
 
