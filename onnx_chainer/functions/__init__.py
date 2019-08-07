@@ -5,6 +5,7 @@ from onnx_chainer.functions.activation import convert_LeakyReLU  # NOQA
 from onnx_chainer.functions.activation import convert_LogSoftmax  # NOQA
 from onnx_chainer.functions.activation import convert_PReLUFunction  # NOQA
 from onnx_chainer.functions.activation import convert_ReLU  # NOQA
+from onnx_chainer.functions.activation import convert_Selu  # NOQA
 from onnx_chainer.functions.activation import convert_Sigmoid  # NOQA
 from onnx_chainer.functions.activation import convert_Softmax  # NOQA
 from onnx_chainer.functions.activation import convert_Softplus  # NOQA
@@ -18,6 +19,7 @@ from onnx_chainer.functions.array import convert_Dstack  # NOQA
 from onnx_chainer.functions.array import convert_ExpandDims  # NOQA
 from onnx_chainer.functions.array import convert_GetItem  # NOQA
 from onnx_chainer.functions.array import convert_Hstack  # NOQA
+from onnx_chainer.functions.array import convert_Moveaxis  # NOQA
 from onnx_chainer.functions.array import convert_Pad  # NOQA
 from onnx_chainer.functions.array import convert_Repeat  # NOQA
 from onnx_chainer.functions.array import convert_Reshape  # NOQA

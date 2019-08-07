@@ -18,6 +18,7 @@ from tests.helper import ONNXModelTest
     {'name': 'log_softmax',
      'args': {'axis': 2}, 'test_name': 'log_softmax_axis2'},
     {'name': 'relu'},
+    {'name': 'selu'},
     {'name': 'sigmoid'},
     {'name': 'softmax'},
     {'name': 'softmax',
