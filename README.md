@@ -19,8 +19,6 @@ This is an add-on package for ONNX support by Chainer.
 
 ## Installation
 
-### On Ubuntu 14.04/16.04
-
 ```bash
 pip install onnx-chainer
 ```

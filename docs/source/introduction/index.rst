@@ -167,6 +167,7 @@ Tested Environments
 * OS
 
     * Ubuntu 16.04, 18.04
+    * Windows 10
 
 * Python 3.5.5, 3.6.7, 3.7.2
 * ONNX 1.4.1, 1.5.0
