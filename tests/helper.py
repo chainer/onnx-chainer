@@ -144,7 +144,7 @@ class ONNXModelTest(unittest.TestCase):
 
 def check_all_connected_from_inputs(onnx_model):
     edge_names = _get_initializer_names(onnx_model) |\
-                 _get_input_names(onnx_model)
+        _get_input_names(onnx_model)
     # Nodes which are not connected from the network inputs.
     orphan_nodes = []
     for node in onnx_model.graph.node:
