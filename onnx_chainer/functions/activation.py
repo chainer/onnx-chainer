@@ -126,10 +126,11 @@ def convert_Selu(func, opset_version, input_names, output_names, context):
         ),
     elif opset_version == 6:
         return onnx_helper.make_node('Selu', input_names, output_names,
-            alpha=func.alpha,
-            gamma=func.scale
-        ),
-    
+                                     alpha=func.alpha,
+                                     gamma=func.scale
+                                     ),
+
+
 @support((1, 6))
 def convert_Sigmoid(func, opset_version, input_names, output_names, context):
     if opset_version == 1:

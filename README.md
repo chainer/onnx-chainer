@@ -86,6 +86,7 @@ Currently 82 Chainer Functions are supported to export in ONNX format.
 - LogSoftmax
 - PReLUFunction
 - ReLU
+- Selu
 - Sigmoid
 - Softmax
 - Softplus
