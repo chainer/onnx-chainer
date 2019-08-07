@@ -294,7 +294,8 @@ def convert_Square(func, opset_version, input_names, output_names, context):
 @support((8,))
 def convert_BroadcastTo(
         func, opset_version, input_names, output_names, context):
-    shape_name = context.add_const(np.array(func._shape), 'shape')
+    shape_name = context.add_const(
+        np.array(func._shape, dtype=np.int64), 'shape')
     input_names.append(shape_name)
     return onnx_helper.make_node('Expand', input_names, output_names),
 
@@ -304,7 +305,7 @@ def _argminmax_nodes(op_name, func, input_names, output_names, context):
     target_input_names = input_names
     axis = func.axis
     if axis is None:
-        shape_name = context.add_const(np.array([-1]), 'shape')
+        shape_name = context.add_const(np.array([-1], dtype=np.int64), 'shape')
         input_names.append(shape_name)
         target_input_names = [gb.op('Reshape', input_names)]
         axis = 0
