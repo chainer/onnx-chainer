@@ -5,6 +5,7 @@ from onnx_chainer.functions.activation import convert_LeakyReLU  # NOQA
 from onnx_chainer.functions.activation import convert_LogSoftmax  # NOQA
 from onnx_chainer.functions.activation import convert_PReLUFunction  # NOQA
 from onnx_chainer.functions.activation import convert_ReLU  # NOQA
+from onnx_chainer.functions.activation import convert_Selu  # NOQA
 from onnx_chainer.functions.activation import convert_Sigmoid  # NOQA
 from onnx_chainer.functions.activation import convert_Softmax  # NOQA
 from onnx_chainer.functions.activation import convert_Softplus  # NOQA
