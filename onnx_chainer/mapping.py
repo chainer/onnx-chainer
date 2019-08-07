@@ -11,6 +11,7 @@ _supported_function_node_set = {
     'LogSoftmax',
     'PReLUFunction',
     'ReLU',
+    'Selu',
     'Sigmoid',
     'Softmax',
     'Softplus',
