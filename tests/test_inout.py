@@ -142,7 +142,7 @@ class TestRetainInputHook(object):
 
     @pytest.mark.parametrize(
         'test_type', ['variable', 'list', 'dict', 'array'])
-    def test_hook(self, test_type):
+    def test_hook_for_funcnode(self, test_type):
         class Model(chainer.Chain):
 
             def forward(self, x):
@@ -162,6 +162,37 @@ class TestRetainInputHook(object):
             # input is ndarray and not checked in forward_preprocess
             expected_count += 1
         assert len(h.retain_inputs) == expected_count
+
+    @pytest.mark.parametrize('test_type', ['array'])
+    def test_hook_for_childlink(self, test_type):
+        # TODO(disktnk): test_type='variable' is failed
+        class ChildModel(chainer.Chain):
+
+            def forward(self, x, h):
+                if test_type in ['variable', 'array']:
+                    h = [chainer.as_variable(h)]
+                elif test_type == 'dict':
+                    h = list(h.values())
+                h.append(x)
+                return F.stack(h)
+
+        class ParentModel(chainer.Chain):
+
+            def __init__(self, get_x):
+                super().__init__()
+                self.get_x = get_x
+                with self.init_scope():
+                    self.m = ChildModel()
+
+            def forward(self, x):
+                h = self.get_x(test_type)
+                return self.m(x, h)
+
+        model = ParentModel(self.get_x)
+        x = self.get_x('variable')
+        with RetainInputHook() as h:
+            model(x)
+        assert len(h.retain_inputs) == 1
 
 
 @testing.parameterize(
