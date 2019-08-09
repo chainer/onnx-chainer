@@ -186,6 +186,9 @@ class RetainInputHook(chainer.LinkHook):
         self.hooked_apply = hooked_apply
 
     def _extract_inputs(self, args):
+        # Retain only chainer.Variable (and its collection)
+        # Other type args are ignored and not checked instance IDs
+        # If these variable are used in FunctionNode, they will be retained
         ret = set()
         if isinstance(args, chainer.Variable):
             ret.add(id(args))
@@ -195,9 +198,6 @@ class RetainInputHook(chainer.LinkHook):
         elif isinstance(args, dict):
             for arg in args.values():
                 ret |= self._extract_inputs(arg)
-        else:
-            raise ValueError('type {} is not supported to retain input'.format(
-                type(args)))
         return ret
 
     def forward_preprocess(self, args):
