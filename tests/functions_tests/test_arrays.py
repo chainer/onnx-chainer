@@ -352,7 +352,7 @@ class TestShape(ONNXModelTest):
             @as_funcnode('Shape')
             def shape(self, x):
                 # ONNX Shape operator constrains to return int64 type
-                return np.array(x.shape)
+                return np.array(x.shape, dtype=np.int64)
 
             def forward(self, x):
                 # use shape method instead of x.shape to connect graph.
@@ -383,7 +383,7 @@ class TestDynamicReshape(ONNXModelTest):
 
         model = Model()
         x = input_generator.increasing(3, 4, 5)
-        shape = np.array([12, 5])
+        shape = np.array([12, 5], dtype=np.int64)
 
         def check_no_param(onnx_model):
             assert not any(['param' in v.name for v in onnx_model.graph.input])

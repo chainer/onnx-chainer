@@ -12,7 +12,7 @@ requirements = {
         'hacking',
     ],
     'test': [
-        'pytest',
+        'pytest<5.0.0',
         'chainercv>=0.11.0',
     ],
     'test-cpu': [

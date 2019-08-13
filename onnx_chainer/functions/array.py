@@ -342,7 +342,7 @@ def convert_Repeat(func, opset_version, input_names, output_names, context):
     inputs = list(input_names)
     axis = func.axis
     if axis is None:
-        shape_name = context.add_const(np.array([-1]), 'shape')
+        shape_name = context.add_const(np.array([-1], dtype=np.int64), 'shape')
         input_names.append(shape_name)
         inputs = [gb.op('Reshape', input_names)]
         scales = [float(repeats[0])]
