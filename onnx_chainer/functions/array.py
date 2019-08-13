@@ -70,6 +70,19 @@ def convert_Depth2Space(
     ),
 
 
+def get_slice_node(
+        gb, opset_version, context, input_names, axes, starts, ends):
+    if opset_version < 10:
+        return gb.op(
+            'Slice', input_names, axes=axes, starts=starts, ends=ends)
+    else:
+        for param in [('starts', starts), ('ends', ends), ('axes', axes)]:
+            param_name = context.add_const(
+                np.asarray(list(param[1]), dtype=np.int64), param[0])
+            input_names.append(param_name)
+        return gb.op('Slice', input_names)
+
+
 @support((1, 10))
 def convert_GetItem(func, opset_version, input_names, output_names, context):
     x = func.inputs[0]
@@ -115,15 +128,8 @@ def convert_GetItem(func, opset_version, input_names, output_names, context):
                 'ONNX-Chainer does not accept the type'.format(type(idx)))
 
     gb = onnx_helper.GraphBuilder()
-    if opset_version == 1:
-        output = gb.op('Slice', input_names,
-                       axes=axes, starts=starts, ends=ends)
-    elif opset_version == 10:
-        for param in [('starts', starts), ('ends', ends), ('axes', axes)]:
-            param_name = context.add_const(
-                np.asarray(list(param[1]), dtype=np.int64), param[0])
-            input_names.append(param_name)
-        output = gb.op('Slice', input_names)
+    output = get_slice_node(
+        gb, opset_version, context, input_names, axes, starts, ends)
 
     if squeeze_idxs:
         output = gb.op('Squeeze', [output],

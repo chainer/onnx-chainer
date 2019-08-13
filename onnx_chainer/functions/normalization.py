@@ -3,6 +3,7 @@ import sys
 import chainer
 import numpy as np
 
+from onnx_chainer.functions.array import get_slice_node
 from onnx_chainer.functions.opset_version import support
 from onnx_chainer import onnx_helper
 
@@ -94,6 +95,59 @@ def convert_FixedBatchNormalization(
         func, opset_version, input_names, output_names, context):
     return convert_BatchNormalization(
         func, opset_version, input_names, output_names, context)
+
+
+@support((5, 10))
+def convert_GroupNormalization(
+        func, opset_version, input_names, output_names, context):
+    # drop opset < 5, to reduce supporting cost of old Reshape op
+    # calculation process is from
+    # https://github.com/chainer/chainer/blob/v6.2.0/chainer/functions/normalization/group_normalization.py  # NOQA
+    # support dynamic batch size, but channel size is expected to be fixed
+
+    group = context.add_const(np.array(func.groups, dtype=np.int64), 'group')
+    eps = context.add_const(np.array(func.eps, dtype=np.float32), 'eps')
+    channel_size = context.add_const(
+        np.array([func.inputs[0].shape[1]], dtype=np.int64), 'channel')
+
+    neg_one = context.add_const(np.array([-1], dtype=np.int64), 'neg_one')
+
+    gb = onnx_helper.GraphBuilder()
+
+    # make reduced input
+    original_shape = gb.op('Shape', [input_names[0]])
+    batch_size = get_slice_node(
+        gb, opset_version, context, [original_shape], [0], [0], [1])
+    batched_group = gb.op('Mul', [batch_size, group])
+    reduce_shape = gb.op('Concat', [batched_group, neg_one], axis=0)
+    reduced_x = gb.op('Reshape', [input_names[0], reduce_shape])
+
+    # calculate mean, var and x_hat
+    mean = gb.op('Unsqueeze', [
+        gb.op('ReduceMean', [reduced_x], axes=[1], keepdims=0)], axes=[1])
+    x_hat = gb.op('Sub', [reduced_x, mean])
+    var = gb.op('Add', [
+        gb.op(
+            'ReduceMean', [gb.op('Mul', [x_hat, x_hat])], axes=[1],
+            keepdims=0),
+        eps])
+    inv_std = gb.op('Unsqueeze', [
+        gb.op('Reciprocal', [gb.op('Sqrt', [var])])], axes=[1])
+    x_hat_ = gb.op('Mul', [x_hat, inv_std])
+
+    # make out y
+    groupless_shape = gb.op(
+        'Concat', [batch_size, channel_size, neg_one], axis=0)
+    y_org = gb.op('Reshape', [x_hat_, groupless_shape])
+
+    # gamma/beta
+    gamma = gb.op('Unsqueeze', [input_names[1]], axes=[1])
+    beta = gb.op('Unsqueeze', [input_names[2]], axes=[1])
+    y_g = gb.op('Mul', [y_org, gamma])
+    y_b = gb.op('Add', [y_g, beta])
+    gb.op('Reshape', [y_b, original_shape])
+
+    return gb.nodes(output_names)
 
 
 def convert_LocalResponseNormalization(
