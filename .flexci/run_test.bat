@@ -8,7 +8,7 @@ set PATH=%CUDA_PATH%\bin;%CUDA_PATH%\libnvvp;%PY_PATH%;%PY_PATH%\Scripts\%PATH%
 
 pip install --pre cupy-cuda100
 pip install --pre chainer
-pip install -U -e .[chainerci]
+pip install -U -e .[flexci]
 pip list -v
 
 pytest -x -s -vvvs tests --cov onnx_chainer

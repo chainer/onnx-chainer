@@ -32,7 +32,7 @@ requirements = {
         'pytest-cov',
         'codecov',
     ],
-    'chainerci': [
+    'flexci': [
         '-r test-gpu',
         'pytest-cov',
     ]
