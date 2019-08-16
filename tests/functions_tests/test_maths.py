@@ -12,6 +12,11 @@ from tests.helper import ONNXModelTest
 @testing.parameterize(
     {'op_name': 'Neg', 'ops': '-a'},
     {'op_name': 'Absolute', 'ops': 'abs(a)'},
+    {'op_name': 'Arccos', 'ops': 'chainer.functions.arccos(a)'},
+    {'op_name': 'Arcsin', 'ops': 'chainer.functions.arcsin(a)'},
+    {'op_name': 'Arctan', 'ops': 'chainer.functions.arctan(a)'},
+    {'op_name': 'Cos', 'ops': 'chainer.functions.cos(a)'},
+    {'op_name': 'Cosh', 'ops': 'chainer.functions.cosh(a)'},
     {'op_name': 'Clip', 'ops': 'chainer.functions.clip(a, 0.1, 0.2)'},
     {'op_name': 'Exp', 'ops': 'chainer.functions.exp(a)'},
     {'op_name': 'Sqrt', 'ops': 'chainer.functions.sqrt(a)'},
@@ -47,10 +52,14 @@ from tests.helper import ONNXModelTest
      'condition': 'axis0'},
     {'op_name': 'Prod', 'ops': 'chainer.functions.prod(a, keepdims=True)',
      'condition': 'keepdims'},
+    {'op_name': 'Log', 'ops': 'chainer.functions.log(a)'},
     {'op_name': 'LogSumExp', 'ops': 'chainer.functions.logsumexp(a)'},
     {'op_name': 'LogSumExp', 'ops': 'chainer.functions.logsumexp(a, axis=0)',
      'condition': 'axis0'},
+    {'op_name': 'Sin', 'ops': 'chainer.functions.sin(a)'},
+    {'op_name': 'Sinh', 'ops': 'chainer.functions.sinh(a)'},
     {'op_name': 'Square', 'ops': 'chainer.functions.square(a)'},
+    {'op_name': 'Tan', 'ops': 'chainer.functions.tan(a)'},
     {'op_name': 'BroadcastTo',
      'ops': 'chainer.functions.broadcast_to(a, (2,2,3))'},
 )
@@ -78,8 +87,13 @@ class TestUnaryMathOperators(ONNXModelTest):
         self.name = name
 
         skip_opset_version = []
+        if self.op_name == 'Cosh' or self.op_name == 'Sinh':
+            skip_opset_version.append(7)
+            skip_opset_version.append(8)
+
         if self.op_name == 'BroadcastTo':
             skip_opset_version.append(7)
+
         self.skip_opset_version = skip_opset_version
 
     def test_output(self):
