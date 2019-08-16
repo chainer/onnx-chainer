@@ -10,7 +10,7 @@ configs {
     time_limit {
       seconds: 600
     }
-    command: "sh .chainerci/run_test.sh"
+    command: "sh .flexci/run_test.sh"
     environment_variables {
       key: "PYTHON_VER"
       value: "37"
@@ -34,7 +34,7 @@ configs {
     time_limit {
       seconds: 600
     }
-    command: "sh .chainerci/run_test.sh"
+    command: "sh .flexci/run_test.sh"
     environment_variables {
       key: "PYTHON_VER"
       value: "37"
@@ -59,6 +59,6 @@ configs {
     time_limit {
       seconds: 600
     }
-    command: ".chainerci\\run_test.bat 10_0 37"
+    command: ".flexci\\run_test.bat 10_0 37"
   }
 }

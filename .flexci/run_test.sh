@@ -7,6 +7,6 @@ docker run --runtime=nvidia -i --rm \
     sh -ex << EOD
 pip install ${CHAINER_INSTALL} cupy-cuda101
 pip install ${CHAINER_INSTALL} chainer
-pip install -U -e .[chainerci]
+pip install -U -e .[flexci]
 pytest -x -s -vvvs tests/ --cov onnx_chainer
 EOD
