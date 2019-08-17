@@ -49,15 +49,19 @@ def convert_BatchNormalization(
     maen_name = add_param(mean, 'avg_mean')
     var_name = add_param(var, 'avg_var')
     if is_fixed_bn:
+        context.implicit_inputs.pop(input_names[3], None)
+        context.implicit_inputs.pop(input_names[4], None)
         input_names[3] = maen_name
         input_names[4] = var_name
     else:
         input_names.extend([maen_name, var_name])
 
     if beta_param is None:
+        context.implicit_inputs.pop(input_names[2], None)
         beta_name = add_param(np.zeros_like(mean, dtype=mean.dtype), 'beta')
         input_names[2] = beta_name
     if gamma_param is None:
+        context.implicit_inputs.pop(input_names[1], None)
         gamma_name = add_param(np.ones_like(mean, dtype=mean.dtype), 'gamma')
         input_names[1] = gamma_name
 

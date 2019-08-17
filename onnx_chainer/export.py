@@ -407,10 +407,10 @@ def _export(model, args, filename, export_params, graph_name, save_text,
     o = Graph(context, converters, opset_version, network_outputs)
     o.to_onnx_graph()
 
-    implicit_input_names = set(o.inputs.keys()) - param_names -\
+    implicit_input_names = set(context.implicit_inputs.keys()) - param_names -\
         set(network_inputs.keys())
     for name in implicit_input_names:
-        tensor = convert_parameter(o.inputs[name], context)
+        tensor = convert_parameter(context.implicit_inputs[name], context)
         initializers.append(tensor)
         input_tensors.append(helper.make_tensor_value_info(
             name, tensor.data_type, tensor.dims))

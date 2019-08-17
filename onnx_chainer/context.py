@@ -36,6 +36,7 @@ class Context(object):
         self.name_list = dict()
         self.parameters = []
         self.constants = []
+        self.implicit_inputs = dict()  # inputs which not connect to output
         namedlink = {n: l for n, l in model.namedlinks()}
         self.param_to_link = {}
         for name, param in model.namedparams():
