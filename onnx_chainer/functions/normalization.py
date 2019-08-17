@@ -13,8 +13,8 @@ def convert_BatchNormalization(
         func, opset_version, input_names, output_names, context):
     is_fixed_bn = len(func.inputs) > 3
 
-    # NOTE(disktnk):
-    # if `use_beta=False`, beta_param is None, `use_gamma=False` is same.
+    # NOTE: even if `use_beta=False` or `use_gamma=False`, beta or gamma
+    # are set in inputs by RetainHook,
     beta_param = func.inputs[2].get_variable_or_none()
     gamma_param = func.inputs[1].get_variable_or_none()
     namedlink = context.get_link(beta_param) or context.get_link(gamma_param)
@@ -55,15 +55,6 @@ def convert_BatchNormalization(
         input_names[4] = var_name
     else:
         input_names.extend([maen_name, var_name])
-
-    if beta_param is None:
-        context.implicit_inputs.pop(input_names[2], None)
-        beta_name = add_param(np.zeros_like(mean, dtype=mean.dtype), 'beta')
-        input_names[2] = beta_name
-    if gamma_param is None:
-        context.implicit_inputs.pop(input_names[1], None)
-        gamma_name = add_param(np.ones_like(mean, dtype=mean.dtype), 'gamma')
-        input_names[1] = gamma_name
 
     momentum = getattr(func, 'decay', 0.)
 
