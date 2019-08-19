@@ -16,7 +16,6 @@ class Graph(object):
 
         self.graph = []
         self.func_name_counts = collections.defaultdict(int)
-        self.inputs = {}  # Input `Variable` objects keyed by string IDs
         self.outputs = set()  # Output variable names
         self.specified_opset_version = opset_version
         self.network_outputs = network_outputs
@@ -90,7 +89,7 @@ class Graph(object):
                 input_name = self.context.get_name(var)
                 if input_name not in self.outputs:
                     # register input variables to check implicit inputs
-                    self.inputs[input_name] = var
+                    self.context.implicit_inputs[input_name] = var
             input_names.append(input_name)
 
         # This is to get corresponding VariableNode id from the output

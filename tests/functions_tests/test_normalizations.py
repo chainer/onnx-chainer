@@ -5,6 +5,7 @@ from chainer import testing
 import numpy as np
 
 from onnx_chainer.testing import input_generator
+from tests.helper import get_initializer_names
 from tests.helper import ONNXModelTest
 
 
@@ -84,9 +85,10 @@ class TestBatchNormalization(ONNXModelTest):
             name += '_' + self.condition
 
         def test_input_names(onnx_model):
-            input_names = set(v.name for v in onnx_model.graph.input)
-            assert 'param_bn_avg_mean' in input_names
-            assert 'param_bn_avg_var' in input_names
+            initializer_names = get_initializer_names(onnx_model)
+            assert len(initializer_names) == 4
+            assert 'param_bn_avg_mean' in initializer_names
+            assert 'param_bn_avg_var' in initializer_names
 
         self.expect(
             self.model, self.x, name=name, train=train,
@@ -130,9 +132,10 @@ class TestBatchNormalizationFunction(ONNXModelTest):
     def test_output(self):
 
         def test_input_names(onnx_model):
-            input_names = set(v.name for v in onnx_model.graph.input)
-            assert 'BatchNormalization_0_param_avg_mean' in input_names
-            assert 'BatchNormalization_0_param_avg_var' in input_names
+            initializer_names = get_initializer_names(onnx_model)
+            assert len(initializer_names) == 4
+            assert 'BatchNormalization_0_param_avg_mean' in initializer_names
+            assert 'BatchNormalization_0_param_avg_var' in initializer_names
 
         self.expect(
             self.model, self.x, custom_model_test_func=test_input_names)
@@ -157,9 +160,12 @@ class TestFixedBatchNormalizationFunction(ONNXModelTest):
     def test_output(self):
 
         def test_input_names(onnx_model):
-            input_names = set(v.name for v in onnx_model.graph.input)
-            assert 'FixedBatchNormalization_0_param_avg_mean' in input_names
-            assert 'FixedBatchNormalization_0_param_avg_var' in input_names
+            initializer_names = get_initializer_names(onnx_model)
+            assert len(initializer_names) == 4
+            assert 'FixedBatchNormalization_0_param_avg_mean' in\
+                initializer_names
+            assert 'FixedBatchNormalization_0_param_avg_var' in\
+                initializer_names
 
         self.expect(
             self.model, self.x, custom_model_test_func=test_input_names)
