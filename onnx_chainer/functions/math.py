@@ -115,6 +115,21 @@ def convert_Absolute(func, opset_version, input_names, output_names, context):
         return onnx_helper.make_node('Abs', input_names, output_names),
 
 
+@support((7,))
+def convert_Arccos(func, opset_version, input_names, output_names, context):
+    return onnx_helper.make_node('Acos', input_names, output_names),
+
+
+@support((7,))
+def convert_Arcsin(func, opset_version, input_names, output_names, context):
+    return onnx_helper.make_node('Asin', input_names, output_names),
+
+
+@support((7,))
+def convert_Arctan(func, opset_version, input_names, output_names, context):
+    return onnx_helper.make_node('Atan', input_names, output_names),
+
+
 @support((1, 7))
 def convert_PowVarConst(
         func, opset_version, input_names, output_names, context):
@@ -141,6 +156,16 @@ def convert_Clip(func, opset_version, input_names, output_names, context):
             max=func.x_max,
             min=func.x_min,
         ),
+
+
+@support((7,))
+def convert_Cos(func, opset_version, input_names, output_names, context):
+    return onnx_helper.make_node('Cos', input_names, output_names),
+
+
+@support((9,))
+def convert_Cosh(func, opset_version, input_names, output_names, context):
+    return onnx_helper.make_node('Cosh', input_names, output_names),
 
 
 @support((1, 6))
@@ -191,6 +216,16 @@ def convert_Minimum(func, opset_version, input_names, output_names, context):
         return onnx_helper.make_node('Min', input_names, output_names),
 
 
+@support((7,))
+def convert_Sin(func, opset_version, input_names, output_names, context):
+    return onnx_helper.make_node('Sin', input_names, output_names),
+
+
+@support((9,))
+def convert_Sinh(func, opset_version, input_names, output_names, context):
+    return onnx_helper.make_node('Sinh', input_names, output_names),
+
+
 @support((1, 6))
 def convert_Sqrt(func, opset_version, input_names, output_names, context):
     if opset_version == 1:
@@ -205,6 +240,11 @@ def convert_RsqrtGPU(func, opset_version, input_names, output_names, context):
     sqrt_out = gb.op('Sqrt', input_names)
     gb.op('Reciprocal', [sqrt_out])
     return gb.nodes(output_names)
+
+
+@support((6,))
+def convert_Log(func, opset_version, input_names, output_names, context):
+    return onnx_helper.make_node('Log', input_names, output_names),
 
 
 def convert_LogSumExp(func, opset_version, input_names, output_names, context):
@@ -257,6 +297,11 @@ def convert_Sum(func, opset_version, input_names, output_names, context):
         kwargs['axes'] = func.axis
     return onnx_helper.make_node(
         'ReduceSum', input_names, output_names, **kwargs),
+
+
+@support((7,))
+def convert_Tan(func, opset_version, input_names, output_names, context):
+    return onnx_helper.make_node('Tan', input_names, output_names),
 
 
 @support((1, 6, 7))

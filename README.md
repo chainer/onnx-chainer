@@ -134,15 +134,21 @@ Currently 82 Chainer Functions are supported to export in ONNX format.
 - Absolute
 - Add
 - AddConstant
+- ArcCos
+- ArcSin
+- ArcTan
 - ArgMax
 - ArgMin
 - BroadcastTo
+- Cos
+- Cosh
 - Clip
 - Div
 - DivFromConstant
 - Exp
 - Identity
 - LinearInterpolate
+- Log
 - LogSumExp
 - MatMul
 - Max
@@ -156,11 +162,14 @@ Currently 82 Chainer Functions are supported to export in ONNX format.
 - PowVarConst
 - Prod
 - RsqrtGPU
+- Sin
+- Sinh
 - Sqrt
 - Square
 - Sub
 - SubFromConstant
 - Sum
+- Tan
 
 ### Noise
 
