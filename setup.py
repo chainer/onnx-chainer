@@ -64,7 +64,7 @@ setup(
         'onnx_chainer.functions',
         'onnx_chainer.testing',
     ],
-    version='1.5.0',
+    version='1.5.1a1',
     description='Convert a Chainer model into ONNX',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
