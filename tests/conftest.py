@@ -1,5 +1,8 @@
 import chainer
+import onnx
 import pytest
+
+import onnx_chainer
 
 
 def pytest_addoption(parser):
@@ -7,6 +10,10 @@ def pytest_addoption(parser):
         '--value-check-runtime',
         dest='value-check-runtime', default='onnxruntime',
         choices=['skip', 'onnxruntime', 'mxnet'], help='select test runtime')
+    parser.addoption(
+        '--opset-versions', dest='opset-versions', default=None,
+        help='select opset versions, select from "min", "latest", '
+             'or set list of number like "9,10"')
 
 
 @pytest.fixture(scope='function')
@@ -33,3 +40,23 @@ def check_model_expect(request):
             pass
         _checker = empty_func
     return _checker
+
+
+@pytest.fixture(scope='function')
+def target_opsets(request):
+    opsets = request.config.getoption('opset-versions')
+    min_version = onnx_chainer.MINIMUM_OPSET_VERSION
+    max_version = onnx.defs.onnx_opset_version()
+    if opsets is None:
+        return list(range(min_version, max_version + 1))
+    elif opsets == 'min':
+        return [min_version]
+    elif opsets == 'latest':
+        return [max_version]
+    else:
+        try:
+            versions = [int(i) for i in opsets.split(',') if not i == '']
+        except ValueError as e:
+            raise ValueError('cannot convert {} to versions list'.format(
+                opsets))
+        return versions
