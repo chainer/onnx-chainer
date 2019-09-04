@@ -8,7 +8,6 @@ import numpy as np
 import onnx
 import pytest
 
-import onnx_chainer
 from onnx_chainer.testing.get_test_data_set import gen_test_data_set
 
 
@@ -25,8 +24,8 @@ def load_input_data(data_dir):
 class ONNXModelTest(unittest.TestCase):
 
     @pytest.fixture(autouse=True)
-    def set_config(self, disable_experimental_warning):
-        pass
+    def set_config(self, disable_experimental_warning, target_opsets):
+        self.target_opsets = target_opsets
 
     @pytest.fixture(autouse=True, scope='function')
     def set_name(self, request, check_model_expect):
@@ -62,8 +61,7 @@ class ONNXModelTest(unittest.TestCase):
         if test_name is None:
             test_name = self.default_name
 
-        for opset_version in range(onnx_chainer.MINIMUM_OPSET_VERSION,
-                                   onnx.defs.onnx_opset_version() + 1):
+        for opset_version in self.target_opsets:
             if skip_opset_version is not None and\
                     opset_version in skip_opset_version:
                 continue
