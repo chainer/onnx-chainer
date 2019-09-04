@@ -13,7 +13,7 @@ def pytest_addoption(parser):
     parser.addoption(
         '--opset-versions', dest='opset-versions', default=None,
         help='select opset versions, select from "min", "latest", '
-             'or set list of number like "9,10"')
+             'or a list of numbers like "9,10"')
 
 
 @pytest.fixture(scope='function')
@@ -55,7 +55,7 @@ def target_opsets(request):
         return [max_version]
     else:
         try:
-            versions = [int(i) for i in opsets.split(',') if not i == '']
+            versions = [int(i) for i in opsets.split(',')]
         except ValueError as e:
             raise ValueError('cannot convert {} to versions list'.format(
                 opsets))
