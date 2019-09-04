@@ -8,7 +8,6 @@ import numpy as np
 import onnx
 import pytest
 
-import onnx_chainer
 from onnx_chainer.testing.get_test_data_set import gen_test_data_set
 
 
