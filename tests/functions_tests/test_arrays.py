@@ -144,6 +144,10 @@ from tests.helper import ONNXModelTest
      'input_argname': 'x',
      'args': {'slices': (0, None, Ellipsis, 0, None, slice(0, 2), None, 0)},
      'name': 'get_item_complicated'},
+    {'ops': 'get_item', 'input_shape': (2, 2, 3),
+     'input_argname': 'x',
+     'args': {'slices': (slice(None), slice(0, 1), slice(None, 2))},
+     'name': 'get_item_start_from_none'},
 
     # expand_dims
     {'ops': 'expand_dims', 'input_shape': (3,),
