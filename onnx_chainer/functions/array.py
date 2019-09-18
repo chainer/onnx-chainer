@@ -98,6 +98,8 @@ def convert_GetItem(func, opset_version, input_names, output_names, context):
                 raise ValueError(
                     'GetItem with {}step slicing is not supported in ONNX '
                     'Slice operator'.format(idx.step))
+            if idx.start is None and idx.stop is None:
+                continue
             axes.append(axis)
             starts.append(0 if idx.start is None else idx.start)
             ends.append(x.shape[axis] if idx.stop is None else idx.stop)
