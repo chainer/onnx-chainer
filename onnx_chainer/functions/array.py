@@ -1,5 +1,6 @@
 import warnings
 
+import chainer
 import numpy as np
 from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 
@@ -90,6 +91,8 @@ def convert_GetItem(func, opset_version, input_names, output_names, context):
     squeeze_idxs, unsqueeze_idxs = [], []
     skipped = 0  # when set ellipsis, need to skip index rolling
 
+    gather_axis, gather_idx = [], []
+
     for i, idx in enumerate(func.slices):
         # axis means the index of input x, adjust None and Ellipsis counts
         axis = i - len(unsqueeze_idxs) + skipped
@@ -123,6 +126,15 @@ def convert_GetItem(func, opset_version, input_names, output_names, context):
                 [idx_ for idx_ in func.slices[i+1:] if idx_ is not None])
             assert skipped == 0
             skipped = len(x.shape) - axis - rest_slice_len - 1
+        elif isinstance(idx, (list,) + chainer.get_array_types()):
+            if gather_axis:
+                raise ValueError(
+                    'ONNX-Chainer does not support multiple advanced index')
+            gather_axis.append(axis - len(squeeze_idxs) + len(unsqueeze_idxs))
+            if isinstance(idx, list):
+                gather_idx = np.array(idx, dtype=np.int64)
+            else:
+                gather_idx = chainer.cuda.to_cpu(idx)
         else:
             # not support advanced index like `array[[0,1], [0, 1]]`
             raise ValueError(
@@ -130,16 +142,22 @@ def convert_GetItem(func, opset_version, input_names, output_names, context):
                 'ONNX-Chainer does not accept the type'.format(type(idx)))
 
     gb = onnx_helper.GraphBuilder()
-    output = get_slice_node(
-        gb, opset_version, context, input_names, axes, starts, ends)
-
+    slice_output = input_names
+    if axes:
+        output = get_slice_node(
+            gb, opset_version, context, slice_output, axes, starts, ends)
+        slice_output = [output]
     if squeeze_idxs:
-        output = gb.op('Squeeze', [output],
-                       axes=squeeze_idxs)
-
+        output = gb.op('Squeeze', slice_output, axes=squeeze_idxs)
+        slice_output = [output]
     if unsqueeze_idxs:
-        output = gb.op('Unsqueeze', [output],
-                       axes=unsqueeze_idxs)
+        output = gb.op('Unsqueeze', slice_output, axes=unsqueeze_idxs)
+        slice_output = [output]
+
+    if gather_axis:
+        gather_idx_name = context.add_const(gather_idx, 'indices')
+        slice_output.append(gather_idx_name)
+        gb.op('Gather', slice_output, axis=gather_axis[0])
 
     return gb.nodes(output_names=output_names)
 
