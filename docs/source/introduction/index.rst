@@ -123,7 +123,9 @@ Currently 82 Chainer Functions are supported to export in ONNX format.
 * Mul
 * MulConstant
 * Neg
+* PowConstVar
 * PowVarConst
+* PowVarVar
 * Prod
 * RsqrtGPU
 * Sqrt

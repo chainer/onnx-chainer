@@ -73,7 +73,9 @@ from onnx_chainer.functions.math import convert_Minimum  # NOQA
 from onnx_chainer.functions.math import convert_Mul  # NOQA
 from onnx_chainer.functions.math import convert_MulConstant  # NOQA
 from onnx_chainer.functions.math import convert_Neg  # NOQA
+from onnx_chainer.functions.math import convert_PowConstVar  # NOQA
 from onnx_chainer.functions.math import convert_PowVarConst  # NOQA
+from onnx_chainer.functions.math import convert_PowVarVar  # NOQA
 from onnx_chainer.functions.math import convert_Prod  # NOQA
 from onnx_chainer.functions.math import convert_RsqrtGPU  # NOQA
 from onnx_chainer.functions.math import convert_Sin  # NOQA

@@ -73,7 +73,7 @@ onnx_chainer.export(model, x, filename='vgg16.onnx')
 
 ## Supported Functions
 
-Currently 82 Chainer Functions are supported to export in ONNX format.
+Currently 84 Chainer Functions are supported to export in ONNX format.
 
 ### Activation
 
@@ -159,7 +159,9 @@ Currently 82 Chainer Functions are supported to export in ONNX format.
 - Mul
 - MulConstant
 - Neg
+- PowConstVar
 - PowVarConst
+- PowVarVar
 - Prod
 - RsqrtGPU
 - Sin
