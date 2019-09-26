@@ -131,12 +131,30 @@ def convert_Arctan(func, opset_version, input_names, output_names, context):
 
 
 @support((1, 7))
+def convert_PowConstVar(
+        func, opset_version, input_names, output_names, context):
+    value_name = context.add_const(
+        np.array(func.value, dtype=func.inputs[0].dtype), 'value')
+    input_names.insert(0, value_name)
+
+    if opset_version == 1 or opset_version == 7:
+        return onnx_helper.make_node('Pow', input_names, output_names),
+
+
+@support((1, 7))
 def convert_PowVarConst(
         func, opset_version, input_names, output_names, context):
     value_name = context.add_const(
         np.array(func.value, dtype=func.inputs[0].dtype), 'value')
     input_names.append(value_name)
 
+    if opset_version == 1 or opset_version == 7:
+        return onnx_helper.make_node('Pow', input_names, output_names),
+
+
+@support((1, 7))
+def convert_PowVarVar(
+        func, opset_version, input_names, output_names, context):
     if opset_version == 1 or opset_version == 7:
         return onnx_helper.make_node('Pow', input_names, output_names),
 

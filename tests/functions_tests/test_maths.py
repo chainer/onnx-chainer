@@ -22,7 +22,9 @@ from tests.helper import ONNXModelTest
     {'op_name': 'Sqrt', 'ops': 'chainer.functions.sqrt(a)'},
     {'op_name': 'RSqrt', 'ops': 'chainer.functions.rsqrt(a)'},
     {'op_name': 'PowVarConst',
-     'ops': 'chainer.functions.math.basic_math.pow(a, 2)'},
+     'ops': 'a ** 2.3'},
+    {'op_name': 'PowConstVar',
+     'ops': '2.3 ** a'},
     {'op_name': 'Sum', 'ops': 'chainer.functions.sum(a)'},
     {'op_name': 'Sum', 'ops': 'chainer.functions.sum(a, axis=1)',
      'condition': 'axis1'},
@@ -121,6 +123,7 @@ class TestUnaryMathOperators(ONNXModelTest):
      'ops': 'chainer.functions.matmul(a, b, transb=True)'},
     {'op_name': 'Maximum', 'ops': 'chainer.functions.maximum(a, b)'},
     {'op_name': 'Minimum', 'ops': 'chainer.functions.minimum(a, b)'},
+    {'op_name': 'PowVarVar', 'ops': 'a ** b'},
 )
 class TestBinaryMathOperators(ONNXModelTest):
 
