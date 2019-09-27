@@ -161,6 +161,7 @@ class RetainInputHook(chainer.LinkHook):
     def __init__(self):
         self.link_inputs = set()
         self.retain_inputs = []
+        self.replaced_inputs = []
 
         self.org_apply = chainer.function_node.FunctionNode.apply
 
@@ -181,6 +182,7 @@ class RetainInputHook(chainer.LinkHook):
                         # of function node. To avoid to lose reference out
                         # of the forward, retain the variable.
                         self.retain_inputs.append(referenced_var)
+            self.replaced_inputs.append((_self, _self.inputs))
             _self.inputs = tuple(func_inodes)
             return ret
         self.hooked_apply = hooked_apply
@@ -213,6 +215,8 @@ class RetainInputHook(chainer.LinkHook):
 
     def __exit__(self, *exc_details):
         chainer.function_node.FunctionNode.apply = self.org_apply
+        for _self, inputs in self.replaced_inputs:
+            _self.inputs = inputs
         super().__exit__(*exc_details)
 
 
