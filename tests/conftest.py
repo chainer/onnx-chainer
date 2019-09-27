@@ -46,7 +46,8 @@ def check_model_expect(request):
 def target_opsets(request):
     opsets = request.config.getoption('opset-versions')
     min_version = onnx_chainer.MINIMUM_OPSET_VERSION
-    max_version = onnx.defs.onnx_opset_version()
+    max_version = min(
+        onnx.defs.onnx_opset_version(), onnx_chainer.MAXIMUM_OPSET_VERSION)
     if opsets is None:
         return list(range(min_version, max_version + 1))
     elif opsets == 'min':
