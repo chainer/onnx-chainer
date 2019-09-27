@@ -161,6 +161,7 @@ class RetainInputHook(chainer.LinkHook):
     def __init__(self):
         self.link_inputs = set()
         self.retain_inputs = []
+        self.replaced_inputs = []
 
         self.org_apply = chainer.function_node.FunctionNode.apply
 
@@ -181,6 +182,7 @@ class RetainInputHook(chainer.LinkHook):
                         # of function node. To avoid to lose reference out
                         # of the forward, retain the variable.
                         self.retain_inputs.append(referenced_var)
+            self.replaced_inputs.append((_self, _self.inputs))
             _self.inputs = tuple(func_inodes)
             return ret
         self.hooked_apply = hooked_apply
@@ -213,6 +215,8 @@ class RetainInputHook(chainer.LinkHook):
 
     def __exit__(self, *exc_details):
         chainer.function_node.FunctionNode.apply = self.org_apply
+        for _self, inputs in self.replaced_inputs:
+            _self.inputs = inputs
         super().__exit__(*exc_details)
 
 
@@ -327,7 +331,7 @@ def _export(model, args, filename, export_params, graph_name, save_text,
         # if input shapes are invalid, raise exception before forwarding.
         input_shapes = format_customized_shapes(args, input_shapes)
 
-    with RetainInputHook() as hook:  # NOQA hook is not used, to keep retained value
+    with RetainInputHook():
         # Forward computation
         context = Context(model)
         network_inputs = OrderedDict()
@@ -357,55 +361,57 @@ def _export(model, args, filename, export_params, graph_name, save_text,
                 'The \'args\' argument should be a list, tuple, dict, '
                 'numpy array, or Chainer Variable. But a {} object was '
                 'given.'.format(type(args)))
-    rename_variable_name(context, args, network_inputs, input_names)
+        rename_variable_name(context, args, network_inputs, input_names)
 
-    initializers = []
-    input_tensors = []
-    param_names = set()
-    for org_name, param in model.namedparams():
-        # `model.namedparams()` has `include_uninit` flag but not use, to
-        # output user warning
-        if param.array is None:
-            warnings.warn(
-                'The parameter \'{}\' is not initialized, skip setting to '
-                'ONNX graph'.format(org_name))
-            continue
-        name = context.get_name(param)
-        param_names.add(name)
-        tensor = convert_parameter(param, context)
-        initializers.append(tensor)
-        input_tensors.append(helper.make_tensor_value_info(
-            name, tensor.data_type, tensor.dims))
+        initializers = []
+        input_tensors = []
+        param_names = set()
+        for org_name, param in model.namedparams():
+            # `model.namedparams()` has `include_uninit` flag but not use, to
+            # output user warning
+            if param.array is None:
+                warnings.warn(
+                    'The parameter \'{}\' is not initialized, skip setting to '
+                    'ONNX graph'.format(org_name))
+                continue
+            name = context.get_name(param)
+            param_names.add(name)
+            tensor = convert_parameter(param, context)
+            initializers.append(tensor)
+            input_tensors.append(helper.make_tensor_value_info(
+                name, tensor.data_type, tensor.dims))
 
-    for i, (name, var) in enumerate(network_inputs.items()):
-        shape = var.shape if input_shapes is None else input_shapes[i]
-        input_tensors.append(helper.make_tensor_value_info(
-            name, NP_TYPE_TO_TENSOR_TYPE[var.dtype], shape))
+        for i, (name, var) in enumerate(network_inputs.items()):
+            shape = var.shape if input_shapes is None else input_shapes[i]
+            input_tensors.append(helper.make_tensor_value_info(
+                name, NP_TYPE_TO_TENSOR_TYPE[var.dtype], shape))
 
-    if external_converters:
-        chainer.utils.experimental('external_converters')
-        converters = dict(mapping.converters, **external_converters)
-    else:
-        converters = mapping.converters
+        if external_converters:
+            chainer.utils.experimental('external_converters')
+            converters = dict(mapping.converters, **external_converters)
+        else:
+            converters = mapping.converters
 
-    if isinstance(outputs, (list, tuple)):
-        flat_outputs = outputs
-    elif isinstance(outputs, dict):
-        flat_outputs = list(outputs.values())
-    elif isinstance(outputs, chainer.Variable):
-        flat_outputs = [outputs]
-    else:
-        raise RuntimeError(
-            'Unexpected output type from the model: {}'.format(type(outputs)))
-    if not all([isinstance(o, chainer.Variable) for o in flat_outputs]):
-        raise ValueError('The all \'outputs\' must be Chainer Variable')
-    network_outputs = OrderedDict(
-        [(context.get_name(var), var) for var in flat_outputs])
-    if output_names:
-        rename_variable_name(context, outputs, network_outputs, output_names)
+        if isinstance(outputs, (list, tuple)):
+            flat_outputs = outputs
+        elif isinstance(outputs, dict):
+            flat_outputs = list(outputs.values())
+        elif isinstance(outputs, chainer.Variable):
+            flat_outputs = [outputs]
+        else:
+            raise RuntimeError(
+                'Unexpected output type from the model: {}'.format(
+                    type(outputs)))
+        if not all([isinstance(o, chainer.Variable) for o in flat_outputs]):
+            raise ValueError('The all \'outputs\' must be Chainer Variable')
+        network_outputs = OrderedDict(
+            [(context.get_name(var), var) for var in flat_outputs])
+        if output_names:
+            rename_variable_name(
+                context, outputs, network_outputs, output_names)
 
-    o = Graph(context, converters, opset_version, network_outputs)
-    o.to_onnx_graph()
+        o = Graph(context, converters, opset_version, network_outputs)
+        o.to_onnx_graph()
 
     implicit_input_names = set(context.implicit_inputs.keys()) - param_names -\
         set(network_inputs.keys())
