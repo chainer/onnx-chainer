@@ -209,14 +209,16 @@ class RetainInputHook(chainer.LinkHook):
     def forward_postprocess(self, args):
         self.link_inputs.clear()
 
+    def restore_inputs(self):
+        for _self, inputs in self.replaced_inputs:
+            _self.inputs = inputs
+
     def __enter__(self):
         chainer.function_node.FunctionNode.apply = self.hooked_apply
         return super().__enter__()
 
     def __exit__(self, *exc_details):
         chainer.function_node.FunctionNode.apply = self.org_apply
-        for _self, inputs in self.replaced_inputs:
-            _self.inputs = inputs
         super().__exit__(*exc_details)
 
 
@@ -410,6 +412,8 @@ def _export(model, args, filename, export_params, graph_name, save_text,
 
     o = Graph(context, converters, opset_version, network_outputs)
     o.to_onnx_graph()
+
+    hook.restore_inputs()
 
     implicit_input_names = set(context.implicit_inputs.keys()) - param_names -\
         set(network_inputs.keys())
