@@ -20,6 +20,7 @@ def model():
         L.Convolution2D(8, 5, 5, 1, 2),
         F.relu,
         L.Linear(None, 100),
+        L.BatchNormalization(100),
         F.relu,
         L.Linear(100, 10)
     )
@@ -51,9 +52,10 @@ def test_export_testcase(
         out_names[0] if out_names else 'LinearFunction_1')
 
 
-def test_output_grad(tmpdir, model, x, disable_experimental_warning):
+@pytest.mark.parametrize('train', [True, False])
+def test_output_grad(tmpdir, model, x, train, disable_experimental_warning):
     path = str(tmpdir)
-    export_testcase(model, (x,), path, output_grad=True, train=True)
+    export_testcase(model, (x,), path, output_grad=True, train=train)
 
     model_filename = os.path.join(path, 'model.onnx')
     assert os.path.isfile(model_filename)
@@ -64,7 +66,7 @@ def test_output_grad(tmpdir, model, x, disable_experimental_warning):
     initializer_names = {i.name for i in onnx_model.graph.initializer}
 
     # 10 gradient files should be there
-    for i in range(10):
+    for i in range(12):
         tensor_filename = os.path.join(
             path, 'test_data_set_0', 'gradient_{}.pb'.format(i))
         assert os.path.isfile(tensor_filename)
@@ -72,4 +74,4 @@ def test_output_grad(tmpdir, model, x, disable_experimental_warning):
         assert tensor.name.startswith('param_')
         assert tensor.name in initializer_names
     assert not os.path.isfile(
-        os.path.join(path, 'test_data_set_0', 'gradient_10.pb'))
+        os.path.join(path, 'test_data_set_0', 'gradient_12.pb'))
