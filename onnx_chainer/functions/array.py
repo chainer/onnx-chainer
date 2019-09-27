@@ -261,16 +261,19 @@ def convert_SplitAxis(func, opset_version, input_names, output_names, context):
     else:
         indices_or_sections = func.sections
 
+    total = func.inputs[0].shape[func.axis]
     if hasattr(indices_or_sections, '__iter__'):
         split = []
         prev_i = 0
         for i in indices_or_sections:
             split.append(i - prev_i)
             prev_i = i
+        split.append(total - prev_i)
     else:
-        length = func.inputs[0].shape[func.axis] // indices_or_sections
+        length = total // indices_or_sections
         split = [length for _ in range(indices_or_sections)]
 
+    assert len(output_names) == len(split)
     if opset_version == 1:
         return onnx_helper.make_node(
             'Split', input_names, output_names,

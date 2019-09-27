@@ -77,6 +77,10 @@ from tests.helper import ONNXModelTest
      'args': {'indices_or_sections': 2,
               'axis': 1, 'force_tuple': False},
      'name': 'split_axis_force_tuple_false'},
+    {'ops': 'split_axis', 'input_shape': (1, 6),
+     'input_argname': 'x',
+     'args': {'indices_or_sections': [1, 2], 'axis': 1},
+     'name': 'split_axis_list'},
 
     # squeeze
     {'ops': 'squeeze', 'input_shape': (1, 3, 1, 2),
