@@ -13,7 +13,7 @@ from PIL import Image
 model = L.VGG16Layers()
 
 # Load image
-img = np.asarray(Image.open('images/cat.jpg'))
+img = np.asarray(Image.open('examples/images/cat.jpg'))
 
 # Convert RGB to BGR
 img = img[:, :, ::-1]
@@ -50,7 +50,7 @@ with chainer.using_config('train', False), \
 ch_pred = np.argmax(chainer_out.array[0])
 rt_pred = np.argmax(rt_out[0])
 
-id_name = [l.strip() for l in open('synset_words.txt').readlines()]
+id_name = [l.strip() for l in open('examples/images/synset_words.txt').readlines()]
 
 print('Prediction by Chainer:\t', id_name[ch_pred])
 print('Prediction by ONNXRuntime:\t', id_name[rt_pred])

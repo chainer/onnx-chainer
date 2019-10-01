@@ -11,7 +11,7 @@ import pytest
 from onnx_chainer import export
 from onnx_chainer.export import RetainInputHook
 from onnx_chainer.testing import input_generator
-from onnx_chainer.testing.helper import ONNXModelTest
+from tests.helper import ONNXModelTest
 
 
 @testing.parameterize(

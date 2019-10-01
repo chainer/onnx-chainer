@@ -3,7 +3,7 @@ import chainer.functions as F
 from chainer import testing
 import numpy as np
 
-from onnx_chainer.testing.helper import ONNXModelTest
+from tests.helper import ONNXModelTest
 
 
 @testing.parameterize(

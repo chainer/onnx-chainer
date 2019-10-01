@@ -21,7 +21,12 @@ def load_input_data(data_dir):
     return input_data
 
 
-class ONNXModelTest(unittest.TestCase):
+class ONNXModelChecker():
+    """Test ONNX export and output value check
+
+    This class support ``pytest.mark.parametrize``.
+    If use ``chainer.testing.parameterize``, use ``ONNXModelTest`` class.
+    """
 
     @pytest.fixture(autouse=True)
     def set_config(self, disable_experimental_warning, target_opsets):
@@ -138,6 +143,14 @@ class ONNXModelTest(unittest.TestCase):
         model.to_gpu()
         x = chainer.cuda.to_gpu(x)
         return model, x
+
+
+class ONNXModelTest(ONNXModelChecker, unittest.TestCase):
+    """Test ONNX export and output value check
+
+    This class enables ``chainer.testing.parameterize``
+    """
+    pass
 
 
 def check_all_connected_from_inputs(onnx_model):
