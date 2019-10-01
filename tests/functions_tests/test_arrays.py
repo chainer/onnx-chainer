@@ -3,8 +3,8 @@ import warnings
 import chainer
 import chainer.functions as F
 from chainer import testing
-import pytest
 import numpy as np
+import pytest
 
 from onnx_chainer.testing import input_generator
 from tests.helper import ONNXModelChecker

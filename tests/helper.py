@@ -21,7 +21,7 @@ def load_input_data(data_dir):
     return input_data
 
 
-class ONNXModelChecker():
+class ONNXModelChecker(object):
     """Test ONNX export and output value check
 
     This class support ``pytest.mark.parametrize``.
