@@ -6,7 +6,7 @@ from chainer import testing
 import numpy as np
 
 from onnx_chainer.testing import input_generator
-from tests.helper import ONNXModelTest
+from onnx_chainer.testing.helper import ONNXModelTest
 
 
 @testing.parameterize(

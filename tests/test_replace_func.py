@@ -14,7 +14,7 @@ from onnx_chainer import onnx_helper
 from onnx_chainer.replace_func import as_funcnode
 from onnx_chainer.replace_func import fake_as_funcnode
 from onnx_chainer.testing import input_generator
-from tests.helper import ONNXModelTest
+from onnx_chainer.testing.helper import ONNXModelTest
 
 
 def test_fake_as_funcnode_without_replace():

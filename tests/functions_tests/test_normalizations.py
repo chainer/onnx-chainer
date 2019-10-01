@@ -5,8 +5,8 @@ from chainer import testing
 import numpy as np
 
 from onnx_chainer.testing import input_generator
-from tests.helper import get_initializer_names
-from tests.helper import ONNXModelTest
+from onnx_chainer.testing.helper import get_initializer_names
+from onnx_chainer.testing.helper import ONNXModelTest
 
 
 @testing.parameterize(

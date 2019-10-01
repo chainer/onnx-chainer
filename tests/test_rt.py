@@ -5,7 +5,7 @@ from chainer.testing import attr
 import numpy as np
 
 import chainercv.links as C
-from tests.helper import ONNXModelTest
+from onnx_chainer.testing.helper import ONNXModelTest
 
 
 class TestLeNet5(ONNXModelTest):
