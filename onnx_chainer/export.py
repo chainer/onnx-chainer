@@ -23,6 +23,7 @@ except ImportError:
     _available = False
 
 MINIMUM_OPSET_VERSION = 7
+MAXIMUM_OPSET_VERSION = 10
 
 
 def _check_available():
@@ -315,17 +316,16 @@ def _export(model, args, filename, export_params, graph_name, save_text,
             opset_version, input_names, output_names, return_named_inout,
             external_converters, external_opset_imports, input_shapes):
     if opset_version is None:
-        opset_version = int(onnx.defs.onnx_opset_version())
-    elif opset_version < MINIMUM_OPSET_VERSION:
+        opset_version = min(
+            int(onnx.defs.onnx_opset_version()), MAXIMUM_OPSET_VERSION)
+    elif opset_version < MINIMUM_OPSET_VERSION or \
+            opset_version > MAXIMUM_OPSET_VERSION:
         warnings.warn(
-            'ONNX-Chainer has been tested only with opset_version >= {m}. '
-            'This is because ONNXRuntime supports only opset_version >= {m}. '
-            'The ONNX file exported with your requested opset_version ({o}) '
+            'ONNX-Chainer has been tested only with opset_version {} ~ {}'
+            'The ONNX file exported with your requested opset_version ({}) '
             'may cause some problems because the converters used for the '
             'opset_version have not been tested.'.format(
-                m=MINIMUM_OPSET_VERSION,
-                o=opset_version)
-        )
+                MINIMUM_OPSET_VERSION, MAXIMUM_OPSET_VERSION, opset_version))
 
     if input_shapes is not None:
         # if input shapes are invalid, raise exception before forwarding.
