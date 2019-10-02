@@ -4,8 +4,10 @@ import chainer
 import chainer.functions as F
 from chainer import testing
 import numpy as np
+import pytest
 
 from onnx_chainer.testing import input_generator
+from tests.helper import ONNXModelChecker
 from tests.helper import ONNXModelTest
 
 
@@ -153,37 +155,6 @@ from tests.helper import ONNXModelTest
      'args': {'slices': (slice(None), slice(0, 1), slice(None, 2))},
      'name': 'get_item_start_from_none'},
 
-    # get_item with list index
-    {'ops': 'get_item', 'input_shape': (2, 3, 4),
-     'input_argname': 'x',
-     'args': {'slices': ([[0, 1], [0, 1]],)},
-     'name': 'get_item_gather_axis0'},
-    {'ops': 'get_item', 'input_shape': (2, 3, 4),
-     'input_argname': 'x',
-     'args': {'slices': (slice(None), [[0, 1], [1, 2]], slice(None))},
-     'name': 'get_item_gather_axis1'},
-    {'ops': 'get_item', 'input_shape': (2, 3, 4),
-     'input_argname': 'x',
-     'args': {'slices': (slice(None), slice(None), [[0, 1], [1, 2]])},
-     'name': 'get_item_gather_axis2'},
-    {'ops': 'get_item', 'input_shape': (2, 3, 4),
-     'input_argname': 'x',
-     'args': {'slices': (
-         Ellipsis, np.array([[0, 1], [1, 2]], dtype=np.int64))},
-     'name': 'get_item_gather_ndarray'},
-    {'ops': 'get_item', 'input_shape': (2, 3, 4),
-     'input_argname': 'x',
-     'args': {'slices': (slice(None), 0, [[0, 1], [2, 3]])},
-     'name': 'get_item_gather_before_squeezed'},
-    {'ops': 'get_item', 'input_shape': (2, 3, 4),
-     'input_argname': 'x',
-     'args': {'slices': (slice(None), [[0, 1], [1, 2]], 0)},
-     'name': 'get_item_gather_after_squeezed'},
-    {'ops': 'get_item', 'input_shape': (2, 3, 4),
-     'input_argname': 'x',
-     'args': {'slices': (slice(None), None, [[0, 1], [1, 2]], slice(None))},
-     'name': 'get_item_gather_unsqueezed'},
-
     # expand_dims
     {'ops': 'expand_dims', 'input_shape': (3,),
      'input_argname': 'x', 'args': {'axis': 0},
@@ -245,6 +216,33 @@ class TestArrayOperators(ONNXModelTest):
         self.expect(
             self.model, self.x, name=name, skip_outvalue_version=skip_ver,
             expected_num_initializers=0)
+
+
+class TestGetItemGather(ONNXModelChecker):
+    # When chainer.testing.parameterize is used with list or ndarray parameter,
+    # it causes regex warning. To resolve, use pytest's parameterize.
+
+    @pytest.mark.parametrize(
+        'name,slices', [
+            ('gather_axis0', ([[0, 1], [0, 1]],)),
+            ('gather_axis1', (slice(None), [[0, 1], [1, 2]], slice(None))),
+            ('gather_axis2', (slice(None), slice(None), [[0, 1], [1, 2]])),
+            ('gather_ndarray', (
+                Ellipsis, np.array([[0, 1], [1, 2]], dtype=np.int64))),
+            ('gather_before_squeezed', (slice(None), 0, [[0, 1], [2, 3]])),
+            ('gather_after_squeezed', (slice(None), [[0, 1], [1, 2]], 0)),
+            ('gather_unsqueezed', (
+                slice(None), None, [[0, 1], [1, 2]], slice(None)))
+        ])
+    def test_output(self, name, slices):
+        name = 'get_item_' + name
+
+        model = chainer.Sequential(
+            lambda x: F.get_item(x, slices=slices))
+        x = input_generator.increasing(2, 3, 4)
+
+        self.expect(
+            model, x, name=name, expected_num_initializers=0)
 
 
 class TestConcat(ONNXModelTest):

@@ -81,7 +81,7 @@ class TestUnaryMathOperators(ONNXModelTest):
                 return eval(self.ops)
 
         self.model = Model(self.ops)
-        self.a = input_generator.positive_increasing(2, 3)
+        self.a = input_generator.positive_increasing(2, 3) / 10.0
 
         name = self.op_name.lower()
         if hasattr(self, 'condition'):
@@ -151,18 +151,18 @@ class TestBinaryMathOperators(ONNXModelTest):
                 self.get_model(), xs, name=name, expected_num_initializers=0)
 
     def matrix(self):
-        a = chainer.Variable(input_generator.increasing(5, 2, 3))
+        a = chainer.Variable(input_generator.positive_increasing(5, 2, 3))
         b = chainer.Variable(input_generator.nonzero_increasing(5, 2, 3) * 0.3)
         return (a, b)
 
     def vector(self):
-        a = chainer.Variable(input_generator.increasing(2,))
+        a = chainer.Variable(input_generator.positive_increasing(2,))
         b = chainer.Variable(input_generator.nonzero_increasing(2,) * 0.3)
         return (a, b)
 
     def scalar(self):
         a = chainer.Variable(np.array(7, dtype=np.float32))
-        b = chainer.Variable(np.array(13, dtype=np.float32))
+        b = chainer.Variable(np.array(2, dtype=np.float32))
         return (a, b)
 
 

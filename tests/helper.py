@@ -21,7 +21,33 @@ def load_input_data(data_dir):
     return input_data
 
 
-class ONNXModelTest(unittest.TestCase):
+class ONNXModelChecker(object):
+    """Base class to check outputs.
+
+    Some configurations are set by fixture, for example, target opset versions,
+    output directory name, and so on.
+
+    Example:
+
+       >>> class TestForSomething(ONNXModelChecker):
+       ...     def test_output(self):
+       ...         model, x = self.setup()  # setup for target test
+       ...         self.expect(model, x)  # to check outputs
+
+    This class supports ``pytest.mark.parametrize``.
+
+    Example:
+
+       >>> class TestForSomething(ONNXModelChecker):
+       ...     @pytest.mark.parametrize('param', [True,False])
+       ...     def test_output(self, param):
+       ...         model, x = self.setup(param)  # use a test case parameter
+       ...         self.expect(model, x)
+
+    This class is **not** subclass of ``unittest.TestCase``, so does not
+    support ``chainer.testing.parameterize``. If tests requires it, see
+    ``ONNXModelTest`` class.
+    """
 
     @pytest.fixture(autouse=True)
     def set_config(self, disable_experimental_warning, target_opsets):
@@ -138,6 +164,22 @@ class ONNXModelTest(unittest.TestCase):
         model.to_gpu()
         x = chainer.cuda.to_gpu(x)
         return model, x
+
+
+class ONNXModelTest(ONNXModelChecker, unittest.TestCase):
+    """Base class to check outputs.
+
+    This class enables ``chainer.testing.parameterize``
+
+    Example:
+
+       >>> @chainer.testing.parameterize({'param': True},{'param': False})
+       ... class TestForSomething(ONNXModelTest):
+       ...     def test_output(self):
+       ...         model, x = self.setup(self.param)  # use a parameter
+       ...         self.expect(model, x)
+    """
+    pass
 
 
 def check_all_connected_from_inputs(onnx_model):
