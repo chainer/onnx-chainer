@@ -28,7 +28,7 @@ def model():
 
 @pytest.fixture(scope='function')
 def x():
-    return np.zeros((1, 3, 28, 28), dtype=np.float32)
+    return np.zeros((10, 3, 28, 28), dtype=np.float32)
 
 
 @pytest.mark.parametrize('in_names,out_names',
