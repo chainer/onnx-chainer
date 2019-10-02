@@ -219,8 +219,8 @@ class TestArrayOperators(ONNXModelTest):
 
 
 class TestGetItemGather(ONNXModelChecker):
-    # When chainer.testing.parameterize is used with list parameter,
-    # occur warning. To resolve, use pytest's
+    # When chainer.testing.parameterize is used with list or ndarray parameter,
+    # it causes regex warning. To resolve, use pytest's parameterize.
 
     @pytest.mark.parametrize(
         'name,slices', [

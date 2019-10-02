@@ -22,10 +22,31 @@ def load_input_data(data_dir):
 
 
 class ONNXModelChecker(object):
-    """Test ONNX export and output value check
+    """Base class to check outputs.
 
-    This class support ``pytest.mark.parametrize``.
-    If use ``chainer.testing.parameterize``, use ``ONNXModelTest`` class.
+    Some configurations are set by fixture, for example, target opset versions,
+    output directory name, and so on.
+
+    Example:
+
+       >>> class TestForSomething(ONNXModelChecker):
+       ...     def test_output(self):
+       ...         model, x = self.setup()  # setup for target test
+       ...         self.expect(model, x)  # to check outputs
+
+    This class supports ``pytest.mark.parametrize``.
+
+    Example:
+
+       >>> class TestForSomething(ONNXModelChecker):
+       ...     @pytest.mark.parametrize('param', [True,False])
+       ...     def test_output(self, param):
+       ...         model, x = self.setup(param)  # use a test case parameter
+       ...         self.expect(model, x)
+
+    This class is **not** subclass of ``unittest.TestCase``, so does not
+    support ``chainer.testing.parameterize``. If tests requires it, see
+    ``ONNXModelTest`` class.
     """
 
     @pytest.fixture(autouse=True)
@@ -146,9 +167,18 @@ class ONNXModelChecker(object):
 
 
 class ONNXModelTest(ONNXModelChecker, unittest.TestCase):
-    """Test ONNX export and output value check
+    """Base class to check outputs.
 
     This class enables ``chainer.testing.parameterize``
+
+    Example:
+
+       >>> @chainer.testing.parameterize(
+               {'param': True},{'param': False})
+       ... class TestForSomething(ONNXModelTest):
+       ...     def test_output(self):
+       ...         model, x = self.setup(self.param)  # use a parameter
+       ...         self.expect(model, x)
     """
     pass
 
