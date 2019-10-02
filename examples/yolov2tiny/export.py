@@ -1,15 +1,4 @@
-import argparse
-import os
-
-import chainer.cuda
-from chainercv.experimental.links import YOLOv2Tiny
-from chainercv.utils import read_image
-from onnx_chainer import export
-from onnx_chainer import export_testcase
-
-
-"""
-This example is exporting YOLOv2 Tiny model to ONNX graph.
+"""Example for exporting YOLOv2 Tiny model to ONNX graph.
 
   $ pwd
   /path/to/onnx-chainer
@@ -20,6 +9,14 @@ This example is exporting YOLOv2 Tiny model to ONNX graph.
 NOTE: Outputs are required postprocessing to draw bbox on the target.jpg.
       See ChainerCV's example of detection 'visualize_models.py'.
 """
+import argparse
+import os
+
+import chainer.cuda
+from chainercv.experimental.links import YOLOv2Tiny
+from chainercv.utils import read_image
+from onnx_chainer import export
+from onnx_chainer import export_testcase
 
 
 def export_onnx(input_image_path, output_path, gpu, only_output=True):

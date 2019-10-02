@@ -1,3 +1,11 @@
+"""Example for exporting ResNet50 model to ONNX graph.
+
+  $ pwd
+  /path/to/onnx-chainer
+  $ python examples/resnet50/export.py -I target.jpg -O onnx_model
+
+'model.onnx' will be output under 'onnx_model' directory.
+"""
 import argparse
 import os
 
@@ -8,17 +16,6 @@ from chainercv.transforms import scale
 from chainercv.utils import read_image
 from onnx_chainer import export
 from onnx_chainer import export_testcase
-
-
-"""
-This example is exporting ResNet50 model to ONNX graph.
-
-  $ pwd
-  /path/to/onnx-chainer
-  $ python examples/resnet50/export.py -I target.jpg -O onnx_model
-
-'model.onnx' will be output under 'onnx_model' directory.
-"""
 
 
 def export_onnx(input_image_path, output_path, gpu, only_output=True):
