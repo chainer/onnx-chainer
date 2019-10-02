@@ -34,7 +34,7 @@ def load_test_data(data_dir, input_names, output_names):
     return tuple(inout_values)
 
 
-def check_model_expect(test_path, input_names=None):
+def check_model_expect(test_path, input_names=None, rtol=1e-5, atol=1e-5):
     if not ONNXRUNTIME_AVAILABLE:
         raise ImportError('ONNX Runtime is not found on checking module.')
 
@@ -59,4 +59,4 @@ def check_model_expect(test_path, input_names=None):
 
         rt_out = sess.run(list(outputs.keys()), inputs)
         for cy, my in zip(outputs.values(), rt_out):
-            np.testing.assert_allclose(cy, my, rtol=1e-5, atol=1e-5)
+            np.testing.assert_allclose(cy, my, rtol=rtol, atol=atol)

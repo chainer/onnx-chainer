@@ -18,7 +18,7 @@ except ImportError:
     MXNET_AVAILABLE = False
 
 
-def check_model_expect(test_path, input_names=None):
+def check_model_expect(test_path, input_names=None, rtol=1e-5, atol=1e-5):
     if not MXNET_AVAILABLE:
         raise ImportError('MXNet is not found on checking module.')
 
@@ -53,4 +53,4 @@ def check_model_expect(test_path, input_names=None):
         mod.forward(Batch(mx_input))
         mx_outputs = [y.asnumpy() for y in mod.get_outputs()]
         for cy, my in zip(outputs.values(), mx_outputs):
-            np.testing.assert_allclose(cy, my, rtol=1e-5, atol=1e-5)
+            np.testing.assert_allclose(cy, my, rtol=rtol, atol=atol)
