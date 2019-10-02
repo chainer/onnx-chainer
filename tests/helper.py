@@ -173,8 +173,7 @@ class ONNXModelTest(ONNXModelChecker, unittest.TestCase):
 
     Example:
 
-       >>> @chainer.testing.parameterize(
-               {'param': True},{'param': False})
+       >>> @chainer.testing.parameterize({'param': True},{'param': False})
        ... class TestForSomething(ONNXModelTest):
        ...     def test_output(self):
        ...         model, x = self.setup(self.param)  # use a parameter
