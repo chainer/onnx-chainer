@@ -10,6 +10,17 @@ from onnx_chainer import export
 from onnx_chainer import export_testcase
 
 
+"""
+This example is exporting ResNet50 model to ONNX graph.
+
+  $ pwd
+  /path/to/onnx-chainer
+  $ python examples/resnet50/export.py -I target.jpg -O onnx_model
+
+'model.onnx' will be output under 'onnx_model' directory.
+"""
+
+
 def export_onnx(input_image_path, output_path, gpu, only_output=True):
     """Export ResNet50 model to ONNX graph
 
@@ -39,7 +50,8 @@ def export_onnx(input_image_path, output_path, gpu, only_output=True):
 
 if __name__ == '__main__':
     this_file_path = os.path.dirname(os.path.abspath(__file__))
-    default_image_path = os.path.join(this_file_path, 'images')
+    default_image_path = os.path.normpath(
+        os.path.join(this_file_path, '..', 'images'))
     default_input_path = os.path.join(default_image_path, 'cat.jpg')
     default_output_path = os.path.join('out', 'test_resnet50')
 
