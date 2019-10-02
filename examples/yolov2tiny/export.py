@@ -8,6 +8,20 @@ from onnx_chainer import export
 from onnx_chainer import export_testcase
 
 
+"""
+This example is exporting YOLOv2 Tiny model to ONNX graph.
+
+  $ pwd
+  /path/to/onnx-chainer
+  $ python examples/yolov2tiny/export.py -I target.jpg -O onnx_model
+
+'model.onnx' will be output under 'onnx_model' directory.
+
+NOTE: Outputs are required postprocessing to draw bbox on the target.jpg.
+      See ChainerCV's example of detection 'visualize_models.py'.
+"""
+
+
 def export_onnx(input_image_path, output_path, gpu, only_output=True):
     """Export YOLOv2 Tiny model to ONNX graph
 
@@ -17,7 +31,6 @@ def export_onnx(input_image_path, output_path, gpu, only_output=True):
 
     input_image = read_image(input_image_path)
     input_image = input_image[None, :]
-    print(input_image.shape)
 
     if gpu >= 0:
         model.to_gpu()
