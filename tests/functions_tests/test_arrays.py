@@ -1,5 +1,3 @@
-import warnings
-
 import chainer
 import chainer.functions as F
 from chainer import testing
@@ -316,9 +314,8 @@ class TestResizeImages(ONNXModelTest):
 
         self.check_out_values = None  # Skip output value check
 
-        with warnings.catch_warnings(record=True) as w:
+        with testing.assert_warns(UserWarning):
             self.expect(self.model, self.x, expected_num_initializers=0)
-        assert len(w) == 1
 
 
 @testing.parameterize(

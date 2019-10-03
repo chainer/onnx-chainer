@@ -1,7 +1,6 @@
 import glob
 import os
 import unittest
-import warnings
 
 import chainer
 import numpy as np
@@ -60,9 +59,8 @@ class ONNXModelChecker(object):
         self.check_out_values = check_model_expect
 
     def expect(self, model, args, name=None, skip_opset_version=None,
-               skip_outvalue_version=None, with_warning=False,
-               custom_model_test_func=None, expected_num_initializers=None,
-               **kwargs):
+               skip_outvalue_version=None, custom_model_test_func=None,
+               expected_num_initializers=None, **kwargs):
         """Compare model output and test runtime output.
 
         Make an ONNX model from target model with args, and put output
@@ -74,7 +72,6 @@ class ONNXModelChecker(object):
             name (str): name of test. Set class name on default.
             skip_opset_version (list): Versions to skip test.
             skip_outvalue_version (list): Versions to skip output value check.
-            with_warning (bool): If True, check warnings.
             custom_model_test_func (func): A function to check generated
                 model. The functions is called before checking output values.
                 ONNX model is passed to arguments.
@@ -93,14 +90,8 @@ class ONNXModelChecker(object):
                 continue
 
             dir_name = 'test_' + test_name
-            if with_warning:
-                with warnings.catch_warnings(record=True) as w:
-                    test_path = gen_test_data_set(
-                        model, args, dir_name, opset_version, **kwargs)
-                assert len(w) == 1
-            else:
-                test_path = gen_test_data_set(
-                    model, args, dir_name, opset_version, **kwargs)
+            test_path = gen_test_data_set(
+                model, args, dir_name, opset_version, **kwargs)
 
             onnx_model_path = os.path.join(test_path, 'model.onnx')
             assert os.path.isfile(onnx_model_path)

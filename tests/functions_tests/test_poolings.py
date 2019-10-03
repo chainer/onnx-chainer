@@ -88,4 +88,5 @@ class TestROIPooling2D(ONNXModelTest):
         self.model = Model(kwargs)
 
     def test_output(self):
-        self.expect(self.model, [self.x, self.rois], with_warning=True)
+        with testing.assert_warns(UserWarning):
+            self.expect(self.model, [self.x, self.rois])
