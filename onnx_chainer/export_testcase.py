@@ -1,4 +1,5 @@
 import os
+import warnings
 
 import chainer
 
@@ -56,4 +57,8 @@ def export_testcase(model, args, out_dir, output_grad=False, **kwargs):
             pb_name = os.path.join(test_data_dir, 'gradient_{}.pb'.format(i))
             grad = chainer.cuda.to_cpu(param.grad)
             onnx_name = cleanse_param_name(name)
-            write_tensor_pb(pb_name, onnx_name, grad)
+            if grad is None:
+                warnings.warn(
+                    'Parameter `{}` does not have gradient value'.format(name))
+            else:
+                write_tensor_pb(pb_name, onnx_name, grad)
