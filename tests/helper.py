@@ -1,7 +1,6 @@
 import glob
 import os
 import unittest
-import warnings
 
 import chainer
 import numpy as np
