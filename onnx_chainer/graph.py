@@ -90,7 +90,7 @@ class Graph(object):
             else:  # It is a parameter inside a Link or network input
                 input_name = self.context.get_name(var)
                 if (input_name not in self.explicit_input_names and
-                    input_name not in self.outputs):
+                        input_name not in self.outputs):
                     # register input variables to check implicit inputs
                     self.context.implicit_inputs[input_name] = var
             input_names.append(input_name)
