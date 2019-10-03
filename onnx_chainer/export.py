@@ -500,10 +500,10 @@ def check_onnx_model(onnx_model, external_converters, external_opset_imports):
                         '`external_opset_imports` when using '
                         '`external_converters` on exporting. Please take care '
                         'about ONNX format check is insufficient. Error '
-                        'message:\n{}'.format(str(e)))
+                        'message:\n{}'.format(str(e)), UserWarning)
             else:
                 warnings.warn(
                     'ValidationError is occurred but ignored because '
                     'exporting with `external_converters`. Please take care '
                     'about ONNX format check is insufficient. Error '
-                    'message:\n{}'.format(str(e)))
+                    'message:\n{}'.format(str(e)), UserWarning)
