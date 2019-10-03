@@ -1,5 +1,4 @@
 import unittest
-import warnings
 
 import chainer
 import chainer.functions as F
@@ -338,10 +337,8 @@ class TestUnusedLink(ONNXModelTest):
         model = MLP(100, 10)
         x = np.random.rand(1, 768).astype(np.float32)
 
-        with warnings.catch_warnings(record=True) as w:
+        with testing.assert_warns(UserWarning):
             self.expect(model, x)
-            assert len(w) == 1
-            assert '/l2/W' in str(w[-1].message)
 
 
 @testing.parameterize(

@@ -190,7 +190,7 @@ def test_replace_func_collection_return(tmpdir, return_type):
 
     addon_converters = {'xTiledArray': tiled_array_converter}
 
-    with warnings.catch_warnings(record=True):
+    with testing.assert_warns(UserWarning):
         export_testcase(model, x, path, external_converters=addon_converters)
 
     model_filepath = os.path.join(path, 'model.onnx')

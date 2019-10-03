@@ -1,7 +1,7 @@
 import os
-import warnings
 
 import chainer
+from chainer import testing
 import numpy as np
 import onnx
 import pytest
@@ -22,9 +22,7 @@ def test_export_external_converters_overwrite(tmpdir, check_model_expect):
             'Tanh', params.input_names, params.output_names),
 
     addon_converters = {'Sigmoid': custom_converter}
-    with warnings.catch_warnings(record=True) as w:
-        export_testcase(model, x, path, external_converters=addon_converters)
-        assert len(w) == 2
+    export_testcase(model, x, path, external_converters=addon_converters)
 
     tanh_outputs = chainer.functions.tanh(x).array
     output_path = os.path.join(path, 'test_data_set_0', 'output_0.pb')
@@ -58,26 +56,19 @@ def test_export_external_converters_custom_op(tmpdir, domain, version):
 
     addon_converters = {'Dummy': custom_converter}
 
-    # warnings list
-    # 1. `external_converter` is experimental feature
-    # 2. `return_named_inout` which is used internally is experimental feature
-    expected_warning_num = 2
     external_opset_imports = {}
-    if domain is not None:
+    is_set_domain = domain is not None
+    if is_set_domain:
         external_opset_imports[domain] = version
-        # 3. `external_opset_imports` is experimental feature
-        expected_warning_num += 1
-        if not onnx_helper.is_support_non_standard_domain():
-            # 4. ValidationError is ignored
-            expected_warning_num += 1
-    else:
-        # 3. ValidationError is ignored
-        expected_warning_num += 1
-    with warnings.catch_warnings(record=True) as w:
+    if is_set_domain and onnx_helper.is_support_non_standard_domain():
         export_testcase(
             model, x, path, external_converters=addon_converters,
             external_opset_imports=external_opset_imports)
-        assert len(w) == expected_warning_num
+    else:
+        with testing.assert_warns(UserWarning):
+            export_testcase(
+                model, x, path, external_converters=addon_converters,
+                external_opset_imports=external_opset_imports)
 
     output_path = os.path.join(path, 'test_data_set_0', 'output_0.pb')
     assert os.path.isfile(output_path)
