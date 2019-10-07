@@ -49,6 +49,7 @@ script:
   - flake8
   - autopep8 -r . --dif --exit-code
   - pytest -m "not gpu" -x -s -vvvs tests/ --cov onnx_chainer
+  - if [[ $ONNX_CHAINER_DEPLOY_JOB == 1 ]]; then pushd docs && make doctest && popd; fi
 
 after_success:
   - if [[ $ONNX_CHAINER_DEPLOY_JOB == 1 ]]; then codecov; fi
