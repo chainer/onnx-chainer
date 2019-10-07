@@ -33,6 +33,7 @@ author = 'Preferred Networks, inc.'
 # ones.
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.autosummary',
+              'sphinx.ext.doctest',
               'sphinx.ext.viewcode',
               'sphinx.ext.napoleon']
 
@@ -134,6 +135,13 @@ intersphinx_mapping = {
     'chainer': ('https://docs.chainer.org/en/latest/', None),
     'chainercv': ('https://chainercv.readthedocs.io/en/latest/', None),
 }
+
+doctest_global_setup = '''
+import chainer
+import chainer.functions as F
+import numpy as np
+import onnx_chainer
+'''
 
 # -- Own configuration for this project -----------------------------------
 
