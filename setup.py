@@ -26,9 +26,13 @@ requirements = {
         # CUDA9.1 is not supported latest cuDNN, so decided to use CPU version
         'onnxruntime==0.4.0',
     ],
+    'doctest': [
+        'sphinx==1.8.2',
+    ],
     'travis': [
         '-r stylecheck',
         '-r test-cpu',
+        '-r doctest',
         'pytest-cov',
         'codecov',
     ],
