@@ -5,6 +5,8 @@
 [![codecov](https://codecov.io/gh/chainer/onnx-chainer/branch/master/graph/badge.svg)](https://codecov.io/gh/chainer/onnx-chainer)
 [![Documentation Status](https://readthedocs.org/projects/onnx-chainer/badge/?version=latest)](https://onnx-chainer.readthedocs.io/en/latest/?badge=latest)
 
+All code and functionalities of ONNX-Chainer have been merged into [Chainer](https://chainer.org/) v7rc1 and this repository supports only bug fixes.
+
 This is an add-on package for ONNX support by Chainer.
 
 ## Tested environment
