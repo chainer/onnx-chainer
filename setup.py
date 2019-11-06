@@ -3,9 +3,8 @@ from setuptools import setup
 
 requirements = {
     'install': [
-        'packaging>=19.0',
-        'chainer>=5.0.0',
-        'onnx>=1.4.0,<1.6',
+        'chainer>=5.0.0,<7.0.0',
+        'onnx>=1.4.0,<1.7',
     ],
     'stylecheck': [
         'autopep8',
@@ -17,14 +16,14 @@ requirements = {
     ],
     'test-cpu': [
         '-r test',
-        'onnxruntime==0.4.0',
+        'onnxruntime==1.0.0',
     ],
     'test-gpu': [
         '-r test',
         # 'cupy',  # installed 'cupy-cudaXX' before
-        # onnxruntime-gpu is better but prebuild version requires CUDA9.1
-        # CUDA9.1 is not supported latest cuDNN, so decided to use CPU version
-        'onnxruntime==0.4.0',
+        # to avoid to match cuDNN version supported by onnxruntime,
+        # install CPU version.
+        'onnxruntime==1.0.0',
     ],
     'doctest': [
         'sphinx==1.8.2',

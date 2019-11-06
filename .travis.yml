@@ -3,30 +3,22 @@ language: python
 
 matrix:
   include:
-    - name: "Py35, Chainer stable"
+    - name: "Py35, Chainer v6"
       python: "3.5"
-    - name: "Py36, Chainer stable, ONNX 1.4.1"
+    - name: "Py36, Chainer v6, ONNX 1.4.1"
       python: "3.6"
       env:
         - ONNX_VER="1.4.1"
-    - name: "Py36, Chainer stable"
+    - name: "Py36, Chainer v6"
       python: "3.6"
-    - name: "Py37, Chainer stable"
+    - name: "Py37, Chainer v6, ONNX 1.5.0"
+      python: "3.7"
+      env:
+        - ONNX_VER="1.5.0"
+    - name: "Py37, Chainer v6"
       python: "3.7"
       env:
         - ONNX_CHAINER_DEPLOY_JOB=1
-    - name: "Py35, Chainer pre-release"
-      python: "3.5"
-      env:
-        - CHAINER_INSTALL="--pre"
-    - name: "Py36, Chainer pre-release"
-      python: "3.6"
-      env:
-        - CHAINER_INSTALL="--pre"
-    - name: "Py37, Chainer pre-release"
-      python: "3.7"
-      env:
-        - CHAINER_INSTALL="--pre"
 
 addons:
   apt:
@@ -40,7 +32,7 @@ notifications:
   email: false
 
 before_install:
-  - pip install $CHAINER_INSTALL chainer
+  - pip install 'chainer<7.0.0'
   - pip install -U -e .[travis]
   - if [[ $ONNX_VER != "" ]]; then pip install onnx==$ONNX_VER; fi
   - pip list -v

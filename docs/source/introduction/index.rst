@@ -41,6 +41,8 @@ First, install `ChainerCV <https://github.com/chainer/chainercv>`__ to get the p
 
 ``vgg16.onnx`` file will be exported.
 
+Other export examples are put on `examples <https://github.com/chainer/onnx-chainer/tree/master/examples>`__. Please check them.
+
 Supported Functions
 -------------------
 
@@ -71,6 +73,7 @@ Currently 82 Chainer Functions are supported to export in ONNX format.
 * GetItem
 * Hstack
 * Pad [#pad1]_ [#pad2]_
+* Permutate
 * Repeat
 * Reshape
 * ResizeImages
@@ -172,12 +175,12 @@ Tested Environments
     * Windows 10
 
 * Python 3.5.5, 3.6.7, 3.7.2
-* ONNX 1.4.1, 1.5.0
+* ONNX 1.4.1, 1.5.0, 1.6.0
 
-    * opset version 7, 8, 9, 10
+    * opset version 7, 8, 9, 10, 11
 
-* Chainer stable, preview
-* ONNX-Runtime 0.4.0
+* Chainer 6.5.0
+* ONNX-Runtime 1.0.0
 
 
 Run Test
@@ -211,6 +214,6 @@ on GPU environment::
 Contribution
 ------------
 
-Any contribution to ONNX-Chainer is welcom!
+Any contribution to ONNX-Chainer is welcome!
 
-* Python codes follow `Chainer Coding Guidelines <ttps://docs.chainer.org/en/stable/contribution.html#coding-guidelines>`__
+* Python codes follow `Chainer Coding Guidelines <https://docs.chainer.org/en/stable/contribution.html#coding-guidelines>`__
