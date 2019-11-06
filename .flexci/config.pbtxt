@@ -1,5 +1,5 @@
 configs {
-  key: "onnxchainer.chainer-stable"
+  key: "onnxchainer.chainerv6"
   value {
     requirement {
       cpu: 4
@@ -11,51 +11,13 @@ configs {
       seconds: 600
     }
     command: "sh .flexci/run_test.sh"
-    environment_variables {
-      key: "PYTHON_VER"
-      value: "37"
-    }
-    environment_variables {
-      key: "CHAINER_INSTALL"
-      value: ""
-    }
-    environment_variables {
-      key: "EXAMPLE_ARGS"
-      value: "-G 0"
-    }
+    environment_variables { key: "PYTHON_VER" value: "37" }
+    environment_variables { key: "GPU" value: "0" }
   }
 }
 
 configs {
-  key: "onnxchainer.chainer-pre"
-  value {
-    requirement {
-      cpu: 4
-      disk: 10
-      memory: 16
-      gpu: 1
-    }
-    time_limit {
-      seconds: 600
-    }
-    command: "sh .flexci/run_test.sh"
-    environment_variables {
-      key: "PYTHON_VER"
-      value: "37"
-    }
-    environment_variables {
-      key: "CHAINER_INSTALL"
-      value: "--pre"
-    }
-    environment_variables {
-      key: "EXAMPLE_ARGS"
-      value: "-G 0"
-    }
-  }
-}
-
-configs {
-  key: "onnxchainer.win.chainer-pre"
+  key: "onnxchainer.win.chainerv6"
   value {
     requirement {
       cpu: 4
@@ -67,6 +29,6 @@ configs {
     time_limit {
       seconds: 600
     }
-    command: ".flexci\\run_test.bat 10_0 37"
+    command: ".flexci\\run_test.bat 10.1 37"
   }
 }
